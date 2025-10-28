@@ -203,6 +203,15 @@ Setiap ada perubahan API, regenerate swagger docs:
 
 - `POST /api/v1/auth/signin` - User signin
 
+### Default Credentials
+
+Setelah menjalankan seeder, gunakan credential berikut untuk login:
+
+```
+Email: tantowi@gmail.com
+Password: Bismillah1407*
+```
+
 ### Testing API
 
 **Health Check:**
@@ -217,8 +226,8 @@ curl http://localhost:8080/health
 curl -X POST http://localhost:8080/api/v1/auth/signin \
   -H "Content-Type: application/json" \
   -d '{
-    "login": "admin@example.com",
-    "password": "admin123"
+    "login": "tantowi@gmail.com",
+    "password": "Bismillah1407*"
   }'
 ```
 
