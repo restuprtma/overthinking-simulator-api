@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"time"
 
-	"lakukan-be/internal/modules/core/auth/domain"
-	"lakukan-be/pkg/logger"
+	"venturo-skeleton-go/internal/modules/core/auth/domain"
+	"venturo-skeleton-go/pkg/logger"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"

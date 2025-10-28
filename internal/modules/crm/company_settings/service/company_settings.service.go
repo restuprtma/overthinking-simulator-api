@@ -5,10 +5,10 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
-	"lakukan-be/internal/modules/crm/company_settings/domain"
-	"lakukan-be/internal/modules/crm/company_settings/dto"
-	"lakukan-be/internal/modules/crm/company_settings/repository"
-	"lakukan-be/pkg/logger"
+	"venturo-skeleton-go/internal/modules/crm/company_settings/domain"
+	"venturo-skeleton-go/internal/modules/crm/company_settings/dto"
+	"venturo-skeleton-go/internal/modules/crm/company_settings/repository"
+	"venturo-skeleton-go/pkg/logger"
 )
 
 var (

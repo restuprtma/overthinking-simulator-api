@@ -1,15 +1,15 @@
 package auth
 
 import (
-	"lakukan-be/internal/config"
-	"lakukan-be/internal/middleware"
-	"lakukan-be/internal/modules/core/auth/handler"
-	authrepo "lakukan-be/internal/modules/core/auth/repository"
-	"lakukan-be/internal/modules/core/auth/service"
-	companyrepo "lakukan-be/internal/modules/core/company/repository"
-	"lakukan-be/internal/modules/core/user/repository"
-	"lakukan-be/pkg/email"
-	"lakukan-be/pkg/logger"
+	"venturo-skeleton-go/internal/config"
+	"venturo-skeleton-go/internal/middleware"
+	"venturo-skeleton-go/internal/modules/core/auth/handler"
+	authrepo "venturo-skeleton-go/internal/modules/core/auth/repository"
+	"venturo-skeleton-go/internal/modules/core/auth/service"
+	companyrepo "venturo-skeleton-go/internal/modules/core/company/repository"
+	"venturo-skeleton-go/internal/modules/core/user/repository"
+	"venturo-skeleton-go/pkg/email"
+	"venturo-skeleton-go/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"

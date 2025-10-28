@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strings"
 
-	"lakukan-be/internal/shared/response"
-	jwtpkg "lakukan-be/pkg/jwt"
-	"lakukan-be/pkg/logger"
+	"venturo-skeleton-go/internal/shared/response"
+	jwtpkg "venturo-skeleton-go/pkg/jwt"
+	"venturo-skeleton-go/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 )

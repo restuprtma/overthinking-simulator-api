@@ -3,10 +3,10 @@ package leads
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"lakukan-be/internal/middleware"
-	"lakukan-be/internal/modules/crm/leads/handler"
-	"lakukan-be/internal/modules/crm/leads/repository"
-	"lakukan-be/internal/modules/crm/leads/service"
+	"venturo-skeleton-go/internal/middleware"
+	"venturo-skeleton-go/internal/modules/crm/leads/handler"
+	"venturo-skeleton-go/internal/modules/crm/leads/repository"
+	"venturo-skeleton-go/internal/modules/crm/leads/service"
 )
 
 type LeadModule struct {

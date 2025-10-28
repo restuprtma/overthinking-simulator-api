@@ -1,10 +1,10 @@
 package permission
 
 import (
-	"lakukan-be/internal/middleware"
-	"lakukan-be/internal/modules/core/permission/handler"
-	"lakukan-be/internal/modules/core/permission/repository"
-	"lakukan-be/internal/modules/core/permission/service"
+	"venturo-skeleton-go/internal/middleware"
+	"venturo-skeleton-go/internal/modules/core/permission/handler"
+	"venturo-skeleton-go/internal/modules/core/permission/repository"
+	"venturo-skeleton-go/internal/modules/core/permission/service"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"

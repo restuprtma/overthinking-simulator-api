@@ -1,10 +1,10 @@
 package lead_sources
 
 import (
-	"lakukan-be/internal/middleware"
-	"lakukan-be/internal/modules/crm/lead_sources/handler"
-	"lakukan-be/internal/modules/crm/lead_sources/repository"
-	"lakukan-be/internal/modules/crm/lead_sources/service"
+	"venturo-skeleton-go/internal/middleware"
+	"venturo-skeleton-go/internal/modules/crm/lead_sources/handler"
+	"venturo-skeleton-go/internal/modules/crm/lead_sources/repository"
+	"venturo-skeleton-go/internal/modules/crm/lead_sources/service"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"

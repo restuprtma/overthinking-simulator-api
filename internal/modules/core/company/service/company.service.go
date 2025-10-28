@@ -5,10 +5,10 @@ import (
 	"math"
 	"time"
 
-	"lakukan-be/internal/modules/core/company/domain"
-	"lakukan-be/internal/modules/core/company/dto"
-	"lakukan-be/internal/modules/core/company/repository"
-	"lakukan-be/pkg/logger"
+	"venturo-skeleton-go/internal/modules/core/company/domain"
+	"venturo-skeleton-go/internal/modules/core/company/dto"
+	"venturo-skeleton-go/internal/modules/core/company/repository"
+	"venturo-skeleton-go/pkg/logger"
 
 	"github.com/google/uuid"
 )

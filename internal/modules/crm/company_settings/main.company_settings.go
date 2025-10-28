@@ -3,10 +3,10 @@ package company_settings
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"lakukan-be/internal/middleware"
-	"lakukan-be/internal/modules/crm/company_settings/handler"
-	"lakukan-be/internal/modules/crm/company_settings/repository"
-	"lakukan-be/internal/modules/crm/company_settings/service"
+	"venturo-skeleton-go/internal/middleware"
+	"venturo-skeleton-go/internal/modules/crm/company_settings/handler"
+	"venturo-skeleton-go/internal/modules/crm/company_settings/repository"
+	"venturo-skeleton-go/internal/modules/crm/company_settings/service"
 )
 
 type CompanySettingsModule struct {

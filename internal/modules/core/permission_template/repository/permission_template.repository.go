@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"lakukan-be/internal/modules/core/permission_template/domain"
+	"venturo-skeleton-go/internal/modules/core/permission_template/domain"
 )
 
 type PermissionTemplateRepository struct {

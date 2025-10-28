@@ -8,7 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"lakukan-be/internal/modules/crm/auto_reply_rules/domain"
+	"venturo-skeleton-go/internal/modules/crm/auto_reply_rules/domain"
 )
 
 type AutoReplyRuleRepository struct {

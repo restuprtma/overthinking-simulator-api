@@ -3,10 +3,10 @@ package auto_reply_rules
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"lakukan-be/internal/middleware"
-	"lakukan-be/internal/modules/crm/auto_reply_rules/handler"
-	"lakukan-be/internal/modules/crm/auto_reply_rules/repository"
-	"lakukan-be/internal/modules/crm/auto_reply_rules/service"
+	"venturo-skeleton-go/internal/middleware"
+	"venturo-skeleton-go/internal/modules/crm/auto_reply_rules/handler"
+	"venturo-skeleton-go/internal/modules/crm/auto_reply_rules/repository"
+	"venturo-skeleton-go/internal/modules/crm/auto_reply_rules/service"
 )
 
 type AutoReplyRuleModule struct {

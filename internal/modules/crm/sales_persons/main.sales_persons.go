@@ -3,11 +3,11 @@ package sales_persons
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"lakukan-be/internal/config"
-	"lakukan-be/internal/middleware"
-	"lakukan-be/internal/modules/crm/sales_persons/handler"
-	"lakukan-be/internal/modules/crm/sales_persons/repository"
-	"lakukan-be/internal/modules/crm/sales_persons/service"
+	"venturo-skeleton-go/internal/config"
+	"venturo-skeleton-go/internal/middleware"
+	"venturo-skeleton-go/internal/modules/crm/sales_persons/handler"
+	"venturo-skeleton-go/internal/modules/crm/sales_persons/repository"
+	"venturo-skeleton-go/internal/modules/crm/sales_persons/service"
 )
 
 type SalesPersonModule struct {

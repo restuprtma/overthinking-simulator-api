@@ -5,10 +5,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"lakukan-be/internal/middleware"
-	"lakukan-be/internal/modules/crm/auto_reply_rules/dto"
-	"lakukan-be/internal/modules/crm/auto_reply_rules/service"
-	"lakukan-be/internal/shared/response"
+	"venturo-skeleton-go/internal/middleware"
+	"venturo-skeleton-go/internal/modules/crm/auto_reply_rules/dto"
+	"venturo-skeleton-go/internal/modules/crm/auto_reply_rules/service"
+	"venturo-skeleton-go/internal/shared/response"
 )
 
 type AutoReplyRuleHandler struct {

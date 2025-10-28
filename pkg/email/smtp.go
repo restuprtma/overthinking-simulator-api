@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"lakukan-be/pkg/logger"
+	"venturo-skeleton-go/pkg/logger"
 
 	"gopkg.in/gomail.v2"
 )

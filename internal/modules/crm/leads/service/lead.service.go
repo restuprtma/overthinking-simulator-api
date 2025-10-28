@@ -8,10 +8,10 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"lakukan-be/internal/modules/crm/leads/domain"
-	"lakukan-be/internal/modules/crm/leads/dto"
-	"lakukan-be/internal/modules/crm/leads/repository"
-	"lakukan-be/pkg/logger"
+	"venturo-skeleton-go/internal/modules/crm/leads/domain"
+	"venturo-skeleton-go/internal/modules/crm/leads/dto"
+	"venturo-skeleton-go/internal/modules/crm/leads/repository"
+	"venturo-skeleton-go/pkg/logger"
 )
 
 var (

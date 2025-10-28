@@ -5,10 +5,10 @@ import (
 	"math"
 	"time"
 
-	"lakukan-be/internal/modules/crm/lead_sources/domain"
-	"lakukan-be/internal/modules/crm/lead_sources/dto"
-	"lakukan-be/internal/modules/crm/lead_sources/repository"
-	"lakukan-be/pkg/logger"
+	"venturo-skeleton-go/internal/modules/crm/lead_sources/domain"
+	"venturo-skeleton-go/internal/modules/crm/lead_sources/dto"
+	"venturo-skeleton-go/internal/modules/crm/lead_sources/repository"
+	"venturo-skeleton-go/pkg/logger"
 
 	"github.com/google/uuid"
 )

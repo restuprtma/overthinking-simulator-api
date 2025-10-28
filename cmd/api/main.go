@@ -1,11 +1,11 @@
 package main
 
 import (
-	_ "lakukan-be/docs/swagger" // Import generated swagger docs
-	"lakukan-be/internal/config"
-	"lakukan-be/internal/database"
-	"lakukan-be/internal/router"
-	"lakukan-be/pkg/logger"
+	_ "venturo-skeleton-go/docs/swagger" // Import generated swagger docs
+	"venturo-skeleton-go/internal/config"
+	"venturo-skeleton-go/internal/database"
+	"venturo-skeleton-go/internal/router"
+	"venturo-skeleton-go/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 )

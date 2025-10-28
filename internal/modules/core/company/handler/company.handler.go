@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"lakukan-be/internal/middleware"
-	"lakukan-be/internal/modules/core/company/dto"
-	"lakukan-be/internal/modules/core/company/service"
-	"lakukan-be/internal/shared/response"
+	"venturo-skeleton-go/internal/middleware"
+	"venturo-skeleton-go/internal/modules/core/company/dto"
+	"venturo-skeleton-go/internal/modules/core/company/service"
+	"venturo-skeleton-go/internal/shared/response"
 
 	"github.com/gin-gonic/gin"
 )

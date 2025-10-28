@@ -4,10 +4,10 @@ import (
 	"errors"
 	"net/http"
 
-	"lakukan-be/internal/middleware"
-	"lakukan-be/internal/modules/core/role/dto"
-	"lakukan-be/internal/modules/core/role/service"
-	"lakukan-be/internal/shared/response"
+	"venturo-skeleton-go/internal/middleware"
+	"venturo-skeleton-go/internal/modules/core/role/dto"
+	"venturo-skeleton-go/internal/modules/core/role/service"
+	"venturo-skeleton-go/internal/shared/response"
 
 	"github.com/gin-gonic/gin"
 )

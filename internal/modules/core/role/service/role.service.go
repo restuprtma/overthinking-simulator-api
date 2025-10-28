@@ -6,10 +6,10 @@ import (
 	"math"
 	"time"
 
-	"lakukan-be/internal/modules/core/role/domain"
-	"lakukan-be/internal/modules/core/role/dto"
-	"lakukan-be/internal/modules/core/role/repository"
-	"lakukan-be/pkg/logger"
+	"venturo-skeleton-go/internal/modules/core/role/domain"
+	"venturo-skeleton-go/internal/modules/core/role/dto"
+	"venturo-skeleton-go/internal/modules/core/role/repository"
+	"venturo-skeleton-go/pkg/logger"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"

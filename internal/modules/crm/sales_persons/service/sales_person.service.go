@@ -7,10 +7,10 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"lakukan-be/internal/modules/crm/sales_persons/domain"
-	"lakukan-be/internal/modules/crm/sales_persons/dto"
-	"lakukan-be/internal/modules/crm/sales_persons/repository"
-	"lakukan-be/pkg/logger"
+	"venturo-skeleton-go/internal/modules/crm/sales_persons/domain"
+	"venturo-skeleton-go/internal/modules/crm/sales_persons/dto"
+	"venturo-skeleton-go/internal/modules/crm/sales_persons/repository"
+	"venturo-skeleton-go/pkg/logger"
 )
 
 var (

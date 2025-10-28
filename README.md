@@ -231,6 +231,41 @@ Project ini menggunakan **Uber's Zap** dengan **Ginzap** middleware untuk loggin
 
 Dokumentasi lengkap: [docs/LOGGING_SWAGGER.md](docs/LOGGING_SWAGGER.md)
 
+## Rename Module Name
+
+Untuk mengubah nama module dari `venturo-skeleton-go` ke nama project Anda:
+
+### Option 1: Using go-replace (Recommended)
+
+```bash
+# Install go-replace
+go install github.com/webdevops/go-replace@latest
+
+# Replace module name in all .go files and go.mod
+find . -type f -name "*.go" -exec sed -i '' 's|venturo-skeleton-go|your-new-module-name|g' {} +
+sed -i '' 's|venturo-skeleton-go|your-new-module-name|g' go.mod
+
+# Or on Linux (without the '')
+find . -type f -name "*.go" -exec sed -i 's|venturo-skeleton-go|your-new-module-name|g' {} +
+sed -i 's|venturo-skeleton-go|your-new-module-name|g' go.mod
+
+# Tidy up dependencies
+go mod tidy
+
+# Test build
+go build ./...
+```
+
+### Option 2: Manual (VS Code)
+
+1. Edit `go.mod` - ubah `module venturo-skeleton-go` ke nama baru
+2. Find & Replace (Cmd/Ctrl + Shift + H):
+   - Find: `venturo-skeleton-go`
+   - Replace: `your-new-module-name`
+   - Files to include: `*.go`
+3. Run: `go mod tidy`
+4. Test: `go build ./...`
+
 ## Documentation
 
 - [Development Guide](docs/DEVELOPMENT.md) - Hot reload, Make commands, debugging

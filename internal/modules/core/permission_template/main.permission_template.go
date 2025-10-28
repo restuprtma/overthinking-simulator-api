@@ -4,10 +4,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"lakukan-be/internal/middleware"
-	"lakukan-be/internal/modules/core/permission_template/handler"
-	"lakukan-be/internal/modules/core/permission_template/repository"
-	"lakukan-be/internal/modules/core/permission_template/service"
+	"venturo-skeleton-go/internal/middleware"
+	"venturo-skeleton-go/internal/modules/core/permission_template/handler"
+	"venturo-skeleton-go/internal/modules/core/permission_template/repository"
+	"venturo-skeleton-go/internal/modules/core/permission_template/service"
 )
 
 type PermissionTemplateModule struct {

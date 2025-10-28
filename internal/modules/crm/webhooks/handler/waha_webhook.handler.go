@@ -6,10 +6,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"lakukan-be/internal/modules/crm/webhooks/dto"
-	"lakukan-be/internal/modules/crm/webhooks/service"
-	"lakukan-be/internal/shared/response"
-	"lakukan-be/pkg/logger"
+	"venturo-skeleton-go/internal/modules/crm/webhooks/dto"
+	"venturo-skeleton-go/internal/modules/crm/webhooks/service"
+	"venturo-skeleton-go/internal/shared/response"
+	"venturo-skeleton-go/pkg/logger"
 )
 
 type WAHAWebhookHandler struct {

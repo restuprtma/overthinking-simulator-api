@@ -6,7 +6,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"lakukan-be/internal/modules/crm/company_settings/domain"
+	"venturo-skeleton-go/internal/modules/crm/company_settings/domain"
 )
 
 type CompanySettingsRepository struct {

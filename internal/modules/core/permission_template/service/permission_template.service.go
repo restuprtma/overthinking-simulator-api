@@ -7,9 +7,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"lakukan-be/internal/modules/core/permission_template/domain"
-	"lakukan-be/internal/modules/core/permission_template/dto"
-	"lakukan-be/internal/modules/core/permission_template/repository"
+	"venturo-skeleton-go/internal/modules/core/permission_template/domain"
+	"venturo-skeleton-go/internal/modules/core/permission_template/dto"
+	"venturo-skeleton-go/internal/modules/core/permission_template/repository"
 )
 
 var (

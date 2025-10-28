@@ -8,7 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"lakukan-be/internal/modules/crm/leads/domain"
+	"venturo-skeleton-go/internal/modules/crm/leads/domain"
 )
 
 type LeadRepository struct {

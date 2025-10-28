@@ -6,10 +6,10 @@ import (
 	"math"
 
 	"github.com/google/uuid"
-	"lakukan-be/internal/modules/crm/auto_reply_rules/domain"
-	"lakukan-be/internal/modules/crm/auto_reply_rules/dto"
-	"lakukan-be/internal/modules/crm/auto_reply_rules/repository"
-	"lakukan-be/pkg/logger"
+	"venturo-skeleton-go/internal/modules/crm/auto_reply_rules/domain"
+	"venturo-skeleton-go/internal/modules/crm/auto_reply_rules/dto"
+	"venturo-skeleton-go/internal/modules/crm/auto_reply_rules/repository"
+	"venturo-skeleton-go/pkg/logger"
 )
 
 var (

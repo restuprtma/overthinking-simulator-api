@@ -3,8 +3,8 @@ package middleware
 import (
 	"net/http"
 
-	"lakukan-be/internal/shared/response"
-	"lakukan-be/pkg/logger"
+	"venturo-skeleton-go/internal/shared/response"
+	"venturo-skeleton-go/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 )

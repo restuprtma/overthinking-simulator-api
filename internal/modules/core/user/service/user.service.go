@@ -5,12 +5,12 @@ import (
 	"math"
 	"time"
 
-	"lakukan-be/internal/modules/core/user/domain"
-	"lakukan-be/internal/modules/core/user/dto"
-	"lakukan-be/internal/modules/core/user/repository"
-	roleRepo "lakukan-be/internal/modules/core/role/repository"
-	"lakukan-be/pkg/crypto"
-	"lakukan-be/pkg/logger"
+	"venturo-skeleton-go/internal/modules/core/user/domain"
+	"venturo-skeleton-go/internal/modules/core/user/dto"
+	"venturo-skeleton-go/internal/modules/core/user/repository"
+	roleRepo "venturo-skeleton-go/internal/modules/core/role/repository"
+	"venturo-skeleton-go/pkg/crypto"
+	"venturo-skeleton-go/pkg/logger"
 
 	"github.com/google/uuid"
 )

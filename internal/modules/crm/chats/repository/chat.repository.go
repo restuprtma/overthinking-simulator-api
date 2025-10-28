@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/lib/pq"
-	"lakukan-be/internal/modules/crm/chats/domain"
+	"venturo-skeleton-go/internal/modules/crm/chats/domain"
 )
 
 type ChatRepository struct {

@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"lakukan-be/internal/modules/core/company/domain"
-	"lakukan-be/internal/shared/query"
+	"venturo-skeleton-go/internal/modules/core/company/domain"
+	"venturo-skeleton-go/internal/shared/query"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"

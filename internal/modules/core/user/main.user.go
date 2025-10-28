@@ -1,11 +1,11 @@
 package user
 
 import (
-	"lakukan-be/internal/middleware"
-	"lakukan-be/internal/modules/core/user/handler"
-	"lakukan-be/internal/modules/core/user/repository"
-	"lakukan-be/internal/modules/core/user/service"
-	roleRepo "lakukan-be/internal/modules/core/role/repository"
+	"venturo-skeleton-go/internal/middleware"
+	"venturo-skeleton-go/internal/modules/core/user/handler"
+	"venturo-skeleton-go/internal/modules/core/user/repository"
+	"venturo-skeleton-go/internal/modules/core/user/service"
+	roleRepo "venturo-skeleton-go/internal/modules/core/role/repository"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"

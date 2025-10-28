@@ -4,10 +4,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"lakukan-be/internal/middleware"
-	"lakukan-be/internal/modules/crm/company_settings/dto"
-	"lakukan-be/internal/modules/crm/company_settings/service"
-	"lakukan-be/internal/shared/response"
+	"venturo-skeleton-go/internal/middleware"
+	"venturo-skeleton-go/internal/modules/crm/company_settings/dto"
+	"venturo-skeleton-go/internal/modules/crm/company_settings/service"
+	"venturo-skeleton-go/internal/shared/response"
 )
 
 type CompanySettingsHandler struct {

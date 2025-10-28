@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	"lakukan-be/internal/config"
-	"lakukan-be/internal/modules/crm/sales_persons/dto"
-	"lakukan-be/internal/modules/crm/sales_persons/repository"
-	"lakukan-be/pkg/logger"
-	"lakukan-be/pkg/waha"
+	"venturo-skeleton-go/internal/config"
+	"venturo-skeleton-go/internal/modules/crm/sales_persons/dto"
+	"venturo-skeleton-go/internal/modules/crm/sales_persons/repository"
+	"venturo-skeleton-go/pkg/logger"
+	"venturo-skeleton-go/pkg/waha"
 )
 
 var (

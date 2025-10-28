@@ -3,10 +3,10 @@ package chats
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"lakukan-be/internal/middleware"
-	"lakukan-be/internal/modules/crm/chats/handler"
-	"lakukan-be/internal/modules/crm/chats/repository"
-	"lakukan-be/internal/modules/crm/chats/service"
+	"venturo-skeleton-go/internal/middleware"
+	"venturo-skeleton-go/internal/modules/crm/chats/handler"
+	"venturo-skeleton-go/internal/modules/crm/chats/repository"
+	"venturo-skeleton-go/internal/modules/crm/chats/service"
 )
 
 type ChatModule struct {

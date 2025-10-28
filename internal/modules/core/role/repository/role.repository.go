@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"lakukan-be/internal/modules/core/role/domain"
+	"venturo-skeleton-go/internal/modules/core/role/domain"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"

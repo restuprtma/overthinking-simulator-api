@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"lakukan-be/internal/modules/core/role/domain"
+	"venturo-skeleton-go/internal/modules/core/role/domain"
 )
 
 type RoleModuleTemplateRepository struct {

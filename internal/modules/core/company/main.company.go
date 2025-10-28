@@ -1,10 +1,10 @@
 package company
 
 import (
-	"lakukan-be/internal/middleware"
-	"lakukan-be/internal/modules/core/company/handler"
-	"lakukan-be/internal/modules/core/company/repository"
-	"lakukan-be/internal/modules/core/company/service"
+	"venturo-skeleton-go/internal/middleware"
+	"venturo-skeleton-go/internal/modules/core/company/handler"
+	"venturo-skeleton-go/internal/modules/core/company/repository"
+	"venturo-skeleton-go/internal/modules/core/company/service"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"

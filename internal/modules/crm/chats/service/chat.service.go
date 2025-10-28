@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"lakukan-be/internal/modules/crm/chats/domain"
-	"lakukan-be/internal/modules/crm/chats/dto"
-	"lakukan-be/internal/modules/crm/chats/repository"
-	webhooksDto "lakukan-be/internal/modules/crm/webhooks/dto"
-	"lakukan-be/pkg/logger"
+	"venturo-skeleton-go/internal/modules/crm/chats/domain"
+	"venturo-skeleton-go/internal/modules/crm/chats/dto"
+	"venturo-skeleton-go/internal/modules/crm/chats/repository"
+	webhooksDto "venturo-skeleton-go/internal/modules/crm/webhooks/dto"
+	"venturo-skeleton-go/pkg/logger"
 )
 
 var (

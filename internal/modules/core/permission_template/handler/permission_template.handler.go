@@ -6,10 +6,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"lakukan-be/internal/middleware"
-	"lakukan-be/internal/modules/core/permission_template/dto"
-	"lakukan-be/internal/modules/core/permission_template/service"
-	"lakukan-be/internal/shared/response"
+	"venturo-skeleton-go/internal/middleware"
+	"venturo-skeleton-go/internal/modules/core/permission_template/dto"
+	"venturo-skeleton-go/internal/modules/core/permission_template/service"
+	"venturo-skeleton-go/internal/shared/response"
 )
 
 type PermissionTemplateHandler struct {

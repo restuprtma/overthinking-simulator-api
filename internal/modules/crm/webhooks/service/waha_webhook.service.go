@@ -9,13 +9,13 @@ import (
 	"strings"
 	"time"
 
-	"lakukan-be/internal/config"
-	"lakukan-be/internal/modules/crm/chats/service"
-	salesPersonsRepo "lakukan-be/internal/modules/crm/sales_persons/repository"
-	salesPersonsService "lakukan-be/internal/modules/crm/sales_persons/service"
-	"lakukan-be/internal/modules/crm/webhooks/dto"
-	"lakukan-be/pkg/logger"
-	"lakukan-be/pkg/waha"
+	"venturo-skeleton-go/internal/config"
+	"venturo-skeleton-go/internal/modules/crm/chats/service"
+	salesPersonsRepo "venturo-skeleton-go/internal/modules/crm/sales_persons/repository"
+	salesPersonsService "venturo-skeleton-go/internal/modules/crm/sales_persons/service"
+	"venturo-skeleton-go/internal/modules/crm/webhooks/dto"
+	"venturo-skeleton-go/pkg/logger"
+	"venturo-skeleton-go/pkg/waha"
 )
 
 type WAHAWebhookService struct {

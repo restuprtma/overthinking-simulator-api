@@ -3,14 +3,14 @@ package webhooks
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"lakukan-be/internal/config"
-	chatsService "lakukan-be/internal/modules/crm/chats/service"
-	salesPersonsRepo "lakukan-be/internal/modules/crm/sales_persons/repository"
-	salesPersonsService "lakukan-be/internal/modules/crm/sales_persons/service"
-	"lakukan-be/internal/modules/crm/webhooks/handler"
-	"lakukan-be/internal/modules/crm/webhooks/service"
+	"venturo-skeleton-go/internal/config"
+	chatsService "venturo-skeleton-go/internal/modules/crm/chats/service"
+	salesPersonsRepo "venturo-skeleton-go/internal/modules/crm/sales_persons/repository"
+	salesPersonsService "venturo-skeleton-go/internal/modules/crm/sales_persons/service"
+	"venturo-skeleton-go/internal/modules/crm/webhooks/handler"
+	"venturo-skeleton-go/internal/modules/crm/webhooks/service"
 
-	chatsRepo "lakukan-be/internal/modules/crm/chats/repository"
+	chatsRepo "venturo-skeleton-go/internal/modules/crm/chats/repository"
 )
 
 type WebhooksModule struct {

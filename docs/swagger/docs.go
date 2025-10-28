@@ -44,7 +44,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_core_auth_dto.RefreshTokenRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_auth_dto.RefreshTokenRequest"
                         }
                     }
                 ],
@@ -54,13 +54,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_auth_dto.RefreshTokenResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_auth_dto.RefreshTokenResponse"
                                         }
                                     }
                                 }
@@ -70,19 +70,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request payload",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "401": {
                         "description": "Invalid or expired refresh token",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -108,7 +108,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_core_auth_dto.ResendVerificationRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_auth_dto.ResendVerificationRequest"
                         }
                     }
                 ],
@@ -118,13 +118,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_auth_dto.ResendVerificationResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_auth_dto.ResendVerificationResponse"
                                         }
                                     }
                                 }
@@ -134,13 +134,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request or limit reached",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -166,7 +166,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_core_auth_dto.RevokeTokenRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_auth_dto.RevokeTokenRequest"
                         }
                     }
                 ],
@@ -176,13 +176,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_auth_dto.RevokeTokenResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_auth_dto.RevokeTokenResponse"
                                         }
                                     }
                                 }
@@ -192,13 +192,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request payload",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -224,7 +224,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_core_auth_dto.SignInRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_auth_dto.SignInRequest"
                         }
                     }
                 ],
@@ -234,13 +234,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_auth_dto.SignInResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_auth_dto.SignInResponse"
                                         }
                                     }
                                 }
@@ -250,19 +250,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request payload",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "401": {
                         "description": "Invalid credentials or user not active",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -288,7 +288,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_core_auth_dto.SignUpRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_auth_dto.SignUpRequest"
                         }
                     }
                 ],
@@ -298,13 +298,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_auth_dto.SignUpResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_auth_dto.SignUpResponse"
                                         }
                                     }
                                 }
@@ -314,19 +314,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request payload or validation error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "409": {
                         "description": "Email or username already exists",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -352,7 +352,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_core_auth_dto.VerifyEmailRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_auth_dto.VerifyEmailRequest"
                         }
                     }
                 ],
@@ -362,13 +362,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_auth_dto.VerifyEmailResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_auth_dto.VerifyEmailResponse"
                                         }
                                     }
                                 }
@@ -378,13 +378,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid token or already verified",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -448,13 +448,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_company_dto.CompanyListResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_company_dto.CompanyListResponse"
                                         }
                                     }
                                 }
@@ -464,13 +464,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid query parameters",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -499,7 +499,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_core_company_dto.CreateCompanyRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_company_dto.CreateCompanyRequest"
                         }
                     }
                 ],
@@ -509,13 +509,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_company_dto.CompanyResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_company_dto.CompanyResponse"
                                         }
                                     }
                                 }
@@ -525,19 +525,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request payload",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "409": {
                         "description": "Company code already exists",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -576,13 +576,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_company_dto.CompanyResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_company_dto.CompanyResponse"
                                         }
                                     }
                                 }
@@ -592,13 +592,13 @@ const docTemplate = `{
                     "404": {
                         "description": "Company not found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -634,7 +634,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_core_company_dto.UpdateCompanyRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_company_dto.UpdateCompanyRequest"
                         }
                     }
                 ],
@@ -644,13 +644,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_company_dto.CompanyResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_company_dto.CompanyResponse"
                                         }
                                     }
                                 }
@@ -660,19 +660,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request payload",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Company not found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -707,19 +707,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Company deleted successfully",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Company not found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -784,13 +784,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_company_dto.CompanyUserListResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_company_dto.CompanyUserListResponse"
                                         }
                                     }
                                 }
@@ -800,13 +800,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid query parameters",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -842,7 +842,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_core_company_dto.AddUserToCompanyRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_company_dto.AddUserToCompanyRequest"
                         }
                     }
                 ],
@@ -852,13 +852,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_company_dto.CompanyUserResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_company_dto.CompanyUserResponse"
                                         }
                                     }
                                 }
@@ -868,25 +868,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request payload",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Company not found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "409": {
                         "description": "User already in company or max users reached",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -931,7 +931,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_core_company_dto.UpdateCompanyUserRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_company_dto.UpdateCompanyUserRequest"
                         }
                     }
                 ],
@@ -941,13 +941,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_company_dto.CompanyUserResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_company_dto.CompanyUserResponse"
                                         }
                                     }
                                 }
@@ -957,19 +957,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request payload",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "User not in company",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -1011,25 +1011,25 @@ const docTemplate = `{
                     "200": {
                         "description": "User removed from company successfully",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Cannot remove primary owner",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "User not in company",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -1059,13 +1059,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_auth_dto.GetUserCompaniesResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_auth_dto.GetUserCompaniesResponse"
                                         }
                                     }
                                 }
@@ -1075,13 +1075,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized - Invalid or missing authentication token",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -1112,7 +1112,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_core_auth_dto.SwitchCompanyRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_auth_dto.SwitchCompanyRequest"
                         }
                     }
                 ],
@@ -1122,13 +1122,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_auth_dto.SwitchCompanyResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_auth_dto.SwitchCompanyResponse"
                                         }
                                     }
                                 }
@@ -1138,31 +1138,31 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request payload - Missing or invalid company_id",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "401": {
                         "description": "Unauthorized - Invalid or missing authentication token",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "403": {
                         "description": "Forbidden - User is not a member of this company",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Not Found - Company not found or user not found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -1218,19 +1218,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Lead sources retrieved successfully",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Invalid query parameters",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -1259,7 +1259,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_crm_lead_sources_dto.CreateLeadSourceRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_crm_lead_sources_dto.CreateLeadSourceRequest"
                         }
                     }
                 ],
@@ -1267,25 +1267,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Lead source created successfully",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Invalid request body",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "409": {
                         "description": "Lead source code already exists",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -1322,19 +1322,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Lead source retrieved successfully",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Lead source not found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -1370,7 +1370,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_crm_lead_sources_dto.UpdateLeadSourceRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_crm_lead_sources_dto.UpdateLeadSourceRequest"
                         }
                     }
                 ],
@@ -1378,31 +1378,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Lead source updated successfully",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Invalid request body",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Lead source not found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "409": {
                         "description": "Lead source code already exists",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -1437,19 +1437,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Lead source deleted successfully",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Lead source not found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -1486,19 +1486,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Lead source restored successfully",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Lead source not found or not deleted",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -1560,19 +1560,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -1601,7 +1601,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_crm_auto_reply_rules_dto.CreateAutoReplyRuleRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_crm_auto_reply_rules_dto.CreateAutoReplyRuleRequest"
                         }
                     }
                 ],
@@ -1609,19 +1609,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -1658,25 +1658,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -1712,7 +1712,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_crm_auto_reply_rules_dto.UpdateAutoReplyRuleRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_crm_auto_reply_rules_dto.UpdateAutoReplyRuleRequest"
                         }
                     }
                 ],
@@ -1720,25 +1720,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -1773,25 +1773,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -1828,25 +1828,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -1920,19 +1920,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -1961,7 +1961,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_crm_chats_dto.CreateChatRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_crm_chats_dto.CreateChatRequest"
                         }
                     }
                 ],
@@ -1969,19 +1969,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -2018,25 +2018,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -2110,19 +2110,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -2151,7 +2151,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_crm_leads_dto.CreateLeadRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_crm_leads_dto.CreateLeadRequest"
                         }
                     }
                 ],
@@ -2159,25 +2159,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -2214,25 +2214,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -2268,7 +2268,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_crm_leads_dto.UpdateLeadRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_crm_leads_dto.UpdateLeadRequest"
                         }
                     }
                 ],
@@ -2276,31 +2276,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -2335,25 +2335,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -2390,25 +2390,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -2476,19 +2476,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -2517,7 +2517,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_crm_sales_persons_dto.CreateSalesPersonRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_crm_sales_persons_dto.CreateSalesPersonRequest"
                         }
                     }
                 ],
@@ -2525,25 +2525,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -2580,25 +2580,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -2634,7 +2634,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_crm_sales_persons_dto.UpdateSalesPersonRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_crm_sales_persons_dto.UpdateSalesPersonRequest"
                         }
                     }
                 ],
@@ -2642,31 +2642,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -2701,25 +2701,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -2756,25 +2756,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -2813,13 +2813,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_crm_sales_persons_dto.ConnectWhatsAppResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_crm_sales_persons_dto.ConnectWhatsAppResponse"
                                         }
                                     }
                                 }
@@ -2829,25 +2829,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -2884,7 +2884,7 @@ const docTemplate = `{
                         "name": "body",
                         "in": "body",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_crm_sales_persons_dto.DisconnectWhatsAppRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_crm_sales_persons_dto.DisconnectWhatsAppRequest"
                         }
                     }
                 ],
@@ -2892,25 +2892,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -2947,25 +2947,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -3004,13 +3004,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_crm_sales_persons_dto.WhatsAppStatusResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_crm_sales_persons_dto.WhatsAppStatusResponse"
                                         }
                                     }
                                 }
@@ -3020,19 +3020,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -3060,19 +3060,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -3101,7 +3101,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_crm_company_settings_dto.UpdateCompanySettingsRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_crm_company_settings_dto.UpdateCompanySettingsRequest"
                         }
                     }
                 ],
@@ -3109,19 +3109,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -3165,7 +3165,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_crm_webhooks_dto.WAHAWebhookPayload"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_crm_webhooks_dto.WAHAWebhookPayload"
                         }
                     }
                 ],
@@ -3173,25 +3173,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -3249,13 +3249,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_permission_dto.ModuleListResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_permission_dto.ModuleListResponse"
                                         }
                                     }
                                 }
@@ -3265,13 +3265,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid query parameters",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -3300,7 +3300,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_core_permission_dto.CreateModuleRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_permission_dto.CreateModuleRequest"
                         }
                     }
                 ],
@@ -3310,13 +3310,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_permission_dto.ModuleDetailResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_permission_dto.ModuleDetailResponse"
                                         }
                                     }
                                 }
@@ -3326,19 +3326,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request body",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "409": {
                         "description": "Module code already exists",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -3368,7 +3368,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
@@ -3376,7 +3376,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/lakukan-be_internal_modules_core_permission_dto.ModuleWithSubModules"
+                                                "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_permission_dto.ModuleWithSubModules"
                                             }
                                         }
                                     }
@@ -3387,7 +3387,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -3426,13 +3426,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_permission_dto.ModuleDetailResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_permission_dto.ModuleDetailResponse"
                                         }
                                     }
                                 }
@@ -3442,13 +3442,13 @@ const docTemplate = `{
                     "404": {
                         "description": "Module not found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -3484,7 +3484,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_core_permission_dto.UpdateModuleRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_permission_dto.UpdateModuleRequest"
                         }
                     }
                 ],
@@ -3494,13 +3494,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_permission_dto.ModuleDetailResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_permission_dto.ModuleDetailResponse"
                                         }
                                     }
                                 }
@@ -3510,25 +3510,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request body",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Module not found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "409": {
                         "description": "Module code already exists",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -3563,19 +3563,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Module deleted successfully",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Module not found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -3646,13 +3646,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_permission_dto.PermissionListResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_permission_dto.PermissionListResponse"
                                         }
                                     }
                                 }
@@ -3662,13 +3662,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -3706,7 +3706,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_core_permission_dto.ApplyCRUDTemplateRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_permission_dto.ApplyCRUDTemplateRequest"
                         }
                     }
                 ],
@@ -3716,13 +3716,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_permission_dto.CRUDTemplateResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_permission_dto.CRUDTemplateResponse"
                                         }
                                     }
                                 }
@@ -3732,13 +3732,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -3775,19 +3775,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Module restored successfully",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Module not found or not deleted",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -3845,13 +3845,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_permission_template_dto.PermissionTemplateListResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_permission_template_dto.PermissionTemplateListResponse"
                                         }
                                     }
                                 }
@@ -3861,13 +3861,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -3896,7 +3896,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_core_permission_template_dto.CreatePermissionTemplateRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_permission_template_dto.CreatePermissionTemplateRequest"
                         }
                     }
                 ],
@@ -3906,13 +3906,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_permission_template_dto.PermissionTemplateResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_permission_template_dto.PermissionTemplateResponse"
                                         }
                                     }
                                 }
@@ -3922,19 +3922,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -3973,13 +3973,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_permission_template_dto.PermissionTemplateResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_permission_template_dto.PermissionTemplateResponse"
                                         }
                                     }
                                 }
@@ -3989,13 +3989,13 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -4031,7 +4031,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_core_permission_template_dto.UpdatePermissionTemplateRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_permission_template_dto.UpdatePermissionTemplateRequest"
                         }
                     }
                 ],
@@ -4041,13 +4041,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_permission_template_dto.PermissionTemplateResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_permission_template_dto.PermissionTemplateResponse"
                                         }
                                     }
                                 }
@@ -4057,31 +4057,31 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -4116,25 +4116,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -4171,13 +4171,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -4241,13 +4241,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_permission_dto.PermissionListResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_permission_dto.PermissionListResponse"
                                         }
                                     }
                                 }
@@ -4257,13 +4257,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid query parameters",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -4292,7 +4292,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_core_permission_dto.CreatePermissionRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_permission_dto.CreatePermissionRequest"
                         }
                     }
                 ],
@@ -4302,13 +4302,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_permission_dto.PermissionResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_permission_dto.PermissionResponse"
                                         }
                                     }
                                 }
@@ -4318,19 +4318,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request payload",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "409": {
                         "description": "Permission with this resource and action already exists",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -4360,7 +4360,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
@@ -4379,7 +4379,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -4418,13 +4418,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_permission_dto.PermissionResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_permission_dto.PermissionResponse"
                                         }
                                     }
                                 }
@@ -4434,13 +4434,13 @@ const docTemplate = `{
                     "404": {
                         "description": "Permission not found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -4476,7 +4476,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_core_permission_dto.UpdatePermissionRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_permission_dto.UpdatePermissionRequest"
                         }
                     }
                 ],
@@ -4486,13 +4486,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_permission_dto.PermissionResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_permission_dto.PermissionResponse"
                                         }
                                     }
                                 }
@@ -4502,25 +4502,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request payload",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Permission not found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "409": {
                         "description": "Permission with this resource and action already exists",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -4555,19 +4555,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Permission deleted successfully",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Permission not found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -4626,13 +4626,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_role_dto.RoleListResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_role_dto.RoleListResponse"
                                         }
                                     }
                                 }
@@ -4642,13 +4642,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid query parameters",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -4677,7 +4677,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_core_role_dto.CreateRoleRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_role_dto.CreateRoleRequest"
                         }
                     }
                 ],
@@ -4687,13 +4687,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_role_dto.RoleResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_role_dto.RoleResponse"
                                         }
                                     }
                                 }
@@ -4703,19 +4703,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request payload",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "409": {
                         "description": "Role name already exists",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -4754,13 +4754,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_role_dto.RoleResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_role_dto.RoleResponse"
                                         }
                                     }
                                 }
@@ -4770,13 +4770,13 @@ const docTemplate = `{
                     "404": {
                         "description": "Role not found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -4812,7 +4812,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_core_role_dto.UpdateRoleRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_role_dto.UpdateRoleRequest"
                         }
                     }
                 ],
@@ -4822,13 +4822,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_role_dto.RoleResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_role_dto.RoleResponse"
                                         }
                                     }
                                 }
@@ -4838,31 +4838,31 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request payload",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "403": {
                         "description": "Cannot modify system role",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Role not found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "409": {
                         "description": "Role name already exists",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -4897,25 +4897,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Role deleted successfully",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "403": {
                         "description": "Cannot delete system role",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Role not found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -4954,13 +4954,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_role_dto.RoleWithPermissionsResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_role_dto.RoleWithPermissionsResponse"
                                         }
                                     }
                                 }
@@ -4970,13 +4970,13 @@ const docTemplate = `{
                     "404": {
                         "description": "Role not found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -5012,7 +5012,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_core_role_dto.AssignPermissionsRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_role_dto.AssignPermissionsRequest"
                         }
                     }
                 ],
@@ -5020,31 +5020,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Permissions assigned successfully",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Invalid request payload",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "403": {
                         "description": "Cannot modify system role",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Role not found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -5088,25 +5088,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Permission added successfully",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "403": {
                         "description": "Cannot modify system role",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Role not found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -5148,25 +5148,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Permission removed successfully",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "403": {
                         "description": "Cannot modify system role",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "Role not found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -5205,13 +5205,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_role_dto.RoleResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_role_dto.RoleResponse"
                                         }
                                     }
                                 }
@@ -5221,13 +5221,13 @@ const docTemplate = `{
                     "404": {
                         "description": "Role not found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -5303,13 +5303,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_user_dto.UserListResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_user_dto.UserListResponse"
                                         }
                                     }
                                 }
@@ -5319,13 +5319,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid query parameters",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -5354,7 +5354,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_core_user_dto.CreateUserRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_user_dto.CreateUserRequest"
                         }
                     }
                 ],
@@ -5364,13 +5364,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_user_dto.UserResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_user_dto.UserResponse"
                                         }
                                     }
                                 }
@@ -5380,19 +5380,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request payload",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "409": {
                         "description": "Email or username already exists",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -5431,13 +5431,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_user_dto.UserResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_user_dto.UserResponse"
                                         }
                                     }
                                 }
@@ -5447,13 +5447,13 @@ const docTemplate = `{
                     "404": {
                         "description": "User not found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -5489,7 +5489,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_core_user_dto.UpdateUserRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_user_dto.UpdateUserRequest"
                         }
                     }
                 ],
@@ -5499,13 +5499,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_user_dto.UserResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_user_dto.UserResponse"
                                         }
                                     }
                                 }
@@ -5515,25 +5515,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request payload",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "User not found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "409": {
                         "description": "Email or username already exists",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -5568,19 +5568,19 @@ const docTemplate = `{
                     "200": {
                         "description": "User deleted successfully",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "User not found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -5618,7 +5618,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_core_user_dto.ChangePasswordRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_user_dto.ChangePasswordRequest"
                         }
                     }
                 ],
@@ -5626,37 +5626,37 @@ const docTemplate = `{
                     "200": {
                         "description": "Password changed successfully",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "400": {
                         "description": "Invalid request payload",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "401": {
                         "description": "Invalid old password",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "403": {
                         "description": "Forbidden - Cannot change other user's password",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "User not found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -5695,13 +5695,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_user_dto.UserResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_user_dto.UserResponse"
                                         }
                                     }
                                 }
@@ -5711,13 +5711,13 @@ const docTemplate = `{
                     "404": {
                         "description": "User not found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -5755,7 +5755,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_core_user_dto.SyncRolesRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_user_dto.SyncRolesRequest"
                         }
                     }
                 ],
@@ -5765,13 +5765,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_user_dto.UserResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_user_dto.UserResponse"
                                         }
                                     }
                                 }
@@ -5781,19 +5781,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request payload",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "User not found or invalid role ID",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -5829,7 +5829,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_core_user_dto.AssignRolesRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_user_dto.AssignRolesRequest"
                         }
                     }
                 ],
@@ -5839,13 +5839,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_user_dto.UserResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_user_dto.UserResponse"
                                         }
                                     }
                                 }
@@ -5855,19 +5855,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request payload",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "404": {
                         "description": "User not found or invalid role ID",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -5913,13 +5913,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/lakukan-be_internal_modules_core_user_dto.UserResponse"
+                                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_user_dto.UserResponse"
                                         }
                                     }
                                 }
@@ -5929,13 +5929,13 @@ const docTemplate = `{
                     "404": {
                         "description": "User not found or role not found",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/lakukan-be_internal_shared_response.Response"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Response"
                         }
                     }
                 }
@@ -5943,7 +5943,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "lakukan-be_internal_modules_core_auth_dto.CompanyInfo": {
+        "venturo-skeleton-go_internal_modules_core_auth_dto.CompanyInfo": {
             "type": "object",
             "properties": {
                 "code": {
@@ -5968,19 +5968,19 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_auth_dto.GetUserCompaniesResponse": {
+        "venturo-skeleton-go_internal_modules_core_auth_dto.GetUserCompaniesResponse": {
             "type": "object",
             "properties": {
                 "companies": {
                     "description": "List of companies the user is a member of",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/lakukan-be_internal_modules_core_auth_dto.CompanyInfo"
+                        "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_auth_dto.CompanyInfo"
                     }
                 }
             }
         },
-        "lakukan-be_internal_modules_core_auth_dto.RefreshTokenRequest": {
+        "venturo-skeleton-go_internal_modules_core_auth_dto.RefreshTokenRequest": {
             "type": "object",
             "required": [
                 "refresh_token"
@@ -5991,7 +5991,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_auth_dto.RefreshTokenResponse": {
+        "venturo-skeleton-go_internal_modules_core_auth_dto.RefreshTokenResponse": {
             "type": "object",
             "properties": {
                 "access_token": {
@@ -6008,7 +6008,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_auth_dto.ResendVerificationRequest": {
+        "venturo-skeleton-go_internal_modules_core_auth_dto.ResendVerificationRequest": {
             "type": "object",
             "required": [
                 "email"
@@ -6019,7 +6019,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_auth_dto.ResendVerificationResponse": {
+        "venturo-skeleton-go_internal_modules_core_auth_dto.ResendVerificationResponse": {
             "type": "object",
             "properties": {
                 "message": {
@@ -6027,7 +6027,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_auth_dto.RevokeTokenRequest": {
+        "venturo-skeleton-go_internal_modules_core_auth_dto.RevokeTokenRequest": {
             "type": "object",
             "required": [
                 "refresh_token"
@@ -6038,7 +6038,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_auth_dto.RevokeTokenResponse": {
+        "venturo-skeleton-go_internal_modules_core_auth_dto.RevokeTokenResponse": {
             "type": "object",
             "properties": {
                 "message": {
@@ -6046,7 +6046,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_auth_dto.SignInRequest": {
+        "venturo-skeleton-go_internal_modules_core_auth_dto.SignInRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -6063,7 +6063,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_auth_dto.SignInResponse": {
+        "venturo-skeleton-go_internal_modules_core_auth_dto.SignInResponse": {
             "type": "object",
             "properties": {
                 "access_token": {
@@ -6081,7 +6081,7 @@ const docTemplate = `{
                 "user": {}
             }
         },
-        "lakukan-be_internal_modules_core_auth_dto.SignUpRequest": {
+        "venturo-skeleton-go_internal_modules_core_auth_dto.SignUpRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -6107,7 +6107,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_auth_dto.SignUpResponse": {
+        "venturo-skeleton-go_internal_modules_core_auth_dto.SignUpResponse": {
             "type": "object",
             "properties": {
                 "message": {
@@ -6116,7 +6116,7 @@ const docTemplate = `{
                 "user": {}
             }
         },
-        "lakukan-be_internal_modules_core_auth_dto.SwitchCompanyRequest": {
+        "venturo-skeleton-go_internal_modules_core_auth_dto.SwitchCompanyRequest": {
             "type": "object",
             "required": [
                 "company_id"
@@ -6129,7 +6129,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_auth_dto.SwitchCompanyResponse": {
+        "venturo-skeleton-go_internal_modules_core_auth_dto.SwitchCompanyResponse": {
             "type": "object",
             "properties": {
                 "access_token": {
@@ -6161,7 +6161,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_auth_dto.VerifyEmailRequest": {
+        "venturo-skeleton-go_internal_modules_core_auth_dto.VerifyEmailRequest": {
             "type": "object",
             "required": [
                 "token"
@@ -6172,7 +6172,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_auth_dto.VerifyEmailResponse": {
+        "venturo-skeleton-go_internal_modules_core_auth_dto.VerifyEmailResponse": {
             "type": "object",
             "properties": {
                 "message": {
@@ -6180,7 +6180,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_company_dto.AddUserToCompanyRequest": {
+        "venturo-skeleton-go_internal_modules_core_company_dto.AddUserToCompanyRequest": {
             "type": "object",
             "required": [
                 "user_id"
@@ -6205,13 +6205,13 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_company_dto.CompanyListResponse": {
+        "venturo-skeleton-go_internal_modules_core_company_dto.CompanyListResponse": {
             "type": "object",
             "properties": {
                 "companies": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/lakukan-be_internal_modules_core_company_dto.CompanyResponse"
+                        "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_company_dto.CompanyResponse"
                     }
                 },
                 "page": {
@@ -6228,7 +6228,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_company_dto.CompanyResponse": {
+        "venturo-skeleton-go_internal_modules_core_company_dto.CompanyResponse": {
             "type": "object",
             "properties": {
                 "address": {
@@ -6293,7 +6293,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_company_dto.CompanyUserListResponse": {
+        "venturo-skeleton-go_internal_modules_core_company_dto.CompanyUserListResponse": {
             "type": "object",
             "properties": {
                 "page": {
@@ -6311,12 +6311,12 @@ const docTemplate = `{
                 "users": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/lakukan-be_internal_modules_core_company_dto.CompanyUserResponse"
+                        "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_company_dto.CompanyUserResponse"
                     }
                 }
             }
         },
-        "lakukan-be_internal_modules_core_company_dto.CompanyUserResponse": {
+        "venturo-skeleton-go_internal_modules_core_company_dto.CompanyUserResponse": {
             "type": "object",
             "properties": {
                 "company_id": {
@@ -6376,7 +6376,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_company_dto.CreateCompanyRequest": {
+        "venturo-skeleton-go_internal_modules_core_company_dto.CreateCompanyRequest": {
             "type": "object",
             "required": [
                 "code",
@@ -6433,7 +6433,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_company_dto.UpdateCompanyRequest": {
+        "venturo-skeleton-go_internal_modules_core_company_dto.UpdateCompanyRequest": {
             "type": "object",
             "properties": {
                 "address": {
@@ -6484,7 +6484,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_company_dto.UpdateCompanyUserRequest": {
+        "venturo-skeleton-go_internal_modules_core_company_dto.UpdateCompanyUserRequest": {
             "type": "object",
             "properties": {
                 "is_active": {
@@ -6506,7 +6506,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_permission_dto.ApplyCRUDTemplateRequest": {
+        "venturo-skeleton-go_internal_modules_core_permission_dto.ApplyCRUDTemplateRequest": {
             "type": "object",
             "required": [
                 "resource"
@@ -6523,13 +6523,13 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_permission_dto.CRUDTemplateResponse": {
+        "venturo-skeleton-go_internal_modules_core_permission_dto.CRUDTemplateResponse": {
             "type": "object",
             "properties": {
                 "created": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/lakukan-be_internal_modules_core_permission_dto.PermissionResponse"
+                        "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_permission_dto.PermissionResponse"
                     }
                 },
                 "skipped": {
@@ -6544,7 +6544,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_permission_dto.CreateModuleRequest": {
+        "venturo-skeleton-go_internal_modules_core_permission_dto.CreateModuleRequest": {
             "type": "object",
             "required": [
                 "code",
@@ -6610,7 +6610,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_permission_dto.CreatePermissionRequest": {
+        "venturo-skeleton-go_internal_modules_core_permission_dto.CreatePermissionRequest": {
             "type": "object",
             "required": [
                 "action",
@@ -6637,7 +6637,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_permission_dto.ModuleDetailResponse": {
+        "venturo-skeleton-go_internal_modules_core_permission_dto.ModuleDetailResponse": {
             "type": "object",
             "properties": {
                 "code": {
@@ -6719,13 +6719,13 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_permission_dto.ModuleListResponse": {
+        "venturo-skeleton-go_internal_modules_core_permission_dto.ModuleListResponse": {
             "type": "object",
             "properties": {
                 "modules": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/lakukan-be_internal_modules_core_permission_dto.ModuleDetailResponse"
+                        "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_permission_dto.ModuleDetailResponse"
                     }
                 },
                 "page": {
@@ -6742,7 +6742,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_permission_dto.ModuleResponse": {
+        "venturo-skeleton-go_internal_modules_core_permission_dto.ModuleResponse": {
             "type": "object",
             "properties": {
                 "code": {
@@ -6771,14 +6771,14 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_permission_dto.ModuleWithSubModules": {
+        "venturo-skeleton-go_internal_modules_core_permission_dto.ModuleWithSubModules": {
             "type": "object",
             "properties": {
                 "module": {
                     "description": "Root module (depth = 0)",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_core_permission_dto.ModuleDetailResponse"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_permission_dto.ModuleDetailResponse"
                         }
                     ]
                 },
@@ -6786,12 +6786,12 @@ const docTemplate = `{
                     "description": "Sub-modules belonging to this module, ordered by depth and sort_order",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/lakukan-be_internal_modules_core_permission_dto.ModuleDetailResponse"
+                        "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_permission_dto.ModuleDetailResponse"
                     }
                 }
             }
         },
-        "lakukan-be_internal_modules_core_permission_dto.PermissionListResponse": {
+        "venturo-skeleton-go_internal_modules_core_permission_dto.PermissionListResponse": {
             "type": "object",
             "properties": {
                 "page": {
@@ -6803,7 +6803,7 @@ const docTemplate = `{
                 "permissions": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/lakukan-be_internal_modules_core_permission_dto.PermissionResponse"
+                        "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_permission_dto.PermissionResponse"
                     }
                 },
                 "total": {
@@ -6814,7 +6814,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_permission_dto.PermissionResponse": {
+        "venturo-skeleton-go_internal_modules_core_permission_dto.PermissionResponse": {
             "type": "object",
             "properties": {
                 "action": {
@@ -6839,7 +6839,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "module": {
-                    "$ref": "#/definitions/lakukan-be_internal_modules_core_permission_dto.ModuleResponse"
+                    "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_permission_dto.ModuleResponse"
                 },
                 "module_id": {
                     "type": "string"
@@ -6855,7 +6855,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_permission_dto.UpdateModuleRequest": {
+        "venturo-skeleton-go_internal_modules_core_permission_dto.UpdateModuleRequest": {
             "type": "object",
             "properties": {
                 "code": {
@@ -6917,7 +6917,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_permission_dto.UpdatePermissionRequest": {
+        "venturo-skeleton-go_internal_modules_core_permission_dto.UpdatePermissionRequest": {
             "type": "object",
             "properties": {
                 "action": {
@@ -6939,7 +6939,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_permission_template_dto.CreatePermissionTemplateRequest": {
+        "venturo-skeleton-go_internal_modules_core_permission_template_dto.CreatePermissionTemplateRequest": {
             "type": "object",
             "required": [
                 "actions",
@@ -6964,7 +6964,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_permission_template_dto.PermissionTemplateListResponse": {
+        "venturo-skeleton-go_internal_modules_core_permission_template_dto.PermissionTemplateListResponse": {
             "type": "object",
             "properties": {
                 "page": {
@@ -6976,7 +6976,7 @@ const docTemplate = `{
                 "templates": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/lakukan-be_internal_modules_core_permission_template_dto.PermissionTemplateResponse"
+                        "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_permission_template_dto.PermissionTemplateResponse"
                     }
                 },
                 "total": {
@@ -6987,7 +6987,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_permission_template_dto.PermissionTemplateResponse": {
+        "venturo-skeleton-go_internal_modules_core_permission_template_dto.PermissionTemplateResponse": {
             "type": "object",
             "properties": {
                 "actions": {
@@ -7028,7 +7028,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_permission_template_dto.UpdatePermissionTemplateRequest": {
+        "venturo-skeleton-go_internal_modules_core_permission_template_dto.UpdatePermissionTemplateRequest": {
             "type": "object",
             "required": [
                 "actions",
@@ -7053,7 +7053,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_role_dto.AssignPermissionsRequest": {
+        "venturo-skeleton-go_internal_modules_core_role_dto.AssignPermissionsRequest": {
             "type": "object",
             "required": [
                 "permission_ids"
@@ -7068,7 +7068,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_role_dto.CreateRoleRequest": {
+        "venturo-skeleton-go_internal_modules_core_role_dto.CreateRoleRequest": {
             "type": "object",
             "required": [
                 "name"
@@ -7099,7 +7099,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_role_dto.PermissionResponse": {
+        "venturo-skeleton-go_internal_modules_core_role_dto.PermissionResponse": {
             "type": "object",
             "properties": {
                 "action": {
@@ -7116,7 +7116,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_role_dto.RoleListResponse": {
+        "venturo-skeleton-go_internal_modules_core_role_dto.RoleListResponse": {
             "type": "object",
             "properties": {
                 "page": {
@@ -7128,7 +7128,7 @@ const docTemplate = `{
                 "roles": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/lakukan-be_internal_modules_core_role_dto.RoleResponse"
+                        "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_role_dto.RoleResponse"
                     }
                 },
                 "total": {
@@ -7139,7 +7139,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_role_dto.RoleModuleTemplateResponse": {
+        "venturo-skeleton-go_internal_modules_core_role_dto.RoleModuleTemplateResponse": {
             "type": "object",
             "properties": {
                 "module_code": {
@@ -7159,7 +7159,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_role_dto.RoleResponse": {
+        "venturo-skeleton-go_internal_modules_core_role_dto.RoleResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -7194,7 +7194,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_role_dto.RoleWithPermissionsResponse": {
+        "venturo-skeleton-go_internal_modules_core_role_dto.RoleWithPermissionsResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -7221,7 +7221,7 @@ const docTemplate = `{
                 "module_templates": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/lakukan-be_internal_modules_core_role_dto.RoleModuleTemplateResponse"
+                        "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_role_dto.RoleModuleTemplateResponse"
                     }
                 },
                 "name": {
@@ -7230,7 +7230,7 @@ const docTemplate = `{
                 "permissions": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/lakukan-be_internal_modules_core_role_dto.PermissionResponse"
+                        "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_role_dto.PermissionResponse"
                     }
                 },
                 "updated_at": {
@@ -7241,7 +7241,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_role_dto.UpdateRoleRequest": {
+        "venturo-skeleton-go_internal_modules_core_role_dto.UpdateRoleRequest": {
             "type": "object",
             "properties": {
                 "description": {
@@ -7269,7 +7269,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_user_dto.AssignRolesRequest": {
+        "venturo-skeleton-go_internal_modules_core_user_dto.AssignRolesRequest": {
             "type": "object",
             "required": [
                 "role_ids"
@@ -7284,7 +7284,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_user_dto.ChangePasswordRequest": {
+        "venturo-skeleton-go_internal_modules_core_user_dto.ChangePasswordRequest": {
             "type": "object",
             "required": [
                 "new_password",
@@ -7301,7 +7301,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_user_dto.CreateUserRequest": {
+        "venturo-skeleton-go_internal_modules_core_user_dto.CreateUserRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -7341,7 +7341,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_user_dto.RoleInfo": {
+        "venturo-skeleton-go_internal_modules_core_user_dto.RoleInfo": {
             "type": "object",
             "properties": {
                 "description": {
@@ -7358,7 +7358,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_user_dto.SyncRolesRequest": {
+        "venturo-skeleton-go_internal_modules_core_user_dto.SyncRolesRequest": {
             "type": "object",
             "required": [
                 "role_ids"
@@ -7373,7 +7373,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_user_dto.UpdateUserRequest": {
+        "venturo-skeleton-go_internal_modules_core_user_dto.UpdateUserRequest": {
             "type": "object",
             "properties": {
                 "email": {
@@ -7406,7 +7406,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_core_user_dto.UserListResponse": {
+        "venturo-skeleton-go_internal_modules_core_user_dto.UserListResponse": {
             "type": "object",
             "properties": {
                 "page": {
@@ -7424,12 +7424,12 @@ const docTemplate = `{
                 "users": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/lakukan-be_internal_modules_core_user_dto.UserResponse"
+                        "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_user_dto.UserResponse"
                     }
                 }
             }
         },
-        "lakukan-be_internal_modules_core_user_dto.UserResponse": {
+        "venturo-skeleton-go_internal_modules_core_user_dto.UserResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -7468,7 +7468,7 @@ const docTemplate = `{
                 "roles": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/lakukan-be_internal_modules_core_user_dto.RoleInfo"
+                        "$ref": "#/definitions/venturo-skeleton-go_internal_modules_core_user_dto.RoleInfo"
                     }
                 },
                 "updated_at": {
@@ -7482,7 +7482,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_crm_auto_reply_rules_dto.CreateAutoReplyRuleRequest": {
+        "venturo-skeleton-go_internal_modules_crm_auto_reply_rules_dto.CreateAutoReplyRuleRequest": {
             "type": "object",
             "required": [
                 "message_template",
@@ -7530,7 +7530,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_crm_auto_reply_rules_dto.UpdateAutoReplyRuleRequest": {
+        "venturo-skeleton-go_internal_modules_crm_auto_reply_rules_dto.UpdateAutoReplyRuleRequest": {
             "type": "object",
             "properties": {
                 "conditions": {},
@@ -7571,7 +7571,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_crm_chats_dto.CreateChatMessageRequest": {
+        "venturo-skeleton-go_internal_modules_crm_chats_dto.CreateChatMessageRequest": {
             "type": "object",
             "required": [
                 "content",
@@ -7635,7 +7635,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_crm_chats_dto.CreateChatRequest": {
+        "venturo-skeleton-go_internal_modules_crm_chats_dto.CreateChatRequest": {
             "type": "object",
             "required": [
                 "customer_name",
@@ -7667,7 +7667,7 @@ const docTemplate = `{
                     "description": "First message info (optional, for creating chat with initial message)",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/lakukan-be_internal_modules_crm_chats_dto.CreateChatMessageRequest"
+                            "$ref": "#/definitions/venturo-skeleton-go_internal_modules_crm_chats_dto.CreateChatMessageRequest"
                         }
                     ]
                 },
@@ -7689,7 +7689,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_crm_company_settings_dto.UpdateCompanySettingsRequest": {
+        "venturo-skeleton-go_internal_modules_crm_company_settings_dto.UpdateCompanySettingsRequest": {
             "type": "object",
             "properties": {
                 "ai_confidence_threshold": {
@@ -7760,7 +7760,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_crm_lead_sources_dto.CreateLeadSourceRequest": {
+        "venturo-skeleton-go_internal_modules_crm_lead_sources_dto.CreateLeadSourceRequest": {
             "type": "object",
             "required": [
                 "code",
@@ -7798,7 +7798,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_crm_lead_sources_dto.UpdateLeadSourceRequest": {
+        "venturo-skeleton-go_internal_modules_crm_lead_sources_dto.UpdateLeadSourceRequest": {
             "type": "object",
             "properties": {
                 "code": {
@@ -7831,7 +7831,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_crm_leads_dto.CreateLeadRequest": {
+        "venturo-skeleton-go_internal_modules_crm_leads_dto.CreateLeadRequest": {
             "type": "object",
             "required": [
                 "category",
@@ -7909,7 +7909,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_crm_leads_dto.UpdateLeadRequest": {
+        "venturo-skeleton-go_internal_modules_crm_leads_dto.UpdateLeadRequest": {
             "type": "object",
             "properties": {
                 "address": {
@@ -7984,7 +7984,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_crm_sales_persons_dto.ConnectWhatsAppResponse": {
+        "venturo-skeleton-go_internal_modules_crm_sales_persons_dto.ConnectWhatsAppResponse": {
             "type": "object",
             "properties": {
                 "expires_at": {
@@ -8007,7 +8007,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_crm_sales_persons_dto.CreateSalesPersonRequest": {
+        "venturo-skeleton-go_internal_modules_crm_sales_persons_dto.CreateSalesPersonRequest": {
             "type": "object",
             "required": [
                 "company_user_id",
@@ -8054,7 +8054,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_crm_sales_persons_dto.DisconnectWhatsAppRequest": {
+        "venturo-skeleton-go_internal_modules_crm_sales_persons_dto.DisconnectWhatsAppRequest": {
             "type": "object",
             "properties": {
                 "logout": {
@@ -8063,7 +8063,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_crm_sales_persons_dto.UpdateSalesPersonRequest": {
+        "venturo-skeleton-go_internal_modules_crm_sales_persons_dto.UpdateSalesPersonRequest": {
             "type": "object",
             "properties": {
                 "commission_rate": {
@@ -8103,7 +8103,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_crm_sales_persons_dto.WhatsAppStatusResponse": {
+        "venturo-skeleton-go_internal_modules_crm_sales_persons_dto.WhatsAppStatusResponse": {
             "type": "object",
             "properties": {
                 "connected_at": {
@@ -8127,7 +8127,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_crm_webhooks_dto.WAHAMeInfo": {
+        "venturo-skeleton-go_internal_modules_crm_webhooks_dto.WAHAMeInfo": {
             "type": "object",
             "properties": {
                 "id": {
@@ -8138,7 +8138,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_modules_crm_webhooks_dto.WAHAWebhookPayload": {
+        "venturo-skeleton-go_internal_modules_crm_webhooks_dto.WAHAWebhookPayload": {
             "type": "object",
             "properties": {
                 "engine": {
@@ -8155,7 +8155,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "me": {
-                    "$ref": "#/definitions/lakukan-be_internal_modules_crm_webhooks_dto.WAHAMeInfo"
+                    "$ref": "#/definitions/venturo-skeleton-go_internal_modules_crm_webhooks_dto.WAHAMeInfo"
                 },
                 "metadata": {
                     "type": "object",
@@ -8175,15 +8175,15 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_shared_response.Meta": {
+        "venturo-skeleton-go_internal_shared_response.Meta": {
             "type": "object",
             "properties": {
                 "pagination": {
-                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Pagination"
+                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Pagination"
                 }
             }
         },
-        "lakukan-be_internal_shared_response.Pagination": {
+        "venturo-skeleton-go_internal_shared_response.Pagination": {
             "type": "object",
             "properties": {
                 "limit": {
@@ -8200,7 +8200,7 @@ const docTemplate = `{
                 }
             }
         },
-        "lakukan-be_internal_shared_response.Response": {
+        "venturo-skeleton-go_internal_shared_response.Response": {
             "type": "object",
             "properties": {
                 "data": {},
@@ -8217,7 +8217,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "meta": {
-                    "$ref": "#/definitions/lakukan-be_internal_shared_response.Meta"
+                    "$ref": "#/definitions/venturo-skeleton-go_internal_shared_response.Meta"
                 }
             }
         }

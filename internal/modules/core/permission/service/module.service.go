@@ -3,9 +3,9 @@ package service
 import (
 	"errors"
 
-	"lakukan-be/internal/modules/core/permission/domain"
-	"lakukan-be/internal/modules/core/permission/dto"
-	"lakukan-be/internal/modules/core/permission/repository"
+	"venturo-skeleton-go/internal/modules/core/permission/domain"
+	"venturo-skeleton-go/internal/modules/core/permission/dto"
+	"venturo-skeleton-go/internal/modules/core/permission/repository"
 )
 
 var (
