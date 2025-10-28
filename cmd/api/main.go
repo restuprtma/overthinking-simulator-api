@@ -10,14 +10,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// @title Lakukan API
+// @title Venturo Skeleton API
 // @version 1.0
-// @description Backend API untuk Lakukan - Multi-tenant Business Management Platform
+// @description Backend API Skeleton - Multi-tenant Business Management Platform
 // @termsOfService http://swagger.io/terms/
 
 // @contact.name API Support
-// @contact.url http://www.lakukan.com/support
-// @contact.email support@lakukan.com
+// @contact.url https://www.venturo.id/support
+// @contact.email support@venturo.id
 
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
@@ -40,7 +40,7 @@ func main() {
 	}
 	defer logger.Sync()
 
-	logger.Info("Starting Lakukan API")
+	logger.Info("Starting Venturo Skeleton API")
 
 	// Initialize database
 	db, err := database.New(cfg.Database.GetDSN())

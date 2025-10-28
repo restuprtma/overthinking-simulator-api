@@ -43,12 +43,12 @@ func NewSMTPEmailService() (*SMTPEmailService, error) {
 		Port:         port,
 		Username:     getEnv("SMTP_USER", ""),
 		Password:     getEnv("SMTP_PASSWORD", ""),
-		FromEmail:    getEnv("SMTP_FROM_EMAIL", "noreply@wizhub.com"),
-		FromName:     getEnv("SMTP_FROM_NAME", "Lakukan"),
+		FromEmail:    getEnv("SMTP_FROM_EMAIL", "noreply@venturo.id"),
+		FromName:     getEnv("SMTP_FROM_NAME", "Venturo Skeleton"),
 		FrontendURL:  getEnv("FRONTEND_URL", "http://localhost:3000"),
 		VerifyURL:    getEnv("EMAIL_VERIFICATION_URL", "http://localhost:3000/verify-email"),
 		ResetURL:     getEnv("RESET_PASSWORD_URL", "http://localhost:3000/reset-password"),
-		SupportEmail: getEnv("SUPPORT_EMAIL", "support@wizhub.com"),
+		SupportEmail: getEnv("SUPPORT_EMAIL", "support@venturo.id"),
 	}
 
 	return &SMTPEmailService{
@@ -62,7 +62,7 @@ func (s *SMTPEmailService) SendVerificationEmail(to, name, token string) error {
 
 	data := EmailData{
 		Name:            name,
-		AppName:         "Lakukan",
+		AppName:         "Venturo Skeleton",
 		AppURL:          s.config.FrontendURL,
 		VerificationURL: verificationURL,
 		SupportEmail:    s.config.SupportEmail,
@@ -75,7 +75,7 @@ func (s *SMTPEmailService) SendVerificationEmail(to, name, token string) error {
 		return err
 	}
 
-	subject := "Verify Your Email - Lakukan"
+	subject := "Verify Your Email - Venturo Skeleton"
 	return s.sendEmail(to, subject, body)
 }
 
@@ -98,7 +98,7 @@ func (s *SMTPEmailService) SendPasswordResetEmail(to, name, token string) error 
 		return err
 	}
 
-	subject := "Reset Your Password - Lakukan"
+	subject := "Reset Your Password - Venturo Skeleton"
 	return s.sendEmail(to, subject, body)
 }
 
@@ -138,7 +138,7 @@ func (s *SMTPEmailService) SendAccountLockedEmail(to, name string) error {
 		return err
 	}
 
-	subject := "Account Security Alert - Lakukan"
+	subject := "Account Security Alert - Venturo Skeleton"
 	return s.sendEmail(to, subject, body)
 }
 
@@ -158,7 +158,7 @@ func (s *SMTPEmailService) SendPasswordChangedEmail(to, name string) error {
 		return err
 	}
 
-	subject := "Password Changed Successfully - Lakukan"
+	subject := "Password Changed Successfully - Venturo Skeleton"
 	return s.sendEmail(to, subject, body)
 }
 

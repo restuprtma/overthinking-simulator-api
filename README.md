@@ -1,6 +1,6 @@
-# Lakukan Backend
+# Venturo Skeleton Go
 
-Backend API untuk Lakukan menggunakan Golang + Gin + PostgreSQL.
+Backend API Skeleton menggunakan Golang + Gin + PostgreSQL.
 
 ## Prerequisites
 
@@ -50,7 +50,7 @@ air -v
 
 ```bash
 # Buat database PostgreSQL
-createdb lakukan
+createdb venturo_skeleton
 
 # Copy .env.example ke .env dan sesuaikan konfigurasi
 cp .env.example .env
@@ -137,7 +137,7 @@ go run cmd/api/main.go
 make build
 
 # Run binary
-./bin/lakukan-api
+./bin/venturo-skeleton-api
 ```
 
 ## Development
@@ -217,7 +217,7 @@ curl http://localhost:8080/health
 curl -X POST http://localhost:8080/api/v1/auth/signin \
   -H "Content-Type: application/json" \
   -d '{
-    "login": "admin@lakukan.com",
+    "login": "admin@example.com",
     "password": "admin123"
   }'
 ```

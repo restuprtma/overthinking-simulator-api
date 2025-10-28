@@ -118,8 +118,8 @@ swagger-gen:
 
 build:
 	@echo "🔨 Building application..."
-	@go build -o bin/wizhub-api cmd/api/main.go
-	@echo "✅ Build completed: bin/wizhub-api"
+	@go build -o bin/venturo-skeleton-api cmd/api/main.go
+	@echo "✅ Build completed: bin/venturo-skeleton-api"
 
 run:
 	@echo "🚀 Running application..."

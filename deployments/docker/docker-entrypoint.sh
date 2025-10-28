@@ -70,7 +70,7 @@ run_migrations() {
 
 # Main execution
 echo "==================================="
-echo "Lakukan Backend - Starting up"
+echo "Venturo Skeleton Backend - Starting up"
 echo "==================================="
 echo ""
 echo "Database Configuration:"

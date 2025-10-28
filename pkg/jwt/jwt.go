@@ -22,7 +22,7 @@ func GetSecret() []byte {
 	if secret == "" {
 		// Default secret for development only
 		// In production, JWT_SECRET MUST be set in .env
-		secret = "wizhub-development-secret-change-in-production"
+		secret = "venturo-skeleton-development-secret-change-in-production"
 	}
 	return []byte(secret)
 }
@@ -60,7 +60,7 @@ func GenerateToken(userID, companyID, companyName, email, username string, fullN
 			ExpiresAt: jwt.NewNumericDate(now.Add(expirationTime)),
 			IssuedAt:  jwt.NewNumericDate(now),
 			NotBefore: jwt.NewNumericDate(now),
-			Issuer:    "lakukan-api",
+			Issuer:    "venturo-skeleton-api",
 			Subject:   userID,
 		},
 	}
