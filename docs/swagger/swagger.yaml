@@ -1,0 +1,5308 @@
+basePath: /core/v1
+definitions:
+  lakukan-be_internal_modules_core_auth_dto.CompanyInfo:
+    properties:
+      code:
+        description: Company code (unique identifier)
+        example: ACME001
+        type: string
+      id:
+        description: Unique company identifier (UUID)
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      logo_url:
+        description: Company logo URL (optional)
+        example: https://example.com/logos/acme-corporation.png
+        type: string
+      name:
+        description: Company name
+        example: Acme Corporation
+        type: string
+    type: object
+  lakukan-be_internal_modules_core_auth_dto.GetUserCompaniesResponse:
+    properties:
+      companies:
+        description: List of companies the user is a member of
+        items:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_auth_dto.CompanyInfo'
+        type: array
+    type: object
+  lakukan-be_internal_modules_core_auth_dto.RefreshTokenRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  lakukan-be_internal_modules_core_auth_dto.RefreshTokenResponse:
+    properties:
+      access_token:
+        type: string
+      expires_in:
+        type: integer
+      refresh_token:
+        type: string
+      token_type:
+        type: string
+    type: object
+  lakukan-be_internal_modules_core_auth_dto.ResendVerificationRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  lakukan-be_internal_modules_core_auth_dto.ResendVerificationResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  lakukan-be_internal_modules_core_auth_dto.RevokeTokenRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  lakukan-be_internal_modules_core_auth_dto.RevokeTokenResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  lakukan-be_internal_modules_core_auth_dto.SignInRequest:
+    properties:
+      email:
+        description: Can be email or username
+        type: string
+      password:
+        description: Min 8 characters
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  lakukan-be_internal_modules_core_auth_dto.SignInResponse:
+    properties:
+      access_token:
+        type: string
+      expires_in:
+        type: integer
+      refresh_token:
+        type: string
+      token_type:
+        type: string
+      user: {}
+    type: object
+  lakukan-be_internal_modules_core_auth_dto.SignUpRequest:
+    properties:
+      email:
+        type: string
+      full_name:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      username:
+        maxLength: 20
+        minLength: 3
+        type: string
+    required:
+    - email
+    - full_name
+    - password
+    - username
+    type: object
+  lakukan-be_internal_modules_core_auth_dto.SignUpResponse:
+    properties:
+      message:
+        type: string
+      user: {}
+    type: object
+  lakukan-be_internal_modules_core_auth_dto.SwitchCompanyRequest:
+    properties:
+      company_id:
+        description: Company ID to switch to
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+    required:
+    - company_id
+    type: object
+  lakukan-be_internal_modules_core_auth_dto.SwitchCompanyResponse:
+    properties:
+      access_token:
+        description: JWT access token with updated company information (includes company_id
+          and company_name in claims)
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+      company:
+        additionalProperties:
+          type: string
+        description: Switched company basic info (id, name, code, logo_url)
+        type: object
+      expires_in:
+        description: Token expiration time in seconds
+        example: 86400
+        type: integer
+      refresh_token:
+        description: New refresh token for extended session
+        example: a1b2c3d4e5f6...
+        type: string
+      token_type:
+        description: Token type (always "Bearer")
+        example: Bearer
+        type: string
+    type: object
+  lakukan-be_internal_modules_core_auth_dto.VerifyEmailRequest:
+    properties:
+      token:
+        type: string
+    required:
+    - token
+    type: object
+  lakukan-be_internal_modules_core_auth_dto.VerifyEmailResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  lakukan-be_internal_modules_core_company_dto.AddUserToCompanyRequest:
+    properties:
+      role:
+        description: 'DEPRECATED: Use role_id instead'
+        enum:
+        - OWNER
+        - ADMIN
+        - MEMBER
+        - VIEWER
+        type: string
+      role_id:
+        description: Company-specific role ID. If null, user inherits global role.
+          UUID validation happens in service layer
+        type: string
+      user_id:
+        type: string
+    required:
+    - user_id
+    type: object
+  lakukan-be_internal_modules_core_company_dto.CompanyListResponse:
+    properties:
+      companies:
+        items:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_company_dto.CompanyResponse'
+        type: array
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  lakukan-be_internal_modules_core_company_dto.CompanyResponse:
+    properties:
+      address:
+        type: string
+      code:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: string
+      deleted_at:
+        type: string
+      deleted_by:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      logo_url:
+        type: string
+      max_branches:
+        type: integer
+      max_users:
+        type: integer
+      name:
+        type: string
+      owner_id:
+        type: string
+      phone:
+        type: string
+      tax_id:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+      village_id:
+        type: string
+      website:
+        type: string
+    type: object
+  lakukan-be_internal_modules_core_company_dto.CompanyUserListResponse:
+    properties:
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+      users:
+        items:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_company_dto.CompanyUserResponse'
+        type: array
+    type: object
+  lakukan-be_internal_modules_core_company_dto.CompanyUserResponse:
+    properties:
+      company_id:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: string
+      deleted_at:
+        type: string
+      deleted_by:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      is_primary:
+        type: boolean
+      joined_at:
+        description: Timestamps
+        type: string
+      role:
+        description: 'DEPRECATED: Use role_id instead. Kept for backward compatibility'
+        type: string
+      role_id:
+        description: Company-specific role ID. Null means inherits global role
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+      user_email:
+        description: User information
+        type: string
+      user_full_name:
+        type: string
+      user_id:
+        type: string
+      user_username:
+        type: string
+    type: object
+  lakukan-be_internal_modules_core_company_dto.CreateCompanyRequest:
+    properties:
+      address:
+        maxLength: 1000
+        type: string
+      code:
+        maxLength: 50
+        minLength: 2
+        type: string
+      email:
+        maxLength: 255
+        type: string
+      logo_url:
+        maxLength: 500
+        type: string
+      max_branches:
+        maximum: 100
+        minimum: 1
+        type: integer
+      max_users:
+        maximum: 1000
+        minimum: 1
+        type: integer
+      name:
+        maxLength: 255
+        minLength: 3
+        type: string
+      phone:
+        maxLength: 20
+        minLength: 10
+        type: string
+      tax_id:
+        maxLength: 50
+        type: string
+      village_id:
+        type: string
+      website:
+        maxLength: 255
+        type: string
+    required:
+    - code
+    - name
+    type: object
+  lakukan-be_internal_modules_core_company_dto.UpdateCompanyRequest:
+    properties:
+      address:
+        maxLength: 1000
+        type: string
+      email:
+        maxLength: 255
+        type: string
+      is_active:
+        type: boolean
+      logo_url:
+        maxLength: 500
+        type: string
+      max_branches:
+        maximum: 100
+        minimum: 1
+        type: integer
+      max_users:
+        maximum: 1000
+        minimum: 1
+        type: integer
+      name:
+        maxLength: 255
+        minLength: 3
+        type: string
+      phone:
+        maxLength: 20
+        minLength: 10
+        type: string
+      tax_id:
+        maxLength: 50
+        type: string
+      village_id:
+        type: string
+      website:
+        maxLength: 255
+        type: string
+    type: object
+  lakukan-be_internal_modules_core_company_dto.UpdateCompanyUserRequest:
+    properties:
+      is_active:
+        type: boolean
+      role:
+        description: 'DEPRECATED: Use role_id instead'
+        enum:
+        - OWNER
+        - ADMIN
+        - MEMBER
+        - VIEWER
+        type: string
+      role_id:
+        description: Company-specific role ID. Set to null to use global role. UUID
+          validation happens in service layer
+        type: string
+    type: object
+  lakukan-be_internal_modules_core_permission_dto.ApplyCRUDTemplateRequest:
+    properties:
+      module_id:
+        description: Set from URL param
+        type: string
+      resource:
+        maxLength: 100
+        minLength: 2
+        type: string
+    required:
+    - resource
+    type: object
+  lakukan-be_internal_modules_core_permission_dto.CRUDTemplateResponse:
+    properties:
+      created:
+        items:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_permission_dto.PermissionResponse'
+        type: array
+      skipped:
+        description: Actions that already exist
+        items:
+          type: string
+        type: array
+      total:
+        type: integer
+    type: object
+  lakukan-be_internal_modules_core_permission_dto.CreateModuleRequest:
+    properties:
+      code:
+        maxLength: 50
+        minLength: 2
+        type: string
+      color:
+        maxLength: 20
+        type: string
+      description:
+        maxLength: 500
+        type: string
+      heading:
+        description: Frontend-matching fields
+        maxLength: 500
+        type: string
+      icon:
+        maxLength: 50
+        type: string
+      is_active:
+        type: boolean
+      is_menu_visible:
+        type: boolean
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      parent_id:
+        description: Tree structure fields
+        type: string
+      permission:
+        maxLength: 100
+        type: string
+      sort_order:
+        minimum: 0
+        type: integer
+      to:
+        maxLength: 255
+        type: string
+      tooltip:
+        maxLength: 255
+        type: string
+      url:
+        maxLength: 255
+        type: string
+    required:
+    - code
+    - name
+    type: object
+  lakukan-be_internal_modules_core_permission_dto.CreatePermissionRequest:
+    properties:
+      action:
+        maxLength: 50
+        minLength: 2
+        type: string
+      description:
+        maxLength: 500
+        type: string
+      module_id:
+        type: string
+      resource:
+        maxLength: 100
+        minLength: 2
+        type: string
+    required:
+    - action
+    - module_id
+    - resource
+    type: object
+  lakukan-be_internal_modules_core_permission_dto.ModuleDetailResponse:
+    properties:
+      code:
+        type: string
+      color:
+        type: string
+      created_at:
+        description: Audit fields
+        type: string
+      created_by:
+        type: string
+      deleted_at:
+        type: string
+      deleted_by:
+        type: string
+      depth:
+        type: integer
+      description:
+        type: string
+      display_order:
+        description: Explicit display order for frontend rendering (only in tree endpoint)
+        type: integer
+      heading:
+        description: Frontend-matching fields
+        type: string
+      icon:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      is_menu_visible:
+        type: boolean
+      name:
+        type: string
+      parent_id:
+        description: Tree structure fields
+        type: string
+      permission:
+        type: string
+      permissions_count:
+        description: Related data counts (for UX badges/indicators)
+        type: integer
+      sort_order:
+        type: integer
+      to:
+        type: string
+      tooltip:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+      url:
+        type: string
+    type: object
+  lakukan-be_internal_modules_core_permission_dto.ModuleListResponse:
+    properties:
+      modules:
+        items:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_permission_dto.ModuleDetailResponse'
+        type: array
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  lakukan-be_internal_modules_core_permission_dto.ModuleResponse:
+    properties:
+      code:
+        type: string
+      color:
+        type: string
+      description:
+        type: string
+      icon:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      sort_order:
+        type: integer
+    type: object
+  lakukan-be_internal_modules_core_permission_dto.ModuleWithSubModules:
+    properties:
+      module:
+        allOf:
+        - $ref: '#/definitions/lakukan-be_internal_modules_core_permission_dto.ModuleDetailResponse'
+        description: Root module (depth = 0)
+      sub_modules:
+        description: Sub-modules belonging to this module, ordered by depth and sort_order
+        items:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_permission_dto.ModuleDetailResponse'
+        type: array
+    type: object
+  lakukan-be_internal_modules_core_permission_dto.PermissionListResponse:
+    properties:
+      page:
+        type: integer
+      page_size:
+        type: integer
+      permissions:
+        items:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_permission_dto.PermissionResponse'
+        type: array
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  lakukan-be_internal_modules_core_permission_dto.PermissionResponse:
+    properties:
+      action:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: string
+      deleted_at:
+        type: string
+      deleted_by:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      module:
+        $ref: '#/definitions/lakukan-be_internal_modules_core_permission_dto.ModuleResponse'
+      module_id:
+        type: string
+      resource:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+    type: object
+  lakukan-be_internal_modules_core_permission_dto.UpdateModuleRequest:
+    properties:
+      code:
+        maxLength: 50
+        minLength: 2
+        type: string
+      color:
+        maxLength: 20
+        type: string
+      description:
+        maxLength: 500
+        type: string
+      heading:
+        description: Frontend-matching fields
+        maxLength: 500
+        type: string
+      icon:
+        maxLength: 50
+        type: string
+      is_active:
+        type: boolean
+      is_menu_visible:
+        type: boolean
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      parent_id:
+        description: Tree structure fields
+        type: string
+      permission:
+        maxLength: 100
+        type: string
+      sort_order:
+        minimum: 0
+        type: integer
+      to:
+        maxLength: 255
+        type: string
+      tooltip:
+        maxLength: 255
+        type: string
+      url:
+        maxLength: 255
+        type: string
+    type: object
+  lakukan-be_internal_modules_core_permission_dto.UpdatePermissionRequest:
+    properties:
+      action:
+        maxLength: 50
+        minLength: 2
+        type: string
+      description:
+        maxLength: 500
+        type: string
+      module_id:
+        type: string
+      resource:
+        maxLength: 100
+        minLength: 2
+        type: string
+    type: object
+  lakukan-be_internal_modules_core_permission_template_dto.CreatePermissionTemplateRequest:
+    properties:
+      actions:
+        items:
+          type: string
+        minItems: 1
+        type: array
+      description:
+        maxLength: 1000
+        type: string
+      name:
+        maxLength: 100
+        minLength: 3
+        type: string
+    required:
+    - actions
+    - name
+    type: object
+  lakukan-be_internal_modules_core_permission_template_dto.PermissionTemplateListResponse:
+    properties:
+      page:
+        type: integer
+      page_size:
+        type: integer
+      templates:
+        items:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_permission_template_dto.PermissionTemplateResponse'
+        type: array
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  lakukan-be_internal_modules_core_permission_template_dto.PermissionTemplateResponse:
+    properties:
+      actions:
+        items:
+          type: string
+        type: array
+      created_at:
+        type: string
+      created_by:
+        type: string
+      deleted_at:
+        type: string
+      deleted_by:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      is_system:
+        type: boolean
+      name:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+    type: object
+  lakukan-be_internal_modules_core_permission_template_dto.UpdatePermissionTemplateRequest:
+    properties:
+      actions:
+        items:
+          type: string
+        minItems: 1
+        type: array
+      description:
+        maxLength: 1000
+        type: string
+      name:
+        maxLength: 100
+        minLength: 3
+        type: string
+    required:
+    - actions
+    - name
+    type: object
+  lakukan-be_internal_modules_core_role_dto.AssignPermissionsRequest:
+    properties:
+      permission_ids:
+        items:
+          type: string
+        minItems: 1
+        type: array
+    required:
+    - permission_ids
+    type: object
+  lakukan-be_internal_modules_core_role_dto.CreateRoleRequest:
+    properties:
+      description:
+        maxLength: 1000
+        type: string
+      module_templates:
+        additionalProperties:
+          type: string
+        description: map[module_id]permission_template_id
+        type: object
+      name:
+        maxLength: 100
+        minLength: 3
+        type: string
+      permissions:
+        description: For backward compatibility
+        items:
+          type: string
+        type: array
+    required:
+    - name
+    type: object
+  lakukan-be_internal_modules_core_role_dto.PermissionResponse:
+    properties:
+      action:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      resource:
+        type: string
+    type: object
+  lakukan-be_internal_modules_core_role_dto.RoleListResponse:
+    properties:
+      page:
+        type: integer
+      page_size:
+        type: integer
+      roles:
+        items:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_role_dto.RoleResponse'
+        type: array
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  lakukan-be_internal_modules_core_role_dto.RoleModuleTemplateResponse:
+    properties:
+      module_code:
+        type: string
+      module_id:
+        type: string
+      module_name:
+        type: string
+      permission_template_id:
+        type: string
+      permission_template_name:
+        type: string
+    type: object
+  lakukan-be_internal_modules_core_role_dto.RoleResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: string
+      deleted_at:
+        type: string
+      deleted_by:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      is_system:
+        type: boolean
+      name:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+    type: object
+  lakukan-be_internal_modules_core_role_dto.RoleWithPermissionsResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: string
+      deleted_at:
+        type: string
+      deleted_by:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      is_system:
+        type: boolean
+      module_templates:
+        items:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_role_dto.RoleModuleTemplateResponse'
+        type: array
+      name:
+        type: string
+      permissions:
+        items:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_role_dto.PermissionResponse'
+        type: array
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+    type: object
+  lakukan-be_internal_modules_core_role_dto.UpdateRoleRequest:
+    properties:
+      description:
+        maxLength: 1000
+        type: string
+      module_templates:
+        additionalProperties:
+          type: string
+        description: map[module_id]permission_template_id
+        type: object
+      name:
+        maxLength: 100
+        minLength: 3
+        type: string
+      permissions:
+        description: For backward compatibility
+        items:
+          type: string
+        type: array
+    type: object
+  lakukan-be_internal_modules_core_user_dto.AssignRolesRequest:
+    properties:
+      role_ids:
+        items:
+          type: string
+        minItems: 1
+        type: array
+    required:
+    - role_ids
+    type: object
+  lakukan-be_internal_modules_core_user_dto.ChangePasswordRequest:
+    properties:
+      new_password:
+        maxLength: 72
+        minLength: 8
+        type: string
+      old_password:
+        type: string
+    required:
+    - new_password
+    - old_password
+    type: object
+  lakukan-be_internal_modules_core_user_dto.CreateUserRequest:
+    properties:
+      email:
+        type: string
+      full_name:
+        maxLength: 255
+        minLength: 3
+        type: string
+      password:
+        maxLength: 72
+        minLength: 8
+        type: string
+      phone:
+        maxLength: 20
+        minLength: 10
+        type: string
+      role_ids:
+        description: 'Optional: assign roles on creation'
+        items:
+          type: string
+        type: array
+      username:
+        maxLength: 50
+        minLength: 3
+        type: string
+    required:
+    - email
+    - password
+    - username
+    type: object
+  lakukan-be_internal_modules_core_user_dto.RoleInfo:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      is_system:
+        type: boolean
+      name:
+        type: string
+    type: object
+  lakukan-be_internal_modules_core_user_dto.SyncRolesRequest:
+    properties:
+      role_ids:
+        description: Can be empty array to remove all roles
+        items:
+          type: string
+        type: array
+    required:
+    - role_ids
+    type: object
+  lakukan-be_internal_modules_core_user_dto.UpdateUserRequest:
+    properties:
+      email:
+        type: string
+      full_name:
+        maxLength: 255
+        minLength: 3
+        type: string
+      is_active:
+        type: boolean
+      phone:
+        maxLength: 20
+        minLength: 10
+        type: string
+      role_ids:
+        description: 'Optional: update/sync roles'
+        items:
+          type: string
+        type: array
+      username:
+        maxLength: 50
+        minLength: 3
+        type: string
+    type: object
+  lakukan-be_internal_modules_core_user_dto.UserListResponse:
+    properties:
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+      users:
+        items:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_user_dto.UserResponse'
+        type: array
+    type: object
+  lakukan-be_internal_modules_core_user_dto.UserResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: string
+      deleted_at:
+        type: string
+      deleted_by:
+        type: string
+      email:
+        type: string
+      full_name:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      is_email_verified:
+        type: boolean
+      last_login_at:
+        type: string
+      phone:
+        type: string
+      roles:
+        items:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_user_dto.RoleInfo'
+        type: array
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+      username:
+        type: string
+    type: object
+  lakukan-be_internal_modules_crm_auto_reply_rules_dto.CreateAutoReplyRuleRequest:
+    properties:
+      conditions:
+        description: Can be map or struct, will be marshaled to JSONB
+      delay_seconds:
+        minimum: 0
+        type: integer
+      description:
+        type: string
+      is_enabled:
+        type: boolean
+      message_template:
+        minLength: 1
+        type: string
+      name:
+        maxLength: 255
+        minLength: 2
+        type: string
+      priority:
+        minimum: 1
+        type: integer
+      trigger_type:
+        enum:
+        - first_message
+        - outside_business_hours
+        - keyword_match
+        - no_sales_available
+        - high_priority_lead
+        - ai_confidence_low
+        - conversation_flow
+        type: string
+    required:
+    - message_template
+    - name
+    - trigger_type
+    type: object
+  lakukan-be_internal_modules_crm_auto_reply_rules_dto.UpdateAutoReplyRuleRequest:
+    properties:
+      conditions: {}
+      delay_seconds:
+        minimum: 0
+        type: integer
+      description:
+        type: string
+      is_enabled:
+        type: boolean
+      message_template:
+        minLength: 1
+        type: string
+      name:
+        maxLength: 255
+        minLength: 2
+        type: string
+      priority:
+        minimum: 1
+        type: integer
+      trigger_type:
+        enum:
+        - first_message
+        - outside_business_hours
+        - keyword_match
+        - no_sales_available
+        - high_priority_lead
+        - ai_confidence_low
+        - conversation_flow
+        type: string
+    type: object
+  lakukan-be_internal_modules_crm_chats_dto.CreateChatMessageRequest:
+    properties:
+      content:
+        type: string
+      delivery_status:
+        enum:
+        - sent
+        - delivered
+        - read
+        - failed
+        type: string
+      media_mime_type:
+        maxLength: 100
+        type: string
+      media_size_bytes:
+        minimum: 0
+        type: integer
+      media_url:
+        maxLength: 500
+        type: string
+      message_type:
+        enum:
+        - text
+        - image
+        - video
+        - file
+        - voice
+        - location
+        type: string
+      metadata:
+        type: string
+      sender_id:
+        type: string
+      sender_name:
+        maxLength: 255
+        type: string
+      sender_type:
+        enum:
+        - customer
+        - sales
+        - system
+        - auto_reply
+        type: string
+    required:
+    - content
+    - message_type
+    - sender_type
+    type: object
+  lakukan-be_internal_modules_crm_chats_dto.CreateChatRequest:
+    properties:
+      assigned_to_company_user_id:
+        type: string
+      category:
+        enum:
+        - hot
+        - warm
+        - cold
+        type: string
+      customer_name:
+        maxLength: 255
+        minLength: 2
+        type: string
+      email:
+        maxLength: 255
+        type: string
+      first_message:
+        allOf:
+        - $ref: '#/definitions/lakukan-be_internal_modules_crm_chats_dto.CreateChatMessageRequest'
+        description: First message info (optional, for creating chat with initial
+          message)
+      lead_id:
+        type: string
+      phone:
+        maxLength: 20
+        type: string
+      platform:
+        enum:
+        - whatsapp
+        - telegram
+        - email
+        - phone
+        type: string
+    required:
+    - customer_name
+    - phone
+    - platform
+    type: object
+  lakukan-be_internal_modules_crm_company_settings_dto.UpdateCompanySettingsRequest:
+    properties:
+      ai_confidence_threshold:
+        maximum: 1
+        minimum: 0
+        type: number
+      ai_enabled:
+        description: AI Settings
+        type: boolean
+      ai_training_mode:
+        type: boolean
+      auto_reply_business_hours_end:
+        description: 'Format: "HH:MM:SS"'
+        type: string
+      auto_reply_business_hours_start:
+        description: 'Format: "HH:MM:SS"'
+        type: string
+      auto_reply_enabled:
+        description: Auto-Reply Settings
+        type: boolean
+      auto_reply_global_delay_seconds:
+        minimum: 0
+        type: integer
+      auto_reply_working_days:
+        items:
+          type: integer
+        type: array
+      chat_assignment_strategy:
+        enum:
+        - round_robin
+        - least_busy
+        - manual
+        type: string
+      chat_auto_assign_enabled:
+        description: Chat Settings
+        type: boolean
+      chat_idle_timeout_minutes:
+        minimum: 1
+        type: integer
+      lead_auto_categorization_enabled:
+        description: Lead Settings
+        type: boolean
+      lead_cold_criteria: {}
+      lead_hot_criteria: {}
+      lead_warm_criteria: {}
+      notification_channels: {}
+      notifications_enabled:
+        description: Notification Settings
+        type: boolean
+      timezone:
+        description: Timezone
+        type: string
+    type: object
+  lakukan-be_internal_modules_crm_lead_sources_dto.CreateLeadSourceRequest:
+    properties:
+      code:
+        maxLength: 50
+        minLength: 2
+        type: string
+      color:
+        description: '#FFFFFF format'
+        type: string
+      description:
+        maxLength: 500
+        type: string
+      icon:
+        maxLength: 50
+        type: string
+      is_active:
+        type: boolean
+      name:
+        maxLength: 100
+        minLength: 3
+        type: string
+      sort_order:
+        minimum: 0
+        type: integer
+    required:
+    - code
+    - name
+    type: object
+  lakukan-be_internal_modules_crm_lead_sources_dto.UpdateLeadSourceRequest:
+    properties:
+      code:
+        maxLength: 50
+        minLength: 2
+        type: string
+      color:
+        type: string
+      description:
+        maxLength: 500
+        type: string
+      icon:
+        maxLength: 50
+        type: string
+      is_active:
+        type: boolean
+      name:
+        maxLength: 100
+        minLength: 3
+        type: string
+      sort_order:
+        minimum: 0
+        type: integer
+    type: object
+  lakukan-be_internal_modules_crm_leads_dto.CreateLeadRequest:
+    properties:
+      address:
+        type: string
+      assigned_to_company_user_id:
+        type: string
+      category:
+        enum:
+        - hot
+        - warm
+        - cold
+        type: string
+      city:
+        maxLength: 100
+        type: string
+      contact_person:
+        maxLength: 255
+        type: string
+      deal_value:
+        minimum: 0
+        type: number
+      email:
+        maxLength: 255
+        type: string
+      name:
+        maxLength: 255
+        minLength: 2
+        type: string
+      next_follow_up_at:
+        type: string
+      notes:
+        type: string
+      phone:
+        maxLength: 20
+        type: string
+      postal_code:
+        maxLength: 10
+        type: string
+      province:
+        maxLength: 100
+        type: string
+      source_id:
+        type: string
+      status:
+        enum:
+        - new
+        - in_progress
+        - follow_up
+        - negotiation
+        - won
+        - lost
+        type: string
+    required:
+    - category
+    - name
+    - phone
+    - source_id
+    type: object
+  lakukan-be_internal_modules_crm_leads_dto.UpdateLeadRequest:
+    properties:
+      address:
+        type: string
+      assigned_to_company_user_id:
+        type: string
+      category:
+        enum:
+        - hot
+        - warm
+        - cold
+        type: string
+      city:
+        maxLength: 100
+        type: string
+      contact_person:
+        maxLength: 255
+        type: string
+      deal_value:
+        minimum: 0
+        type: number
+      email:
+        maxLength: 255
+        type: string
+      last_contact_at:
+        type: string
+      name:
+        maxLength: 255
+        minLength: 2
+        type: string
+      next_follow_up_at:
+        type: string
+      notes:
+        type: string
+      phone:
+        maxLength: 20
+        type: string
+      postal_code:
+        maxLength: 10
+        type: string
+      province:
+        maxLength: 100
+        type: string
+      source_id:
+        type: string
+      status:
+        enum:
+        - new
+        - in_progress
+        - follow_up
+        - negotiation
+        - won
+        - lost
+        type: string
+    type: object
+  lakukan-be_internal_modules_crm_sales_persons_dto.ConnectWhatsAppResponse:
+    properties:
+      expires_at:
+        type: string
+      pairing_code:
+        type: string
+      sales_person_id:
+        type: string
+      session_name:
+        type: string
+      status:
+        type: string
+      whatsapp_number:
+        type: string
+    type: object
+  lakukan-be_internal_modules_crm_sales_persons_dto.CreateSalesPersonRequest:
+    properties:
+      commission_rate:
+        maximum: 100
+        minimum: 0
+        type: number
+      company_user_id:
+        type: string
+      is_active:
+        type: boolean
+      is_whatsapp_connected:
+        type: boolean
+      notes:
+        type: string
+      sales_area:
+        maxLength: 100
+        type: string
+      sales_code:
+        maxLength: 50
+        minLength: 2
+        type: string
+      sales_name:
+        maxLength: 255
+        type: string
+      sales_target:
+        minimum: 0
+        type: number
+      whatsapp:
+        maxLength: 20
+        type: string
+    required:
+    - company_user_id
+    - sales_code
+    type: object
+  lakukan-be_internal_modules_crm_sales_persons_dto.DisconnectWhatsAppRequest:
+    properties:
+      logout:
+        description: If true, logout and delete session; if false, just stop
+        type: boolean
+    type: object
+  lakukan-be_internal_modules_crm_sales_persons_dto.UpdateSalesPersonRequest:
+    properties:
+      commission_rate:
+        maximum: 100
+        minimum: 0
+        type: number
+      is_active:
+        type: boolean
+      is_whatsapp_connected:
+        type: boolean
+      notes:
+        type: string
+      sales_area:
+        maxLength: 100
+        type: string
+      sales_code:
+        maxLength: 50
+        minLength: 2
+        type: string
+      sales_name:
+        maxLength: 255
+        type: string
+      sales_target:
+        minimum: 0
+        type: number
+      whatsapp:
+        maxLength: 20
+        type: string
+    type: object
+  lakukan-be_internal_modules_crm_sales_persons_dto.WhatsAppStatusResponse:
+    properties:
+      connected_at:
+        type: string
+      is_connected:
+        type: boolean
+      last_seen_at:
+        type: string
+      session_name:
+        type: string
+      status:
+        description: nil if never connected
+        type: string
+      whatsapp_number:
+        type: string
+    type: object
+  lakukan-be_internal_modules_crm_webhooks_dto.WAHAMeInfo:
+    properties:
+      id:
+        type: string
+      pushName:
+        type: string
+    type: object
+  lakukan-be_internal_modules_crm_webhooks_dto.WAHAWebhookPayload:
+    properties:
+      engine:
+        type: string
+      environment:
+        additionalProperties: true
+        type: object
+      event:
+        type: string
+      id:
+        type: string
+      me:
+        $ref: '#/definitions/lakukan-be_internal_modules_crm_webhooks_dto.WAHAMeInfo'
+      metadata:
+        additionalProperties:
+          type: string
+        type: object
+      payload:
+        additionalProperties: true
+        type: object
+      session:
+        type: string
+      timestamp:
+        type: integer
+    type: object
+  lakukan-be_internal_shared_response.Meta:
+    properties:
+      pagination:
+        $ref: '#/definitions/lakukan-be_internal_shared_response.Pagination'
+    type: object
+  lakukan-be_internal_shared_response.Pagination:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  lakukan-be_internal_shared_response.Response:
+    properties:
+      data: {}
+      errors:
+        additionalProperties:
+          items:
+            type: string
+          type: array
+        type: object
+      message:
+        type: string
+      meta:
+        $ref: '#/definitions/lakukan-be_internal_shared_response.Meta'
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@lakukan.com
+    name: API Support
+    url: http://www.lakukan.com/support
+  description: Backend API untuk Lakukan - Multi-tenant Business Management Platform
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Lakukan API
+  version: "1.0"
+paths:
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Generate new access and refresh tokens using a valid refresh token
+      parameters:
+      - description: Refresh token
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_auth_dto.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token refreshed successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_auth_dto.RefreshTokenResponse'
+              type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "401":
+          description: Invalid or expired refresh token
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      summary: Refresh access token
+      tags:
+      - Authentication
+  /auth/resend-verification:
+    post:
+      consumes:
+      - application/json
+      description: Resend email verification link to user
+      parameters:
+      - description: User email
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_auth_dto.ResendVerificationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Verification email sent
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_auth_dto.ResendVerificationResponse'
+              type: object
+        "400":
+          description: Invalid request or limit reached
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      summary: Resend verification email
+      tags:
+      - Authentication
+  /auth/revoke:
+    post:
+      consumes:
+      - application/json
+      description: Revoke a refresh token to log out from a specific device
+      parameters:
+      - description: Refresh token to revoke
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_auth_dto.RevokeTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token revoked successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_auth_dto.RevokeTokenResponse'
+              type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      summary: Revoke refresh token
+      tags:
+      - Authentication
+  /auth/signin:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user with email/username and password
+      parameters:
+      - description: Signin credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_auth_dto.SignInRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Sign in successful
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_auth_dto.SignInResponse'
+              type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "401":
+          description: Invalid credentials or user not active
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      summary: User signin
+      tags:
+      - Authentication
+  /auth/signup:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user account
+      parameters:
+      - description: Registration details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_auth_dto.SignUpRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Registration successful
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_auth_dto.SignUpResponse'
+              type: object
+        "400":
+          description: Invalid request payload or validation error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "409":
+          description: Email or username already exists
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      summary: User registration
+      tags:
+      - Authentication
+  /auth/verify-email:
+    post:
+      consumes:
+      - application/json
+      description: Verify user email with verification token
+      parameters:
+      - description: Verification token
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_auth_dto.VerifyEmailRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Email verified successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_auth_dto.VerifyEmailResponse'
+              type: object
+        "400":
+          description: Invalid token or already verified
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      summary: Verify email address
+      tags:
+      - Authentication
+  /companies:
+    get:
+      consumes:
+      - application/json
+      description: Get list of companies with pagination and filters
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Search by name, code, or email
+        in: query
+        name: search
+        type: string
+      - description: Filter by active status
+        in: query
+        name: is_active
+        type: boolean
+      - description: Filter by owner ID
+        in: query
+        name: owner_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Companies retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_company_dto.CompanyListResponse'
+              type: object
+        "400":
+          description: Invalid query parameters
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all companies
+      tags:
+      - Companies
+    post:
+      consumes:
+      - application/json
+      description: Create a new company with the authenticated user as owner
+      parameters:
+      - description: Company details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_company_dto.CreateCompanyRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Company created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_company_dto.CompanyResponse'
+              type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "409":
+          description: Company code already exists
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Create new company
+      tags:
+      - Companies
+  /companies/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a company
+      parameters:
+      - description: Company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Company deleted successfully
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Company not found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Delete company
+      tags:
+      - Companies
+    get:
+      consumes:
+      - application/json
+      description: Get company details by ID
+      parameters:
+      - description: Company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Company retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_company_dto.CompanyResponse'
+              type: object
+        "404":
+          description: Company not found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get company by ID
+      tags:
+      - Companies
+    put:
+      consumes:
+      - application/json
+      description: Update company details
+      parameters:
+      - description: Company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Company details to update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_company_dto.UpdateCompanyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Company updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_company_dto.CompanyResponse'
+              type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Company not found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Update company
+      tags:
+      - Companies
+  /companies/{id}/users:
+    get:
+      consumes:
+      - application/json
+      description: Get list of users in a company
+      parameters:
+      - description: Company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Filter by role
+        in: query
+        name: role
+        type: string
+      - description: Filter by active status
+        in: query
+        name: is_active
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Company users retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_company_dto.CompanyUserListResponse'
+              type: object
+        "400":
+          description: Invalid query parameters
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get company users
+      tags:
+      - Companies
+    post:
+      consumes:
+      - application/json
+      description: Add a user to a company with a specific role
+      parameters:
+      - description: Company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_company_dto.AddUserToCompanyRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User added to company successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_company_dto.CompanyUserResponse'
+              type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Company not found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "409":
+          description: User already in company or max users reached
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Add user to company
+      tags:
+      - Companies
+  /companies/{id}/users/{user_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a user from a company
+      parameters:
+      - description: Company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User removed from company successfully
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Cannot remove primary owner
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: User not in company
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Remove user from company
+      tags:
+      - Companies
+    put:
+      consumes:
+      - application/json
+      description: Update a user's role or status in a company
+      parameters:
+      - description: Company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      - description: Update details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_company_dto.UpdateCompanyUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User role updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_company_dto.CompanyUserResponse'
+              type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: User not in company
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Update user role in company
+      tags:
+      - Companies
+  /core/v1/auth/companies:
+    get:
+      consumes:
+      - application/json
+      description: Get all companies that the authenticated user is a member of. Returns
+        a list of companies with basic information including ID, name, code, and logo
+        URL.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User companies retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_auth_dto.GetUserCompaniesResponse'
+              type: object
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get user companies
+      tags:
+      - Authentication - Company Management
+  /core/v1/auth/switch-company:
+    post:
+      consumes:
+      - application/json
+      description: Switch user's active company and get new access token with updated
+        company context. This endpoint updates the user's primary company and returns
+        new JWT tokens containing the new company ID and name in the claims. Use this
+        when a user wants to change their active company context.
+      parameters:
+      - description: Company ID to switch to
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_auth_dto.SwitchCompanyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Company switched successfully. Returns new access token and
+            refresh token with updated company information in JWT claims (company_id
+            and company_name).
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_auth_dto.SwitchCompanyResponse'
+              type: object
+        "400":
+          description: Invalid request payload - Missing or invalid company_id
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "403":
+          description: Forbidden - User is not a member of this company
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Not Found - Company not found or user not found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Switch company
+      tags:
+      - Authentication - Company Management
+  /crm/lead-sources:
+    get:
+      consumes:
+      - application/json
+      description: Get list of lead sources with pagination and filters
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Search by name, code, or description
+        in: query
+        name: search
+        type: string
+      - description: Filter by active status
+        in: query
+        name: is_active
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lead sources retrieved successfully
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Invalid query parameters
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all lead sources
+      tags:
+      - CRM - Lead Sources
+    post:
+      consumes:
+      - application/json
+      description: Create a new lead source
+      parameters:
+      - description: Lead source data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_crm_lead_sources_dto.CreateLeadSourceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Lead source created successfully
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "409":
+          description: Lead source code already exists
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Create new lead source
+      tags:
+      - CRM - Lead Sources
+  /crm/lead-sources/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a lead source
+      parameters:
+      - description: Lead Source ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lead source deleted successfully
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Lead source not found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Delete lead source
+      tags:
+      - CRM - Lead Sources
+    get:
+      consumes:
+      - application/json
+      description: Get lead source details by ID
+      parameters:
+      - description: Lead Source ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lead source retrieved successfully
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Lead source not found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get lead source by ID
+      tags:
+      - CRM - Lead Sources
+    put:
+      consumes:
+      - application/json
+      description: Update an existing lead source
+      parameters:
+      - description: Lead Source ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated lead source data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_crm_lead_sources_dto.UpdateLeadSourceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lead source updated successfully
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Lead source not found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "409":
+          description: Lead source code already exists
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Update lead source
+      tags:
+      - CRM - Lead Sources
+  /crm/lead-sources/{id}/restore:
+    post:
+      consumes:
+      - application/json
+      description: Restore a soft-deleted lead source
+      parameters:
+      - description: Lead Source ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lead source restored successfully
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Lead source not found or not deleted
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Restore lead source
+      tags:
+      - CRM - Lead Sources
+  /crm/v1/auto-reply-rules:
+    get:
+      consumes:
+      - application/json
+      description: Get list of auto-reply rules with pagination and filters
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Search by name, description, or message template
+        in: query
+        name: search
+        type: string
+      - description: Filter by trigger type
+        in: query
+        name: trigger_type
+        type: string
+      - description: Filter by enabled status
+        in: query
+        name: is_enabled
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all auto-reply rules
+      tags:
+      - CRM - Auto Reply Rules
+    post:
+      consumes:
+      - application/json
+      description: Create a new auto-reply rule record
+      parameters:
+      - description: Auto-reply rule data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_crm_auto_reply_rules_dto.CreateAutoReplyRuleRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Create new auto-reply rule
+      tags:
+      - CRM - Auto Reply Rules
+  /crm/v1/auto-reply-rules/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete an auto-reply rule
+      parameters:
+      - description: Auto-reply rule ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Delete auto-reply rule
+      tags:
+      - CRM - Auto Reply Rules
+    get:
+      consumes:
+      - application/json
+      description: Get a single auto-reply rule by ID
+      parameters:
+      - description: Auto-reply rule ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get auto-reply rule by ID
+      tags:
+      - CRM - Auto Reply Rules
+    put:
+      consumes:
+      - application/json
+      description: Update an existing auto-reply rule
+      parameters:
+      - description: Auto-reply rule ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Auto-reply rule data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_crm_auto_reply_rules_dto.UpdateAutoReplyRuleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Update auto-reply rule
+      tags:
+      - CRM - Auto Reply Rules
+  /crm/v1/auto-reply-rules/{id}/restore:
+    post:
+      consumes:
+      - application/json
+      description: Restore a soft deleted auto-reply rule
+      parameters:
+      - description: Auto-reply rule ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Restore auto-reply rule
+      tags:
+      - CRM - Auto Reply Rules
+  /crm/v1/chats:
+    get:
+      consumes:
+      - application/json
+      description: Get list of all chat sessions with pagination and filters
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Search by customer name, phone, or email
+        in: query
+        name: search
+        type: string
+      - description: Filter by platform (whatsapp, telegram, email, phone)
+        in: query
+        name: platform
+        type: string
+      - description: Filter by status (active, archived, closed)
+        in: query
+        name: status
+        type: string
+      - description: Filter by category (hot, warm, cold)
+        in: query
+        name: category
+        type: string
+      - description: Filter by assigned user
+        in: query
+        name: assigned_to_company_user_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all chats
+      tags:
+      - CRM - Chats
+    post:
+      consumes:
+      - application/json
+      description: Create a new chat session (for WhatsApp webhook integration)
+      parameters:
+      - description: Chat data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_crm_chats_dto.CreateChatRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Create new chat
+      tags:
+      - CRM - Chats
+  /crm/v1/chats/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a single chat with all its messages
+      parameters:
+      - description: Chat ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get chat detail with messages
+      tags:
+      - CRM - Chats
+  /crm/v1/leads:
+    get:
+      consumes:
+      - application/json
+      description: Get list of leads with pagination and filters
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Search by name, phone, email, or contact person
+        in: query
+        name: search
+        type: string
+      - description: Filter by category (hot, warm, cold)
+        in: query
+        name: category
+        type: string
+      - description: Filter by status (new, in_progress, follow_up, negotiation, won,
+          lost)
+        in: query
+        name: status
+        type: string
+      - description: Filter by source ID
+        in: query
+        name: source_id
+        type: string
+      - description: Filter by assigned user
+        in: query
+        name: assigned_to_company_user_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all leads
+      tags:
+      - CRM - Leads
+    post:
+      consumes:
+      - application/json
+      description: Create a new lead record
+      parameters:
+      - description: Lead data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_crm_leads_dto.CreateLeadRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Create new lead
+      tags:
+      - CRM - Leads
+  /crm/v1/leads/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a lead
+      parameters:
+      - description: Lead ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Delete lead
+      tags:
+      - CRM - Leads
+    get:
+      consumes:
+      - application/json
+      description: Get a single lead by ID
+      parameters:
+      - description: Lead ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get lead by ID
+      tags:
+      - CRM - Leads
+    put:
+      consumes:
+      - application/json
+      description: Update an existing lead
+      parameters:
+      - description: Lead ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Lead data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_crm_leads_dto.UpdateLeadRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Update lead
+      tags:
+      - CRM - Leads
+  /crm/v1/leads/{id}/restore:
+    post:
+      consumes:
+      - application/json
+      description: Restore a soft-deleted lead
+      parameters:
+      - description: Lead ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Restore deleted lead
+      tags:
+      - CRM - Leads
+  /crm/v1/sales-persons:
+    get:
+      consumes:
+      - application/json
+      description: Get list of sales persons with pagination and filters
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Search by sales code, name, user name, or area
+        in: query
+        name: search
+        type: string
+      - description: Filter by active status
+        in: query
+        name: is_active
+        type: boolean
+      - description: Filter by WhatsApp connection status
+        in: query
+        name: is_whatsapp_connected
+        type: boolean
+      - description: Filter by sales area
+        in: query
+        name: sales_area
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all sales persons
+      tags:
+      - CRM - Sales Persons
+    post:
+      consumes:
+      - application/json
+      description: Create a new sales person record
+      parameters:
+      - description: Sales person data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_crm_sales_persons_dto.CreateSalesPersonRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Create new sales person
+      tags:
+      - CRM - Sales Persons
+  /crm/v1/sales-persons/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a sales person
+      parameters:
+      - description: Sales Person ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Delete sales person
+      tags:
+      - CRM - Sales Persons
+    get:
+      consumes:
+      - application/json
+      description: Get a single sales person by ID
+      parameters:
+      - description: Sales Person ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get sales person by ID
+      tags:
+      - CRM - Sales Persons
+    put:
+      consumes:
+      - application/json
+      description: Update an existing sales person
+      parameters:
+      - description: Sales Person ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Sales person data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_crm_sales_persons_dto.UpdateSalesPersonRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Update sales person
+      tags:
+      - CRM - Sales Persons
+  /crm/v1/sales-persons/{id}/restore:
+    post:
+      consumes:
+      - application/json
+      description: Restore a soft-deleted sales person
+      parameters:
+      - description: Sales Person ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Restore deleted sales person
+      tags:
+      - CRM - Sales Persons
+  /crm/v1/sales-persons/{id}/whatsapp/connect:
+    post:
+      consumes:
+      - application/json
+      description: Create WAHA session and return pairing code for WhatsApp connection
+      parameters:
+      - description: Sales Person ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_crm_sales_persons_dto.ConnectWhatsAppResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Connect WhatsApp for sales person
+      tags:
+      - CRM - Sales Persons - WhatsApp
+  /crm/v1/sales-persons/{id}/whatsapp/disconnect:
+    post:
+      consumes:
+      - application/json
+      description: Disconnect and delete WhatsApp session for sales person
+      parameters:
+      - description: Sales Person ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Disconnect options
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_crm_sales_persons_dto.DisconnectWhatsAppRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Disconnect WhatsApp
+      tags:
+      - CRM - Sales Persons - WhatsApp
+  /crm/v1/sales-persons/{id}/whatsapp/restart:
+    post:
+      consumes:
+      - application/json
+      description: Restart WhatsApp session for sales person
+      parameters:
+      - description: Sales Person ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Restart WhatsApp session
+      tags:
+      - CRM - Sales Persons - WhatsApp
+  /crm/v1/sales-persons/{id}/whatsapp/status:
+    get:
+      consumes:
+      - application/json
+      description: Get current WhatsApp connection status for sales person
+      parameters:
+      - description: Sales Person ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_crm_sales_persons_dto.WhatsAppStatusResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get WhatsApp connection status
+      tags:
+      - CRM - Sales Persons - WhatsApp
+  /crm/v1/settings:
+    get:
+      consumes:
+      - application/json
+      description: Get CRM settings for the current company (creates default if not
+        exists)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get company CRM settings
+      tags:
+      - CRM - Company Settings
+    put:
+      consumes:
+      - application/json
+      description: Update CRM settings for the current company
+      parameters:
+      - description: Settings data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_crm_company_settings_dto.UpdateCompanySettingsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Update company CRM settings
+      tags:
+      - CRM - Company Settings
+  /crm/v1/webhooks/waha:
+    post:
+      consumes:
+      - application/json
+      description: Receive and process webhooks from WAHA (WhatsApp HTTP API)
+      parameters:
+      - description: Webhook request ID
+        in: header
+        name: X-Webhook-Request-Id
+        type: string
+      - description: Webhook timestamp
+        in: header
+        name: X-Webhook-Timestamp
+        type: string
+      - description: HMAC signature for verification
+        in: header
+        name: X-Webhook-Hmac
+        type: string
+      - description: Webhook payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_crm_webhooks_dto.WAHAWebhookPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      summary: Receive WAHA webhook
+      tags:
+      - CRM - Webhooks
+  /modules:
+    get:
+      consumes:
+      - application/json
+      description: Get list of modules with pagination and filters
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Search by code, name, or description
+        in: query
+        name: search
+        type: string
+      - description: Filter by active status
+        in: query
+        name: is_active
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Modules retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_permission_dto.ModuleListResponse'
+              type: object
+        "400":
+          description: Invalid query parameters
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all modules
+      tags:
+      - Modules
+    post:
+      consumes:
+      - application/json
+      description: Create a new module (admin only)
+      parameters:
+      - description: Module data
+        in: body
+        name: module
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_permission_dto.CreateModuleRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Module created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_permission_dto.ModuleDetailResponse'
+              type: object
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "409":
+          description: Module code already exists
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Create new module
+      tags:
+      - Modules
+  /modules/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a module (admin only)
+      parameters:
+      - description: Module ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Module deleted successfully
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Module not found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Delete module
+      tags:
+      - Modules
+    get:
+      consumes:
+      - application/json
+      description: Get module details by ID
+      parameters:
+      - description: Module ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Module retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_permission_dto.ModuleDetailResponse'
+              type: object
+        "404":
+          description: Module not found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get module by ID
+      tags:
+      - Modules
+    put:
+      consumes:
+      - application/json
+      description: Update module details (admin only)
+      parameters:
+      - description: Module ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Module data
+        in: body
+        name: module
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_permission_dto.UpdateModuleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Module updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_permission_dto.ModuleDetailResponse'
+              type: object
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Module not found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "409":
+          description: Module code already exists
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Update module
+      tags:
+      - Modules
+  /modules/{id}/permissions:
+    get:
+      consumes:
+      - application/json
+      description: Get all permissions belonging to a specific module
+      parameters:
+      - description: Module ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Search by resource, action, or description
+        in: query
+        name: search
+        type: string
+      - description: Filter by resource
+        in: query
+        name: resource
+        type: string
+      - description: Filter by action
+        in: query
+        name: action
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_permission_dto.PermissionListResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get permissions by module ID
+      tags:
+      - Modules
+  /modules/{id}/permissions/apply-crud-template:
+    post:
+      consumes:
+      - application/json
+      description: Automatically create create, read, update, delete permissions for
+        a module's resource
+      parameters:
+      - description: Module ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: CRUD template request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_permission_dto.ApplyCRUDTemplateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_permission_dto.CRUDTemplateResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Apply standard CRUD template
+      tags:
+      - Modules
+  /modules/{id}/restore:
+    post:
+      consumes:
+      - application/json
+      description: Restore a soft-deleted module (admin only)
+      parameters:
+      - description: Module ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Module restored successfully
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Module not found or not deleted
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Restore module
+      tags:
+      - Modules
+  /modules/tree:
+    get:
+      consumes:
+      - application/json
+      description: Get all active modules separated into root modules and sub-modules
+        arrays, ordered by depth and sort_order
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Module tree retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/lakukan-be_internal_modules_core_permission_dto.ModuleWithSubModules'
+                  type: array
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get module tree structure
+      tags:
+      - Modules
+  /permission-templates:
+    get:
+      consumes:
+      - application/json
+      description: Get list of permission templates with pagination and filters
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Search by name or description
+        in: query
+        name: search
+        type: string
+      - description: Include system templates
+        in: query
+        name: include_system
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_permission_template_dto.PermissionTemplateListResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all permission templates
+      tags:
+      - Permission Templates
+    post:
+      consumes:
+      - application/json
+      description: Create a new permission template with actions
+      parameters:
+      - description: Create permission template request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_permission_template_dto.CreatePermissionTemplateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_permission_template_dto.PermissionTemplateResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Create a new permission template
+      tags:
+      - Permission Templates
+  /permission-templates/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a permission template
+      parameters:
+      - description: Permission Template ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Delete a permission template
+      tags:
+      - Permission Templates
+    get:
+      consumes:
+      - application/json
+      description: Get a single permission template with its actions
+      parameters:
+      - description: Permission Template ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_permission_template_dto.PermissionTemplateResponse'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get permission template by ID
+      tags:
+      - Permission Templates
+    put:
+      consumes:
+      - application/json
+      description: Update an existing permission template
+      parameters:
+      - description: Permission Template ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update permission template request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_permission_template_dto.UpdatePermissionTemplateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_permission_template_dto.PermissionTemplateResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Update a permission template
+      tags:
+      - Permission Templates
+  /permission-templates/{id}/restore:
+    post:
+      consumes:
+      - application/json
+      description: Restore a soft deleted permission template
+      parameters:
+      - description: Permission Template ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Restore a permission template
+      tags:
+      - Permission Templates
+  /permissions:
+    get:
+      consumes:
+      - application/json
+      description: Get list of permissions with pagination and filters
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Search by resource, action, or description
+        in: query
+        name: search
+        type: string
+      - description: Filter by resource
+        in: query
+        name: resource
+        type: string
+      - description: Filter by action
+        in: query
+        name: action
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Permissions retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_permission_dto.PermissionListResponse'
+              type: object
+        "400":
+          description: Invalid query parameters
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all permissions
+      tags:
+      - Permissions
+    post:
+      consumes:
+      - application/json
+      description: Create a new permission (admin only)
+      parameters:
+      - description: Permission details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_permission_dto.CreatePermissionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Permission created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_permission_dto.PermissionResponse'
+              type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "409":
+          description: Permission with this resource and action already exists
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Create new permission
+      tags:
+      - Permissions
+  /permissions/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a permission (admin only)
+      parameters:
+      - description: Permission ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Permission deleted successfully
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Permission not found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Delete permission
+      tags:
+      - Permissions
+    get:
+      consumes:
+      - application/json
+      description: Get permission details by ID
+      parameters:
+      - description: Permission ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Permission retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_permission_dto.PermissionResponse'
+              type: object
+        "404":
+          description: Permission not found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get permission by ID
+      tags:
+      - Permissions
+    put:
+      consumes:
+      - application/json
+      description: Update permission details (admin only)
+      parameters:
+      - description: Permission ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Permission details to update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_permission_dto.UpdatePermissionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Permission updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_permission_dto.PermissionResponse'
+              type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Permission not found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "409":
+          description: Permission with this resource and action already exists
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Update permission
+      tags:
+      - Permissions
+  /permissions/actions:
+    get:
+      consumes:
+      - application/json
+      description: Get list of all unique action names from permissions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  items:
+                    type: string
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all unique actions
+      tags:
+      - Permissions
+  /roles:
+    get:
+      consumes:
+      - application/json
+      description: Get list of roles with pagination and filters
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Search by name or description
+        in: query
+        name: search
+        type: string
+      - default: true
+        description: Include system roles
+        in: query
+        name: include_system
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Roles retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_role_dto.RoleListResponse'
+              type: object
+        "400":
+          description: Invalid query parameters
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all roles
+      tags:
+      - Roles
+    post:
+      consumes:
+      - application/json
+      description: Create a new role
+      parameters:
+      - description: Role details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_role_dto.CreateRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Role created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_role_dto.RoleResponse'
+              type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "409":
+          description: Role name already exists
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Create new role
+      tags:
+      - Roles
+  /roles/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a role (system roles cannot be deleted)
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Role deleted successfully
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "403":
+          description: Cannot delete system role
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Role not found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Delete role
+      tags:
+      - Roles
+    get:
+      consumes:
+      - application/json
+      description: Get role details by ID
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Role retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_role_dto.RoleResponse'
+              type: object
+        "404":
+          description: Role not found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get role by ID
+      tags:
+      - Roles
+    put:
+      consumes:
+      - application/json
+      description: Update role details
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Role details to update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_role_dto.UpdateRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Role updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_role_dto.RoleResponse'
+              type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "403":
+          description: Cannot modify system role
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Role not found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "409":
+          description: Role name already exists
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Update role
+      tags:
+      - Roles
+  /roles/{id}/permissions:
+    get:
+      consumes:
+      - application/json
+      description: Get all permissions assigned to a specific role
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Role permissions retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_role_dto.RoleWithPermissionsResponse'
+              type: object
+        "404":
+          description: Role not found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get role permissions
+      tags:
+      - Roles
+    put:
+      consumes:
+      - application/json
+      description: Assign permissions to a role (replaces all existing permissions)
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Permission IDs to assign
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_role_dto.AssignPermissionsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Permissions assigned successfully
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "403":
+          description: Cannot modify system role
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Role not found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Assign permissions to role
+      tags:
+      - Roles
+  /roles/{id}/permissions/{permission_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a single permission from a role
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Permission ID
+        in: path
+        name: permission_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Permission removed successfully
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "403":
+          description: Cannot modify system role
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Role not found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Remove permission from role
+      tags:
+      - Roles
+    post:
+      consumes:
+      - application/json
+      description: Add a single permission to a role
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Permission ID
+        in: path
+        name: permission_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Permission added successfully
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "403":
+          description: Cannot modify system role
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: Role not found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Add permission to role
+      tags:
+      - Roles
+  /roles/{id}/restore:
+    post:
+      consumes:
+      - application/json
+      description: Restore a soft-deleted role by ID
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Role restored successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_role_dto.RoleResponse'
+              type: object
+        "404":
+          description: Role not found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Restore deleted role
+      tags:
+      - Roles
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: Get list of users with pagination and filters
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Search across email, username, and full name (OR condition)
+        in: query
+        name: search
+        type: string
+      - description: Filter by full name (partial match)
+        in: query
+        name: full_name
+        type: string
+      - description: Filter by username (partial match)
+        in: query
+        name: username
+        type: string
+      - description: Filter by email (partial match)
+        in: query
+        name: email
+        type: string
+      - description: Filter by active status
+        in: query
+        name: is_active
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Users retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_user_dto.UserListResponse'
+              type: object
+        "400":
+          description: Invalid query parameters
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all users
+      tags:
+      - Users
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account
+      parameters:
+      - description: User details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_user_dto.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_user_dto.UserResponse'
+              type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "409":
+          description: Email or username already exists
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Create new user
+      tags:
+      - Users
+  /users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User deleted successfully
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Delete user
+      tags:
+      - Users
+    get:
+      consumes:
+      - application/json
+      description: Get user details by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_user_dto.UserResponse'
+              type: object
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get user by ID
+      tags:
+      - Users
+    put:
+      consumes:
+      - application/json
+      description: Update user details
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User details to update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_user_dto.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_user_dto.UserResponse'
+              type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "409":
+          description: Email or username already exists
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Update user
+      tags:
+      - Users
+  /users/{id}/change-password:
+    post:
+      consumes:
+      - application/json
+      description: Change user password (users can only change their own password
+        unless they have users:update permission)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Password change request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_user_dto.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password changed successfully
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "401":
+          description: Invalid old password
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "403":
+          description: Forbidden - Cannot change other user's password
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Change password
+      tags:
+      - Users
+  /users/{id}/restore:
+    post:
+      consumes:
+      - application/json
+      description: Restore a soft-deleted user by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User restored successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_user_dto.UserResponse'
+              type: object
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Restore deleted user
+      tags:
+      - Users
+  /users/{id}/roles:
+    post:
+      consumes:
+      - application/json
+      description: Assign one or more roles to a user (adds to existing roles)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Role IDs to assign
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_user_dto.AssignRolesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Roles assigned successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_user_dto.UserResponse'
+              type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: User not found or invalid role ID
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Assign roles to user
+      tags:
+      - Users
+    put:
+      consumes:
+      - application/json
+      description: Replace all user roles with a new set (removes old roles, assigns
+        new ones)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Role IDs to sync
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/lakukan-be_internal_modules_core_user_dto.SyncRolesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Roles synced successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_user_dto.UserResponse'
+              type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "404":
+          description: User not found or invalid role ID
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Sync user roles
+      tags:
+      - Users
+  /users/{id}/roles/{roleId}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a specific role from a user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Role ID
+        in: path
+        name: roleId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Role removed successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/lakukan-be_internal_modules_core_user_dto.UserResponse'
+              type: object
+        "404":
+          description: User not found or role not found
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/lakukan-be_internal_shared_response.Response'
+      security:
+      - BearerAuth: []
+      summary: Remove role from user
+      tags:
+      - Users
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

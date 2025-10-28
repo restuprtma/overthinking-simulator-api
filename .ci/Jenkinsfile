@@ -1,0 +1,231 @@
+pipeline {
+    agent any
+
+    environment {
+        // Docker registry configuration
+        DOCKER_REGISTRY = 'your-docker-registry.com'
+        DOCKER_IMAGE = 'lakukan-api'
+        DOCKER_CREDENTIALS_ID = 'docker-registry-credentials'
+
+        // Kubernetes configuration
+        K8S_NAMESPACE = 'default'
+        K8S_CREDENTIALS_ID = 'kubernetes-credentials'
+
+        // Git configuration
+        GIT_COMMIT_SHORT = sh(
+            script: "git rev-parse --short HEAD",
+            returnStdout: true
+        ).trim()
+
+        // Build version - uses branch name and short commit hash
+        IMAGE_TAG = "${env.BRANCH_NAME}-${GIT_COMMIT_SHORT}"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                script {
+                    echo "Checking out code from ${env.GIT_BRANCH}"
+                    checkout scm
+                }
+            }
+        }
+
+        stage('Build Info') {
+            steps {
+                script {
+                    echo "======================================"
+                    echo "Build Information"
+                    echo "======================================"
+                    echo "Branch: ${env.BRANCH_NAME}"
+                    echo "Commit: ${env.GIT_COMMIT}"
+                    echo "Short Commit: ${GIT_COMMIT_SHORT}"
+                    echo "Image Tag: ${IMAGE_TAG}"
+                    echo "======================================"
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    echo "Building Docker image..."
+
+                    // Build the Docker image
+                    // Note: No database connection needed at build time
+                    sh """
+                        docker build \
+                            --build-arg BUILD_DATE=\$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
+                            --build-arg VCS_REF=${env.GIT_COMMIT} \
+                            --build-arg VERSION=${IMAGE_TAG} \
+                            -t ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${IMAGE_TAG} \
+                            -t ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:latest \
+                            -f Dockerfile \
+                            .
+                    """
+
+                    echo "Docker image built successfully: ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${IMAGE_TAG}"
+                }
+            }
+        }
+
+        stage('Test Docker Image') {
+            steps {
+                script {
+                    echo "Testing Docker image..."
+
+                    // Basic test: check if image exists and can be inspected
+                    sh """
+                        docker inspect ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${IMAGE_TAG}
+                    """
+
+                    echo "Docker image test passed!"
+                }
+            }
+        }
+
+        stage('Push to Registry') {
+            steps {
+                script {
+                    echo "Pushing Docker image to registry..."
+
+                    docker.withRegistry("https://${DOCKER_REGISTRY}", DOCKER_CREDENTIALS_ID) {
+                        // Push with specific tag
+                        sh "docker push ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${IMAGE_TAG}"
+
+                        // Push latest tag only for main/master branch
+                        if (env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'master') {
+                            sh "docker push ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:latest"
+                            echo "Pushed latest tag"
+                        }
+                    }
+
+                    echo "Docker image pushed successfully!"
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            when {
+                anyOf {
+                    branch 'main'
+                    branch 'master'
+                    branch 'staging'
+                    branch 'develop'
+                }
+            }
+            steps {
+                script {
+                    echo "Deploying to Kubernetes..."
+
+                    // Determine environment based on branch
+                    def environment = 'production'
+                    if (env.BRANCH_NAME == 'staging') {
+                        environment = 'staging'
+                    } else if (env.BRANCH_NAME == 'develop') {
+                        environment = 'development'
+                    }
+
+                    echo "Deploying to environment: ${environment}"
+
+                    withKubeConfig([credentialsId: K8S_CREDENTIALS_ID]) {
+                        // Update the deployment with new image
+                        sh """
+                            kubectl set image deployment/lakukan-api \
+                                lakukan-api=${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${IMAGE_TAG} \
+                                -n ${K8S_NAMESPACE}
+
+                            # Wait for rollout to complete
+                            kubectl rollout status deployment/lakukan-api -n ${K8S_NAMESPACE} --timeout=5m
+                        """
+                    }
+
+                    echo "Deployment completed successfully!"
+                }
+            }
+        }
+
+        stage('Verify Deployment') {
+            when {
+                anyOf {
+                    branch 'main'
+                    branch 'master'
+                    branch 'staging'
+                    branch 'develop'
+                }
+            }
+            steps {
+                script {
+                    echo "Verifying deployment..."
+
+                    withKubeConfig([credentialsId: K8S_CREDENTIALS_ID]) {
+                        // Check pod status
+                        sh """
+                            kubectl get pods -n ${K8S_NAMESPACE} -l app=lakukan-api
+
+                            # Check if all pods are ready
+                            kubectl wait --for=condition=ready pod \
+                                -l app=lakukan-api \
+                                -n ${K8S_NAMESPACE} \
+                                --timeout=5m
+                        """
+                    }
+
+                    echo "Deployment verified successfully!"
+                }
+            }
+        }
+
+        stage('Cleanup') {
+            steps {
+                script {
+                    echo "Cleaning up..."
+
+                    // Remove local Docker images to save space
+                    sh """
+                        docker rmi ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${IMAGE_TAG} || true
+                        docker rmi ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:latest || true
+                    """
+
+                    echo "Cleanup completed!"
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "======================================"
+            echo "Pipeline completed successfully! ✓"
+            echo "======================================"
+            echo "Image: ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${IMAGE_TAG}"
+            echo "Branch: ${env.BRANCH_NAME}"
+            echo "======================================"
+
+            // Optional: Send notification (Slack, email, etc.)
+            // slackSend(
+            //     color: 'good',
+            //     message: "Build Successful: ${env.JOB_NAME} #${env.BUILD_NUMBER}\nImage: ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${IMAGE_TAG}"
+            // )
+        }
+
+        failure {
+            echo "======================================"
+            echo "Pipeline failed! ✗"
+            echo "======================================"
+            echo "Branch: ${env.BRANCH_NAME}"
+            echo "======================================"
+
+            // Optional: Send notification
+            // slackSend(
+            //     color: 'danger',
+            //     message: "Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
+            // )
+        }
+
+        always {
+            // Clean workspace
+            cleanWs()
+        }
+    }
+}

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lakukan API Documentation</title>
+  <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui.css" />
+  <link rel="icon" type="image/png" href="https://unpkg.com/swagger-ui-dist@5.9.0/favicon-32x32.png" sizes="32x32" />
+  <link rel="icon" type="image/png" href="https://unpkg.com/swagger-ui-dist@5.9.0/favicon-16x16.png" sizes="16x16" />
+  <style>
+    html {
+      box-sizing: border-box;
+      overflow: -moz-scrollbars-vertical;
+      overflow-y: scroll;
+    }
+
+    *,
+    *:before,
+    *:after {
+      box-sizing: inherit;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    .topbar {
+      background-color: #1b1b1b !important;
+    }
+
+    .swagger-ui .topbar .download-url-wrapper input[type=text] {
+      border: 2px solid #62a1ff;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="swagger-ui"></div>
+
+  <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-bundle.js" charset="UTF-8"></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js" charset="UTF-8"></script>
+  <script>
+    window.onload = function() {
+      // Persistent auth token storage
+      const STORAGE_KEY = 'swagger-auth-token';
+
+      // Load saved token from localStorage
+      const savedToken = localStorage.getItem(STORAGE_KEY);
+
+      // Begin Swagger UI call region
+      const ui = SwaggerUIBundle({
+        url: "/swagger/swagger.json",
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        persistAuthorization: true, // Enable persistence
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        plugins: [
+          SwaggerUIBundle.plugins.DownloadUrl
+        ],
+        layout: "StandaloneLayout",
+
+        // Custom request interceptor to save token
+        requestInterceptor: (request) => {
+          // Save authorization token to localStorage
+          if (request.headers.Authorization) {
+            const token = request.headers.Authorization.replace('Bearer ', '');
+            if (token && token !== 'undefined') {
+              localStorage.setItem(STORAGE_KEY, token);
+              console.log('🔐 Auth token saved to localStorage');
+            }
+          }
+          return request;
+        },
+
+        // Custom response interceptor
+        responseInterceptor: (response) => {
+          return response;
+        },
+
+        // Initialize with saved token if exists
+        onComplete: () => {
+          if (savedToken) {
+            console.log('🔓 Restoring auth token from localStorage');
+            ui.preauthorizeApiKey('BearerAuth', savedToken);
+          }
+        }
+      });
+
+      window.ui = ui;
+
+      // Add custom button to clear saved token
+      setTimeout(() => {
+        const authWrapper = document.querySelector('.auth-wrapper');
+        if (authWrapper && savedToken) {
+          const clearBtn = document.createElement('button');
+          clearBtn.innerHTML = '🗑️ Clear Saved Token';
+          clearBtn.style.cssText = 'margin-left: 10px; padding: 5px 10px; background: #ff6b6b; color: white; border: none; border-radius: 4px; cursor: pointer;';
+          clearBtn.onclick = () => {
+            localStorage.removeItem(STORAGE_KEY);
+            alert('✅ Saved token cleared! Please refresh the page.');
+            window.location.reload();
+          };
+          authWrapper.appendChild(clearBtn);
+        }
+      }, 1000);
+    };
+  </script>
+</body>
+</html>

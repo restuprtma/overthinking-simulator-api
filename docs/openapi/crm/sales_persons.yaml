@@ -1,0 +1,1172 @@
+openapi: 3.0.3
+info:
+  title: Lakukan CRM - Sales Persons API
+  description: |
+    API documentation for Sales Persons management in Lakukan CRM module.
+
+    ## Overview
+    Sales Persons are marketing/sales representatives within a company. Each sales person is linked to a company user and contains additional information like sales area, targets, commission rates, and WhatsApp integration.
+
+    ## Features
+    - Create, read, update, and delete sales persons
+    - Filter by active status, WhatsApp connection, and sales area
+    - Search by sales code, name, or user information
+    - Soft delete with restore capability
+    - Audit trail tracking
+
+    ## Authentication
+    All endpoints require Bearer token authentication via JWT.
+
+    ## Permissions
+    - `sales_persons:read` - View sales persons
+    - `sales_persons:create` - Create new sales persons
+    - `sales_persons:update` - Update existing sales persons
+    - `sales_persons:delete` - Delete sales persons
+    - `sales_persons:restore` - Restore deleted sales persons
+    - `sales_persons:manage` - Manage WhatsApp integration (connect, disconnect, restart)
+
+  version: 1.0.0
+  contact:
+    name: Lakukan API Support
+    email: support@lakukan.id
+
+servers:
+  - url: http://localhost:8080/crm/v1
+    description: Local development server
+  - url: https://api.lakukan.id/crm/v1
+    description: Production server
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Sales Persons
+    description: Sales person management operations
+  - name: Sales Persons - WhatsApp
+    description: WhatsApp integration for sales persons
+
+paths:
+  /sales-persons:
+    get:
+      tags:
+        - Sales Persons
+      summary: Get all sales persons
+      description: |
+        Retrieve a paginated list of sales persons with optional filters.
+
+        **Note:** For performance optimization, audit trail names (created_by_name, updated_by_name) are not included in list view. Use the detail endpoint to get complete audit information.
+      operationId: listSalesPersons
+      parameters:
+        - name: page
+          in: query
+          description: Page number (starts from 1)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+            example: 1
+        - name: page_size
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+            example: 10
+        - name: search
+          in: query
+          description: Search by sales code, sales name, user full name, or sales area
+          required: false
+          schema:
+            type: string
+            maxLength: 255
+            example: "Jakarta"
+        - name: is_active
+          in: query
+          description: Filter by active status
+          required: false
+          schema:
+            type: boolean
+            example: true
+        - name: is_whatsapp_connected
+          in: query
+          description: Filter by WhatsApp connection status
+          required: false
+          schema:
+            type: boolean
+            example: true
+        - name: sales_area
+          in: query
+          description: Filter by specific sales area
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+            example: "Jakarta Selatan"
+      responses:
+        '200':
+          description: Sales persons retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesPersonListResponse'
+              example:
+                data:
+                  - id: "550e8400-e29b-41d4-a716-446655440000"
+                    company_user_id: "660e8400-e29b-41d4-a716-446655440001"
+                    sales_code: "SP001"
+                    sales_name: "John Sales"
+                    sales_area: "Jakarta Selatan"
+                    sales_target: 50000000.00
+                    commission_rate: 5.00
+                    whatsapp: "+628123456789"
+                    is_whatsapp_connected: true
+                    is_active: true
+                    user:
+                      id: "770e8400-e29b-41d4-a716-446655440002"
+                      full_name: "John Doe"
+                      email: "john.doe@example.com"
+                    audit:
+                      created_at: "2024-01-15T10:30:00Z"
+                      created_by: "880e8400-e29b-41d4-a716-446655440003"
+                      updated_at: "2024-01-20T15:45:00Z"
+                      updated_by: "880e8400-e29b-41d4-a716-446655440003"
+                message: "Sales persons retrieved successfully"
+                meta:
+                  page: 1
+                  page_size: 10
+                  total: 25
+                  total_pages: 3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags:
+        - Sales Persons
+      summary: Create new sales person
+      description: |
+        Create a new sales person record.
+
+        **Business Rules:**
+        - Sales code must be unique within the company
+        - One company user can only have one sales person record
+        - Company user must exist and belong to the authenticated company
+      operationId: createSalesPerson
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSalesPersonRequest'
+            example:
+              company_user_id: "660e8400-e29b-41d4-a716-446655440001"
+              sales_code: "SP001"
+              sales_name: "John Sales"
+              sales_area: "Jakarta Selatan"
+              sales_target: 50000000.00
+              commission_rate: 5.00
+              whatsapp: "+628123456789"
+              is_whatsapp_connected: false
+              is_active: true
+              notes: "Top performer in Q4 2023"
+      responses:
+        '201':
+          description: Sales person created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesPersonResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: Conflict - Sales code already exists or company user already has a sales person record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                duplicate_code:
+                  summary: Duplicate sales code
+                  value:
+                    message: "Sales code already exists"
+                    errors: "sales code already exists in this company"
+                duplicate_user:
+                  summary: Duplicate company user
+                  value:
+                    message: "This company user already has a sales person record"
+                    errors: "this company user already has a sales person record"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /sales-persons/{id}:
+    get:
+      tags:
+        - Sales Persons
+      summary: Get sales person by ID
+      description: |
+        Retrieve detailed information about a specific sales person.
+
+        **Note:** This endpoint includes complete audit trail information with creator/updater names.
+      operationId: getSalesPersonById
+      parameters:
+        - name: id
+          in: path
+          description: Sales person UUID
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '200':
+          description: Sales person retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesPersonResponse'
+              example:
+                data:
+                  id: "550e8400-e29b-41d4-a716-446655440000"
+                  company_user_id: "660e8400-e29b-41d4-a716-446655440001"
+                  sales_code: "SP001"
+                  sales_name: "John Sales"
+                  sales_area: "Jakarta Selatan"
+                  sales_target: 50000000.00
+                  commission_rate: 5.00
+                  whatsapp: "+628123456789"
+                  is_whatsapp_connected: true
+                  is_active: true
+                  notes: "Top performer"
+                  user:
+                    id: "770e8400-e29b-41d4-a716-446655440002"
+                    full_name: "John Doe"
+                    email: "john.doe@example.com"
+                  audit:
+                    created_at: "2024-01-15T10:30:00Z"
+                    created_by: "880e8400-e29b-41d4-a716-446655440003"
+                    created_by_name: "Admin User"
+                    updated_at: "2024-01-20T15:45:00Z"
+                    updated_by: "880e8400-e29b-41d4-a716-446655440003"
+                    updated_by_name: "Manager User"
+                message: "Sales person retrieved successfully"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      tags:
+        - Sales Persons
+      summary: Update sales person
+      description: |
+        Update an existing sales person. All fields are optional for partial updates.
+
+        **Business Rules:**
+        - If sales code is changed, new code must be unique within the company
+        - Cannot change company_user_id (create new sales person instead)
+      operationId: updateSalesPerson
+      parameters:
+        - name: id
+          in: path
+          description: Sales person UUID
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440000"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSalesPersonRequest'
+            example:
+              sales_name: "John Senior Sales"
+              sales_target: 75000000.00
+              is_whatsapp_connected: true
+      responses:
+        '200':
+          description: Sales person updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesPersonResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Conflict - Sales code already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - Sales Persons
+      summary: Delete sales person
+      description: |
+        Soft delete a sales person. The record is not permanently deleted but marked as deleted.
+
+        **Note:** Deleted sales persons can be restored using the restore endpoint.
+      operationId: deleteSalesPerson
+      parameters:
+        - name: id
+          in: path
+          description: Sales person UUID
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '200':
+          description: Sales person deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Sales person deleted successfully"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /sales-persons/{id}/restore:
+    post:
+      tags:
+        - Sales Persons
+      summary: Restore deleted sales person
+      description: Restore a soft-deleted sales person
+      operationId: restoreSalesPerson
+      parameters:
+        - name: id
+          in: path
+          description: Sales person UUID
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '200':
+          description: Sales person restored successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Sales person restored successfully"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Sales person not found or not deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /sales-persons/{id}/whatsapp/connect:
+    post:
+      tags:
+        - Sales Persons - WhatsApp
+      summary: Connect WhatsApp to sales person
+      description: |
+        Initiate WhatsApp connection for a sales person using pairing code authentication.
+
+        **Flow:**
+        1. Backend creates WAHA session and requests pairing code
+        2. Returns 8-digit pairing code to frontend
+        3. User enters pairing code in WhatsApp mobile app (Settings → Linked Devices → Link a Device → Link with phone number instead)
+        4. WhatsApp validates the code and connects the session
+        5. Backend receives webhook with session.status = WORKING
+        6. is_whatsapp_connected is automatically updated to true
+
+        **Polling:**
+        After calling this endpoint, frontend should poll GET /whatsapp/status every 3 seconds to check connection status.
+
+        **Requirements:**
+        - Sales person must have a WhatsApp number configured
+        - One sales person can only have one active session
+        - Pairing code expires in 90 seconds
+
+        **Business Rules:**
+        - If session already exists and is WORKING, returns existing session info
+        - If session exists but STOPPED/FAILED, creates new session
+      operationId: connectWhatsApp
+      parameters:
+        - name: id
+          in: path
+          description: Sales person UUID
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '200':
+          description: WhatsApp connection initiated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectWhatsAppResponse'
+              example:
+                data:
+                  sales_person_id: "550e8400-e29b-41d4-a716-446655440000"
+                  session_name: "sp_550e8400_e29b_41d4_a716_446655440000"
+                  whatsapp_number: "+628123456789"
+                  pairing_code: "12345678"
+                  status: "STARTING"
+                  expires_at: "2025-01-26T10:31:30Z"
+                message: "WhatsApp connection initiated. Please enter the pairing code in WhatsApp mobile app within 90 seconds."
+        '400':
+          description: Bad Request - Sales person has no WhatsApp number or invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                no_whatsapp:
+                  summary: No WhatsApp number configured
+                  value:
+                    message: "Sales person has no WhatsApp number configured"
+                    errors: ""
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /sales-persons/{id}/whatsapp/status:
+    get:
+      tags:
+        - Sales Persons - WhatsApp
+      summary: Get WhatsApp connection status
+      description: |
+        Get current WhatsApp connection status for a sales person.
+
+        **Use Case:**
+        - Poll this endpoint every 3 seconds after initiating connection to check if user has entered pairing code
+        - Display connection status in frontend
+
+        **Status Values:**
+        - `STARTING` - Session is being created
+        - `SCAN_QR_CODE` - Waiting for pairing code entry (should not happen with pairing code flow)
+        - `WORKING` - WhatsApp is connected and working
+        - `FAILED` - Connection failed
+        - `STOPPED` - Session stopped/disconnected
+        - `null` - No session created yet
+
+        **Stop Polling When:**
+        - Status changes to WORKING (success)
+        - Status changes to FAILED (error)
+        - Pairing code expires (90 seconds after connection request)
+      operationId: getWhatsAppStatus
+      parameters:
+        - name: id
+          in: path
+          description: Sales person UUID
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '200':
+          description: WhatsApp status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WhatsAppStatusResponse'
+              examples:
+                working:
+                  summary: WhatsApp connected
+                  value:
+                    data:
+                      sales_person_id: "550e8400-e29b-41d4-a716-446655440000"
+                      session_name: "sp_550e8400_e29b_41d4_a716_446655440000"
+                      whatsapp_number: "+628123456789"
+                      status: "WORKING"
+                      is_connected: true
+                      connected_at: "2025-01-26T10:30:45Z"
+                      last_seen_at: "2025-01-26T10:35:00Z"
+                    message: "WhatsApp status retrieved successfully"
+                starting:
+                  summary: Connection in progress
+                  value:
+                    data:
+                      sales_person_id: "550e8400-e29b-41d4-a716-446655440000"
+                      session_name: "sp_550e8400_e29b_41d4_a716_446655440000"
+                      whatsapp_number: "+628123456789"
+                      status: "STARTING"
+                      is_connected: false
+                      pairing_code: "12345678"
+                      pairing_code_expires_at: "2025-01-26T10:31:30Z"
+                    message: "WhatsApp status retrieved successfully"
+                not_connected:
+                  summary: No session
+                  value:
+                    data:
+                      sales_person_id: "550e8400-e29b-41d4-a716-446655440000"
+                      whatsapp_number: "+628123456789"
+                      status: null
+                      is_connected: false
+                    message: "WhatsApp status retrieved successfully"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /sales-persons/{id}/whatsapp/disconnect:
+    post:
+      tags:
+        - Sales Persons - WhatsApp
+      summary: Disconnect WhatsApp from sales person
+      description: |
+        Disconnect and logout WhatsApp session for a sales person.
+
+        **What Happens:**
+        1. Stops the WAHA session
+        2. Logs out from WhatsApp (removes device from linked devices)
+        3. Updates is_whatsapp_connected to false
+        4. Clears session metadata
+
+        **Note:** This will remove the device from WhatsApp linked devices. User will need to reconnect with a new pairing code.
+      operationId: disconnectWhatsApp
+      parameters:
+        - name: id
+          in: path
+          description: Sales person UUID
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '200':
+          description: WhatsApp disconnected successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "WhatsApp disconnected successfully"
+        '400':
+          description: Bad Request - No active session to disconnect
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "No active WhatsApp session to disconnect"
+                errors: ""
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /sales-persons/{id}/whatsapp/restart:
+    post:
+      tags:
+        - Sales Persons - WhatsApp
+      summary: Restart WhatsApp session
+      description: |
+        Restart an existing WhatsApp session without logging out.
+
+        **Use Case:**
+        - When WhatsApp connection is unstable
+        - When messages are not being received
+        - Session is in FAILED state but still authenticated
+
+        **What Happens:**
+        1. Restarts the WAHA session (keeps authentication)
+        2. Session status temporarily becomes STARTING
+        3. Session reconnects and returns to WORKING
+
+        **Note:** This does NOT require re-entering pairing code. If session authentication is lost, use disconnect + connect instead.
+      operationId: restartWhatsApp
+      parameters:
+        - name: id
+          in: path
+          description: Sales person UUID
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '200':
+          description: WhatsApp session restarted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "WhatsApp session restarted successfully"
+        '400':
+          description: Bad Request - No active session to restart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "No active WhatsApp session to restart"
+                errors: ""
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT token obtained from login endpoint.
+
+        The token must include:
+        - `user_id` - Authenticated user ID
+        - `company_id` - Current company context
+
+  schemas:
+    CreateSalesPersonRequest:
+      type: object
+      required:
+        - company_user_id
+        - sales_code
+      properties:
+        company_user_id:
+          type: string
+          format: uuid
+          description: Company user ID (must exist in company_users table)
+          example: "660e8400-e29b-41d4-a716-446655440001"
+        sales_code:
+          type: string
+          minLength: 2
+          maxLength: 50
+          description: Unique sales code within the company
+          example: "SP001"
+        sales_name:
+          type: string
+          maxLength: 255
+          nullable: true
+          description: Display name for sales person (can differ from user full name)
+          example: "John Sales"
+        sales_area:
+          type: string
+          maxLength: 100
+          nullable: true
+          description: Sales territory or area coverage
+          example: "Jakarta Selatan"
+        sales_target:
+          type: number
+          format: double
+          minimum: 0
+          nullable: true
+          description: Monthly or annual sales target
+          example: 50000000.00
+        commission_rate:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+          nullable: true
+          description: Commission percentage (e.g., 5.00 for 5%)
+          example: 5.00
+        whatsapp:
+          type: string
+          maxLength: 20
+          nullable: true
+          description: WhatsApp number for sales person
+          example: "+628123456789"
+        is_whatsapp_connected:
+          type: boolean
+          nullable: true
+          description: WhatsApp connection status
+          default: false
+          example: false
+        is_active:
+          type: boolean
+          nullable: true
+          description: Active status
+          default: true
+          example: true
+        notes:
+          type: string
+          nullable: true
+          description: Additional notes about the sales person
+          example: "Top performer in Q4 2023"
+
+    UpdateSalesPersonRequest:
+      type: object
+      description: All fields are optional for partial updates
+      properties:
+        sales_code:
+          type: string
+          minLength: 2
+          maxLength: 50
+          description: Unique sales code within the company
+          example: "SP001"
+        sales_name:
+          type: string
+          maxLength: 255
+          nullable: true
+          description: Display name for sales person
+          example: "John Senior Sales"
+        sales_area:
+          type: string
+          maxLength: 100
+          nullable: true
+          description: Sales territory or area coverage
+          example: "Jakarta Selatan"
+        sales_target:
+          type: number
+          format: double
+          minimum: 0
+          nullable: true
+          description: Monthly or annual sales target
+          example: 75000000.00
+        commission_rate:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+          nullable: true
+          description: Commission percentage
+          example: 7.50
+        whatsapp:
+          type: string
+          maxLength: 20
+          nullable: true
+          description: WhatsApp number
+          example: "+628123456789"
+        is_whatsapp_connected:
+          type: boolean
+          nullable: true
+          description: WhatsApp connection status
+          example: true
+        is_active:
+          type: boolean
+          nullable: true
+          description: Active status
+          example: true
+        notes:
+          type: string
+          nullable: true
+          description: Additional notes
+          example: "Promoted to senior sales"
+
+    SalesPersonData:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Sales person unique identifier
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        company_user_id:
+          type: string
+          format: uuid
+          description: Company user ID reference
+          example: "660e8400-e29b-41d4-a716-446655440001"
+        sales_code:
+          type: string
+          description: Sales code
+          example: "SP001"
+        sales_name:
+          type: string
+          nullable: true
+          description: Sales person display name
+          example: "John Sales"
+        sales_area:
+          type: string
+          nullable: true
+          description: Sales territory
+          example: "Jakarta Selatan"
+        sales_target:
+          type: number
+          format: double
+          nullable: true
+          description: Sales target amount
+          example: 50000000.00
+        commission_rate:
+          type: number
+          format: double
+          nullable: true
+          description: Commission percentage
+          example: 5.00
+        whatsapp:
+          type: string
+          nullable: true
+          description: WhatsApp number
+          example: "+628123456789"
+        is_whatsapp_connected:
+          type: boolean
+          description: WhatsApp connection status
+          example: true
+        is_active:
+          type: boolean
+          description: Active status
+          example: true
+        notes:
+          type: string
+          nullable: true
+          description: Additional notes
+          example: "Top performer"
+        user:
+          $ref: '#/components/schemas/UserInfo'
+        audit:
+          $ref: '#/components/schemas/AuditInfo'
+
+    UserInfo:
+      type: object
+      description: Related user information
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: User ID
+          example: "770e8400-e29b-41d4-a716-446655440002"
+        full_name:
+          type: string
+          description: User full name
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          description: User email
+          example: "john.doe@example.com"
+
+    AuditInfo:
+      type: object
+      description: Audit trail information
+      properties:
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: "2024-01-15T10:30:00Z"
+        created_by:
+          type: string
+          format: uuid
+          nullable: true
+          description: Creator user ID
+          example: "880e8400-e29b-41d4-a716-446655440003"
+        created_by_name:
+          type: string
+          nullable: true
+          description: Creator user name (only in detail view)
+          example: "Admin User"
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: "2024-01-20T15:45:00Z"
+        updated_by:
+          type: string
+          format: uuid
+          nullable: true
+          description: Last updater user ID
+          example: "880e8400-e29b-41d4-a716-446655440003"
+        updated_by_name:
+          type: string
+          nullable: true
+          description: Last updater user name (only in detail view)
+          example: "Manager User"
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Deletion timestamp
+          example: null
+        deleted_by:
+          type: string
+          format: uuid
+          nullable: true
+          description: Deleter user ID
+          example: null
+        deleted_by_name:
+          type: string
+          nullable: true
+          description: Deleter user name (only in detail view)
+          example: null
+
+    SalesPersonResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/SalesPersonData'
+        message:
+          type: string
+          example: "Sales person retrieved successfully"
+
+    SalesPersonListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SalesPersonData'
+        message:
+          type: string
+          example: "Sales persons retrieved successfully"
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Current page number
+          example: 1
+        page_size:
+          type: integer
+          description: Number of items per page
+          example: 10
+        total:
+          type: integer
+          format: int64
+          description: Total number of items
+          example: 25
+        total_pages:
+          type: integer
+          description: Total number of pages
+          example: 3
+
+    ConnectWhatsAppData:
+      type: object
+      properties:
+        sales_person_id:
+          type: string
+          format: uuid
+          description: Sales person ID
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        session_name:
+          type: string
+          description: WAHA session name (unique identifier)
+          example: "sp_550e8400_e29b_41d4_a716_446655440000"
+        whatsapp_number:
+          type: string
+          description: WhatsApp phone number
+          example: "+628123456789"
+        pairing_code:
+          type: string
+          description: 8-digit pairing code to enter in WhatsApp app
+          example: "12345678"
+        status:
+          type: string
+          description: Current session status
+          enum: [STARTING, SCAN_QR_CODE, WORKING, FAILED, STOPPED]
+          example: "STARTING"
+        expires_at:
+          type: string
+          format: date-time
+          description: Pairing code expiration time (90 seconds from creation)
+          example: "2025-01-26T10:31:30Z"
+
+    ConnectWhatsAppResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/ConnectWhatsAppData'
+        message:
+          type: string
+          example: "WhatsApp connection initiated. Please enter the pairing code in WhatsApp mobile app within 90 seconds."
+
+    WhatsAppStatusData:
+      type: object
+      properties:
+        sales_person_id:
+          type: string
+          format: uuid
+          description: Sales person ID
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        session_name:
+          type: string
+          nullable: true
+          description: WAHA session name
+          example: "sp_550e8400_e29b_41d4_a716_446655440000"
+        whatsapp_number:
+          type: string
+          description: WhatsApp phone number
+          example: "+628123456789"
+        status:
+          type: string
+          nullable: true
+          description: Current session status
+          enum: [STARTING, SCAN_QR_CODE, WORKING, FAILED, STOPPED]
+          example: "WORKING"
+        is_connected:
+          type: boolean
+          description: Whether WhatsApp is currently connected
+          example: true
+        pairing_code:
+          type: string
+          nullable: true
+          description: Current pairing code (only during connection)
+          example: "12345678"
+        pairing_code_expires_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Pairing code expiration time
+          example: "2025-01-26T10:31:30Z"
+        connected_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp when WhatsApp was connected
+          example: "2025-01-26T10:30:45Z"
+        disconnected_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp when WhatsApp was disconnected
+          example: null
+        last_seen_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Last activity timestamp from WhatsApp
+          example: "2025-01-26T10:35:00Z"
+
+    WhatsAppStatusResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/WhatsAppStatusData'
+        message:
+          type: string
+          example: "WhatsApp status retrieved successfully"
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+          example: "Invalid request"
+        errors:
+          oneOf:
+            - type: string
+            - type: object
+          description: Detailed error information
+          example: "Field validation failed"
+
+  responses:
+    BadRequest:
+      description: Bad Request - Invalid input parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: "Invalid request body"
+            errors: "Field 'sales_code' is required"
+
+    Unauthorized:
+      description: Unauthorized - Missing or invalid authentication token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: "Unauthorized"
+            errors: "Invalid or expired token"
+
+    Forbidden:
+      description: Forbidden - Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: "Forbidden"
+            errors: "Permission 'sales_persons:read' is required"
+
+    NotFound:
+      description: Not Found - Resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: "Sales person not found"
+            errors: ""
+
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: "Internal server error"
+            errors: "An unexpected error occurred"
