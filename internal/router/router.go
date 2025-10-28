@@ -1,35 +1,7 @@
 package router
 
 import (
-	"venturo-skeleton-go/internal/config"
-	"venturo-skeleton-go/internal/modules/core/auth"
-	"venturo-skeleton-go/internal/modules/core/company"
-	"venturo-skeleton-go/internal/modules/core/permission"
-	"venturo-skeleton-go/internal/modules/core/permission_template"
-	"venturo-skeleton-go/internal/modules/core/role"
-	"venturo-skeleton-go/internal/modules/core/user"
-	"venturo-skeleton-go/internal/modules/crm/auto_reply_rules"
-	"venturo-skeleton-go/internal/modules/crm/chats"
-	"venturo-skeleton-go/internal/modules/crm/company_settings"
-	"venturo-skeleton-go/internal/modules/crm/lead_sources"
-	"venturo-skeleton-go/internal/modules/crm/leads"
-	"venturo-skeleton-go/internal/modules/crm/sales_persons"
-	"venturo-skeleton-go/internal/modules/crm/webhooks"
 	"time"
-
-	// Finance modules - commented out until implemented
-	// "venturo-skeleton-go/internal/modules/finance/banks"
-	// "venturo-skeleton-go/internal/modules/finance/categories"
-	// "venturo-skeleton-go/internal/modules/finance/coa"
-	// "venturo-skeleton-go/internal/modules/finance/customers"
-	// "venturo-skeleton-go/internal/modules/finance/expense"
-	// "venturo-skeleton-go/internal/modules/finance/invoice"
-	// "venturo-skeleton-go/internal/modules/finance/items"
-	// "venturo-skeleton-go/internal/modules/finance/receipt"
-	// "venturo-skeleton-go/internal/modules/finance/reports"
-	// "venturo-skeleton-go/internal/modules/finance/tax_rates"
-	// "venturo-skeleton-go/internal/modules/finance/vendors"
-	"venturo-skeleton-go/pkg/logger"
 
 	"github.com/gin-contrib/cors"
 	ginzap "github.com/gin-contrib/zap"
@@ -38,6 +10,15 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
+
+	"venturo-skeleton-go/internal/config"
+	"venturo-skeleton-go/internal/modules/core/auth"
+	"venturo-skeleton-go/internal/modules/core/company"
+	"venturo-skeleton-go/internal/modules/core/permission"
+	"venturo-skeleton-go/internal/modules/core/permission_template"
+	"venturo-skeleton-go/internal/modules/core/role"
+	"venturo-skeleton-go/internal/modules/core/user"
+	"venturo-skeleton-go/pkg/logger"
 )
 
 func Setup(router *gin.Engine, db *pgxpool.Pool, cfg *config.Config) {
@@ -52,7 +33,7 @@ func Setup(router *gin.Engine, db *pgxpool.Pool, cfg *config.Config) {
 
 	// CORS middleware configuration
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173", "http://localhost:3000", "https://app.lakukan.id"},
+		AllowOrigins:     []string{"http://localhost:5173", "http://localhost:3000"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -61,26 +42,13 @@ func Setup(router *gin.Engine, db *pgxpool.Pool, cfg *config.Config) {
 	}))
 
 	// Swagger documentation endpoints
-	// Serve custom Swagger UI with persistent auth
-	router.StaticFile("/swagger", "./web/swagger/index.html")
-	router.StaticFile("/swagger/", "./web/swagger/index.html")
-
-	// Serve swagger.json and other swagger assets
-	router.GET("/swagger/swagger.json", func(c *gin.Context) {
-		c.File("./docs/swagger/swagger.json")
-	})
-	router.GET("/swagger/doc.json", func(c *gin.Context) {
-		c.File("./docs/swagger/swagger.json")
-	})
-
-	// Fallback to default swagger UI if needed
-	router.GET("/swagger-ui/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Health check endpoint
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"status":  "ok",
-			"message": "Lakukan API is running",
+			"message": "API is running",
 		})
 	})
 
@@ -112,86 +80,6 @@ func Setup(router *gin.Engine, db *pgxpool.Pool, cfg *config.Config) {
 		companyModule := company.Initialize(db)
 		companyModule.SetupRoutes(v1)
 	}
-
-	// CRM v1 routes
-	crmV1 := router.Group("/crm/v1")
-	{
-		// Initialize and setup company settings module
-		companySettingsModule := company_settings.Initialize(db)
-		companySettingsModule.SetupRoutes(crmV1)
-
-		// Initialize and setup lead sources module
-		leadSourcesModule := lead_sources.Initialize(db)
-		leadSourcesModule.SetupRoutes(crmV1)
-
-		// Initialize and setup leads module
-		leadsModule := leads.Initialize(db)
-		leadsModule.SetupRoutes(crmV1)
-
-		// Initialize and setup chats module
-		chatsModule := chats.Initialize(db)
-		chatsModule.SetupRoutes(crmV1)
-
-		// Initialize and setup sales persons module
-		salesPersonsModule := sales_persons.Initialize(db, cfg)
-		salesPersonsModule.SetupRoutes(crmV1)
-
-		// Initialize and setup auto reply rules module
-		autoReplyRulesModule := auto_reply_rules.Initialize(db)
-		autoReplyRulesModule.SetupRoutes(crmV1)
-
-		// Initialize and setup webhooks module
-		webhooksModule := webhooks.Initialize(db, cfg)
-		webhooksModule.SetupRoutes(crmV1)
-	}
-
-	// Finance v1 routes (commented out until implemented)
-	// financeV1 := router.Group("/finance/v1")
-	// {
-	// 	// Initialize and setup COA module
-	// 	coaModule := coa.Initialize(db)
-	// 	coaModule.SetupRoutes(financeV1)
-	//
-	// 	// Initialize and setup Tax Rates module
-	// 	taxRateModule := tax_rates.Initialize(db)
-	// 	taxRateModule.SetupRoutes(financeV1)
-	//
-	// 	// Initialize and setup Categories module
-	// 	categoryModule := categories.Initialize(db)
-	// 	categoryModule.SetupRoutes(financeV1)
-	//
-	// 	// Initialize and setup Items module
-	// 	itemModule := items.Initialize(db)
-	// 	itemModule.SetupRoutes(financeV1)
-	//
-	// 	// Initialize and setup Vendors module
-	// 	vendorModule := vendors.Initialize(db)
-	// 	vendorModule.SetupRoutes(financeV1)
-	//
-	// 	// Initialize and setup Customers module
-	// 	customerModule := customers.Initialize(db)
-	// 	customerModule.SetupRoutes(financeV1)
-	//
-	// 	// Initialize and setup Banks module
-	// 	bankModule := banks.Initialize(db)
-	// 	bankModule.SetupRoutes(financeV1)
-	//
-	// 	// Initialize and setup Invoice module
-	// 	invoiceModule := invoice.Initialize(db)
-	// 	invoiceModule.SetupRoutes(financeV1)
-	//
-	// 	// Initialize and setup Receipt module
-	// 	receiptModule := receipt.Initialize(db)
-	// 	receiptModule.SetupRoutes(financeV1)
-	//
-	// 	// Initialize and setup Expense module
-	// 	expenseModule := expense.Initialize(db)
-	// 	expenseModule.SetupRoutes(financeV1)
-	//
-	// 	// Initialize and setup Reports module
-	// 	reportModule := reports.Initialize(db)
-	// 	reportModule.SetupRoutes(financeV1)
-	// }
 
 	log.Info("Routes setup completed", zap.Int("routes", len(router.Routes())))
 }

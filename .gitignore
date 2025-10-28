@@ -6,6 +6,9 @@
 *.dylib
 bin/
 dist/
+build/
+lakukan-be
+venturo-skeleton-go
 
 # Test binary
 *.test
