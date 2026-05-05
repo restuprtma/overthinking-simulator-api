@@ -43,12 +43,22 @@ func NewSMTPEmailService() (*SMTPEmailService, error) {
 		Port:         port,
 		Username:     getEnv("SMTP_USER", ""),
 		Password:     getEnv("SMTP_PASSWORD", ""),
-		FromEmail:    getEnv("SMTP_FROM_EMAIL", "noreply@venturo.id"),
-		FromName:     getEnv("SMTP_FROM_NAME", "Venturo Skeleton"),
+		FromEmail:    getEnv("SMTP_FROM_EMAIL", "noreply@wizhub.com"),
+		FromName:     getEnv("SMTP_FROM_NAME", "Lakukan"),
 		FrontendURL:  getEnv("FRONTEND_URL", "http://localhost:3000"),
 		VerifyURL:    getEnv("EMAIL_VERIFICATION_URL", "http://localhost:3000/verify-email"),
 		ResetURL:     getEnv("RESET_PASSWORD_URL", "http://localhost:3000/reset-password"),
-		SupportEmail: getEnv("SUPPORT_EMAIL", "support@venturo.id"),
+		SupportEmail: getEnv("SUPPORT_EMAIL", "support@wizhub.com"),
+	}
+
+	// Validate SMTP credentials
+	if config.Username == "" || config.Password == "" {
+		return nil, fmt.Errorf("SMTP credentials not configured: SMTP_USER and SMTP_PASSWORD environment variables are required")
+	}
+
+	// Validate SMTP host
+	if config.Host == "" {
+		return nil, fmt.Errorf("SMTP host not configured: SMTP_HOST environment variable is required")
 	}
 
 	return &SMTPEmailService{
@@ -62,7 +72,7 @@ func (s *SMTPEmailService) SendVerificationEmail(to, name, token string) error {
 
 	data := EmailData{
 		Name:            name,
-		AppName:         "Venturo Skeleton",
+		AppName:         "Lakukan",
 		AppURL:          s.config.FrontendURL,
 		VerificationURL: verificationURL,
 		SupportEmail:    s.config.SupportEmail,
@@ -75,7 +85,53 @@ func (s *SMTPEmailService) SendVerificationEmail(to, name, token string) error {
 		return err
 	}
 
-	subject := "Verify Your Email - Venturo Skeleton"
+	subject := "Verify Your Email - Lakukan"
+	return s.sendEmail(to, subject, body)
+}
+
+// SendOTPVerificationEmail sends an OTP code for email verification
+func (s *SMTPEmailService) SendOTPVerificationEmail(to, name, otpCode string) error {
+	data := EmailData{
+		Name:         name,
+		AppName:      "Lakukan",
+		AppURL:       s.config.FrontendURL,
+		OTPCode:      otpCode,
+		SupportEmail: s.config.SupportEmail,
+		Year:         time.Now().Year(),
+	}
+
+	body, err := renderTemplate("otp_verification.html", data)
+	if err != nil {
+		logger.Error("Failed to render OTP verification email template", logger.Err(err))
+		return err
+	}
+
+	subject := "Your Verification Code - Lakukan"
+	return s.sendEmail(to, subject, body)
+}
+
+// SendVerificationEmailWithOTP sends an email with both verification link and OTP code
+func (s *SMTPEmailService) SendVerificationEmailWithOTP(to, name, token, otpCode string) error {
+	// Build verification URL
+	verificationURL := fmt.Sprintf("%s?token=%s", s.config.VerifyURL, token)
+
+	data := EmailData{
+		Name:            name,
+		AppName:         "Lakukan",
+		AppURL:          s.config.FrontendURL,
+		VerificationURL: verificationURL,
+		OTPCode:         otpCode,
+		SupportEmail:    s.config.SupportEmail,
+		Year:            time.Now().Year(),
+	}
+
+	body, err := renderTemplate("verification_with_otp.html", data)
+	if err != nil {
+		logger.Error("Failed to render verification with OTP email template", logger.Err(err))
+		return err
+	}
+
+	subject := "Verify Your Email - Lakukan"
 	return s.sendEmail(to, subject, body)
 }
 
@@ -98,7 +154,28 @@ func (s *SMTPEmailService) SendPasswordResetEmail(to, name, token string) error 
 		return err
 	}
 
-	subject := "Reset Your Password - Venturo Skeleton"
+	subject := "Reset Your Password - Lakukan"
+	return s.sendEmail(to, subject, body)
+}
+
+// SendPasswordResetOTP sends an OTP code for password reset
+func (s *SMTPEmailService) SendPasswordResetOTP(to, name, otpCode string) error {
+	data := EmailData{
+		Name:         name,
+		AppName:      "Lakukan",
+		AppURL:       s.config.FrontendURL,
+		OTPCode:      otpCode,
+		SupportEmail: s.config.SupportEmail,
+		Year:         time.Now().Year(),
+	}
+
+	body, err := renderTemplate("forgot_password_otp.html", data)
+	if err != nil {
+		logger.Error("Failed to render password reset OTP email template", logger.Err(err))
+		return err
+	}
+
+	subject := "Your Password Reset Code - Lakukan"
 	return s.sendEmail(to, subject, body)
 }
 
@@ -138,7 +215,7 @@ func (s *SMTPEmailService) SendAccountLockedEmail(to, name string) error {
 		return err
 	}
 
-	subject := "Account Security Alert - Venturo Skeleton"
+	subject := "Account Security Alert - Lakukan"
 	return s.sendEmail(to, subject, body)
 }
 
@@ -158,7 +235,7 @@ func (s *SMTPEmailService) SendPasswordChangedEmail(to, name string) error {
 		return err
 	}
 
-	subject := "Password Changed Successfully - Venturo Skeleton"
+	subject := "Password Changed Successfully - Lakukan"
 	return s.sendEmail(to, subject, body)
 }
 
@@ -174,7 +251,10 @@ func (s *SMTPEmailService) sendEmail(to, subject, body string) error {
 
 	// Use TLS for port 587 (STARTTLS)
 	if s.config.Port == 587 {
-		d.TLSConfig = &tls.Config{InsecureSkipVerify: false}
+		d.TLSConfig = &tls.Config{
+			ServerName:         s.config.Host,
+			InsecureSkipVerify: false,
+		}
 	}
 
 	// Send the email

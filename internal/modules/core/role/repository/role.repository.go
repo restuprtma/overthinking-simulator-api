@@ -4,12 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
-
-	"venturo-skeleton-go/internal/modules/core/role/domain"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"venturo-skeleton-go/internal/modules/core/role/domain"
+	"venturo-skeleton-go/internal/modules/core/role/dto"
+	"venturo-skeleton-go/pkg/logger"
 )
 
 type RoleRepository struct {
@@ -20,102 +23,335 @@ func NewRoleRepository(db *pgxpool.Pool) *RoleRepository {
 	return &RoleRepository{db: db}
 }
 
-// FindByID finds a role by ID
-func (r *RoleRepository) FindByID(id string) (*domain.Role, error) {
-	ctx := context.Background()
+// Create creates a new role
+func (r *RoleRepository) Create(ctx context.Context, role *domain.Role) error {
 	query := `
-		SELECT r.id, r.name, r.description, r.is_system, r.created_at, COALESCE(u1.full_name, r.created_by::TEXT) as created_by,
-		       r.updated_at, COALESCE(u2.full_name, r.updated_by::TEXT) as updated_by,
-		       r.deleted_at, COALESCE(u3.full_name, r.deleted_by::TEXT) as deleted_by
-		FROM core.roles r
-		LEFT JOIN core.users u1 ON r.created_by = u1.id
-		LEFT JOIN core.users u2 ON r.updated_by = u2.id
-		LEFT JOIN core.users u3 ON r.deleted_by = u3.id
-		WHERE r.id = $1 AND r.deleted_at IS NULL
+		INSERT INTO core.roles (
+			id, code, name, description, permissions, is_system, is_active, company_id,
+			created_at, created_by, updated_at, updated_by
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+	`
+
+	_, err := r.db.Exec(ctx, query,
+		role.ID, role.Code, role.Name, role.Description, role.Permissions,
+		role.IsSystem, role.IsActive, role.CompanyID,
+		role.CreatedAt, role.CreatedBy, role.UpdatedAt, role.UpdatedBy,
+	)
+
+	if err != nil {
+		logger.Error("Failed to create role", logger.Err(err))
+		return err
+	}
+
+	return nil
+}
+
+// FindByID finds a role by ID
+func (r *RoleRepository) FindByID(ctx context.Context, id string) (*domain.Role, error) {
+	query := `
+		SELECT id, code, name, description, permissions, is_system, is_active, company_id,
+		       created_at, created_by, updated_at, updated_by, deleted_at, deleted_by
+		FROM core.roles
+		WHERE id = $1 AND deleted_at IS NULL
 	`
 
 	var role domain.Role
 	err := r.db.QueryRow(ctx, query, id).Scan(
-		&role.ID, &role.Name, &role.Description, &role.IsSystem,
+		&role.ID, &role.Code, &role.Name, &role.Description, &role.Permissions,
+		&role.IsSystem, &role.IsActive, &role.CompanyID,
 		&role.CreatedAt, &role.CreatedBy, &role.UpdatedAt, &role.UpdatedBy,
 		&role.DeletedAt, &role.DeletedBy,
 	)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil // Role not found
+			return nil, nil
 		}
+		logger.Error("Failed to find role by ID", logger.Err(err))
 		return nil, err
 	}
 
 	return &role, nil
 }
 
-// FindByName finds a role by name
-func (r *RoleRepository) FindByName(name string) (*domain.Role, error) {
-	ctx := context.Background()
-	query := `
-		SELECT r.id, r.name, r.description, r.is_system, r.created_at, COALESCE(u1.full_name, r.created_by::TEXT) as created_by,
-		       r.updated_at, COALESCE(u2.full_name, r.updated_by::TEXT) as updated_by,
-		       r.deleted_at, COALESCE(u3.full_name, r.deleted_by::TEXT) as deleted_by
-		FROM core.roles r
-		LEFT JOIN core.users u1 ON r.created_by = u1.id
-		LEFT JOIN core.users u2 ON r.updated_by = u2.id
-		LEFT JOIN core.users u3 ON r.deleted_by = u3.id
-		WHERE r.name = $1 AND r.deleted_at IS NULL
-	`
+// FindByCode finds a role by code within a scope (global or company)
+func (r *RoleRepository) FindByCode(ctx context.Context, code string, companyID *string) (*domain.Role, error) {
+	var query string
+	var args []interface{}
+
+	if companyID == nil {
+		query = `
+			SELECT id, code, name, description, permissions, is_system, is_active, company_id,
+			       created_at, created_by, updated_at, updated_by, deleted_at, deleted_by
+			FROM core.roles
+			WHERE code = $1 AND company_id IS NULL AND deleted_at IS NULL
+		`
+		args = []interface{}{code}
+	} else {
+		query = `
+			SELECT id, code, name, description, permissions, is_system, is_active, company_id,
+			       created_at, created_by, updated_at, updated_by, deleted_at, deleted_by
+			FROM core.roles
+			WHERE code = $1 AND company_id = $2 AND deleted_at IS NULL
+		`
+		args = []interface{}{code, *companyID}
+	}
 
 	var role domain.Role
-	err := r.db.QueryRow(ctx, query, name).Scan(
-		&role.ID, &role.Name, &role.Description, &role.IsSystem,
+	err := r.db.QueryRow(ctx, query, args...).Scan(
+		&role.ID, &role.Code, &role.Name, &role.Description, &role.Permissions,
+		&role.IsSystem, &role.IsActive, &role.CompanyID,
 		&role.CreatedAt, &role.CreatedBy, &role.UpdatedAt, &role.UpdatedBy,
 		&role.DeletedAt, &role.DeletedBy,
 	)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil // Role not found
+			return nil, nil
 		}
+		logger.Error("Failed to find role by code", logger.Err(err))
 		return nil, err
 	}
 
 	return &role, nil
 }
 
-// FindAll finds all roles with pagination and filters
-func (r *RoleRepository) FindAll(limit, offset int, search string, includeSystem *bool) ([]domain.Role, error) {
-	ctx := context.Background()
+// FindAll finds all roles with pagination and filtering
+func (r *RoleRepository) FindAll(ctx context.Context, params *dto.RoleQueryParams) ([]domain.Role, int64, error) {
+	var conditions []string
+	var args []interface{}
+	argIndex := 1
+
+	conditions = append(conditions, "deleted_at IS NULL")
+
+	if params.ExcludeSystem != nil && *params.ExcludeSystem {
+		conditions = append(conditions, "is_system = false")
+	}
+
+	if len(params.ExcludeCodes) > 0 {
+		placeholders := make([]string, len(params.ExcludeCodes))
+		for i, code := range params.ExcludeCodes {
+			placeholders[i] = fmt.Sprintf("$%d", argIndex)
+			args = append(args, code)
+			argIndex++
+		}
+		conditions = append(conditions, fmt.Sprintf("code NOT IN (%s)", strings.Join(placeholders, ", ")))
+	}
+
+	if params.Search != "" {
+		conditions = append(conditions, fmt.Sprintf(
+			"(code ILIKE $%d OR name ILIKE $%d)",
+			argIndex, argIndex,
+		))
+		args = append(args, "%"+params.Search+"%")
+		argIndex++
+	}
+
+	// Filter by company
+	if params.CompanyID != nil {
+		if params.IncludeGlobal != nil && *params.IncludeGlobal {
+			// Include both global and company-specific roles
+			conditions = append(conditions, fmt.Sprintf(
+				"(company_id IS NULL OR company_id = $%d)",
+				argIndex,
+			))
+		} else {
+			// Only company-specific roles
+			conditions = append(conditions, fmt.Sprintf("company_id = $%d", argIndex))
+		}
+		args = append(args, *params.CompanyID)
+		argIndex++
+	} else if params.IncludeGlobal == nil || *params.IncludeGlobal {
+		// Only global roles when no company specified
+		conditions = append(conditions, "company_id IS NULL")
+	}
+
+	whereClause := strings.Join(conditions, " AND ")
+
+	// Count query
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM core.roles WHERE %s", whereClause)
+	var total int64
+	err := r.db.QueryRow(ctx, countQuery, args...).Scan(&total)
+	if err != nil {
+		logger.Error("Failed to count roles", logger.Err(err))
+		return nil, 0, err
+	}
+
+	// Data query
+	offset := (params.Page - 1) * params.Limit
+	dataQuery := fmt.Sprintf(`
+		SELECT id, code, name, description, permissions, is_system, is_active, company_id,
+		       created_at, created_by, updated_at, updated_by, deleted_at, deleted_by
+		FROM core.roles
+		WHERE %s
+		ORDER BY created_at DESC
+		LIMIT $%d OFFSET $%d
+	`, whereClause, argIndex, argIndex+1)
+
+	args = append(args, params.Limit, offset)
+
+	rows, err := r.db.Query(ctx, dataQuery, args...)
+	if err != nil {
+		logger.Error("Failed to find roles", logger.Err(err))
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	var roles []domain.Role
+	for rows.Next() {
+		var role domain.Role
+		err := rows.Scan(
+			&role.ID, &role.Code, &role.Name, &role.Description, &role.Permissions,
+			&role.IsSystem, &role.IsActive, &role.CompanyID,
+			&role.CreatedAt, &role.CreatedBy, &role.UpdatedAt, &role.UpdatedBy,
+			&role.DeletedAt, &role.DeletedBy,
+		)
+		if err != nil {
+			logger.Error("Failed to scan role", logger.Err(err))
+			return nil, 0, err
+		}
+		roles = append(roles, role)
+	}
+
+	return roles, total, nil
+}
+
+// Update updates a role
+func (r *RoleRepository) Update(ctx context.Context, role *domain.Role) error {
 	query := `
-		SELECT r.id, r.name, r.description, r.is_system, r.created_at, COALESCE(u1.full_name, r.created_by::TEXT) as created_by,
-		       r.updated_at, COALESCE(u2.full_name, r.updated_by::TEXT) as updated_by,
-		       r.deleted_at, COALESCE(u3.full_name, r.deleted_by::TEXT) as deleted_by
-		FROM core.roles r
-		LEFT JOIN core.users u1 ON r.created_by = u1.id
-		LEFT JOIN core.users u2 ON r.updated_by = u2.id
-		LEFT JOIN core.users u3 ON r.deleted_by = u3.id
-		WHERE r.deleted_at IS NULL
+		UPDATE core.roles
+		SET name = $2, description = $3, permissions = $4, is_active = $5,
+		    updated_at = $6, updated_by = $7
+		WHERE id = $1 AND deleted_at IS NULL
 	`
 
-	args := []interface{}{}
-	argPos := 1
+	_, err := r.db.Exec(ctx, query,
+		role.ID, role.Name, role.Description, role.Permissions,
+		role.IsActive, role.UpdatedAt, role.UpdatedBy,
+	)
 
-	// Add search filter
-	if search != "" {
-		query += fmt.Sprintf(` AND (r.name ILIKE $%d OR r.description ILIKE $%d)`, argPos, argPos)
-		args = append(args, "%"+search+"%")
-		argPos++
+	if err != nil {
+		logger.Error("Failed to update role", logger.Err(err))
+		return err
 	}
 
-	// Add includeSystem filter
-	if includeSystem != nil && !*includeSystem {
-		query += fmt.Sprintf(` AND r.is_system = false`)
+	return nil
+}
+
+// UpdatePermissions updates only the permissions of a role
+func (r *RoleRepository) UpdatePermissions(ctx context.Context, id string, permissions domain.Permissions, updatedBy string) error {
+	query := `
+		UPDATE core.roles
+		SET permissions = $2, updated_at = $3, updated_by = $4
+		WHERE id = $1 AND deleted_at IS NULL
+	`
+
+	_, err := r.db.Exec(ctx, query, id, permissions, time.Now(), updatedBy)
+	if err != nil {
+		logger.Error("Failed to update role permissions", logger.Err(err))
+		return err
 	}
 
-	query += fmt.Sprintf(` ORDER BY r.created_at DESC LIMIT $%d OFFSET $%d`, argPos, argPos+1)
-	args = append(args, limit, offset)
+	return nil
+}
+
+// SoftDelete soft deletes a role
+func (r *RoleRepository) SoftDelete(ctx context.Context, id, deletedBy string) error {
+	query := `
+		UPDATE core.roles
+		SET deleted_at = $2, deleted_by = $3, updated_at = $2, updated_by = $3
+		WHERE id = $1 AND deleted_at IS NULL
+	`
+
+	now := time.Now()
+	_, err := r.db.Exec(ctx, query, id, now, deletedBy)
+	if err != nil {
+		logger.Error("Failed to soft delete role", logger.Err(err))
+		return err
+	}
+
+	return nil
+}
+
+// AssignRoleToUser assigns a role to a user
+func (r *RoleRepository) AssignRoleToUser(ctx context.Context, userID, roleID string, companyID *string, createdBy string) error {
+	query := `
+		INSERT INTO core.user_roles (user_id, role_id, company_id, created_at, created_by)
+		VALUES ($1, $2, $3, $4, $5)
+		ON CONFLICT (user_id, role_id) DO NOTHING
+	`
+
+	_, err := r.db.Exec(ctx, query, userID, roleID, companyID, time.Now(), createdBy)
+	if err != nil {
+		logger.Error("Failed to assign role to user", logger.Err(err))
+		return err
+	}
+
+	return nil
+}
+
+// RemoveRoleFromUser removes a role from a user
+func (r *RoleRepository) RemoveRoleFromUser(ctx context.Context, userID, roleID string, companyID *string) error {
+	var query string
+	var args []interface{}
+
+	if companyID == nil {
+		query = `DELETE FROM core.user_roles WHERE user_id = $1 AND role_id = $2 AND company_id IS NULL`
+		args = []interface{}{userID, roleID}
+	} else {
+		query = `DELETE FROM core.user_roles WHERE user_id = $1 AND role_id = $2 AND company_id = $3`
+		args = []interface{}{userID, roleID, *companyID}
+	}
+
+	_, err := r.db.Exec(ctx, query, args...)
+	if err != nil {
+		logger.Error("Failed to remove role from user", logger.Err(err))
+		return err
+	}
+
+	return nil
+}
+
+// GetUserRoles gets all roles for a user.
+// Reads from both core.user_roles and core.company_users.role_id to cover both assignment methods.
+func (r *RoleRepository) GetUserRoles(ctx context.Context, userID string, companyID *string) ([]domain.Role, error) {
+	var query string
+	var args []interface{}
+
+	if companyID == nil {
+		// Get global roles only (from user_roles)
+		query = `
+			SELECT DISTINCT r.id, r.code, r.name, r.description, r.permissions, r.is_system, r.is_active, r.company_id,
+			       r.created_at, r.created_by, r.updated_at, r.updated_by, r.deleted_at, r.deleted_by
+			FROM core.roles r
+			JOIN core.user_roles ur ON r.id = ur.role_id
+			WHERE ur.user_id = $1 AND ur.company_id IS NULL AND r.deleted_at IS NULL
+		`
+		args = []interface{}{userID}
+	} else {
+		// Get roles from user_roles + company_users.role_id
+		query = `
+			SELECT DISTINCT r.id, r.code, r.name, r.description, r.permissions, r.is_system, r.is_active, r.company_id,
+			       r.created_at, r.created_by, r.updated_at, r.updated_by, r.deleted_at, r.deleted_by
+			FROM core.roles r
+			WHERE r.deleted_at IS NULL AND (
+				r.id IN (
+					SELECT ur.role_id FROM core.user_roles ur
+					WHERE ur.user_id = $1 AND (ur.company_id IS NULL OR ur.company_id = $2)
+				)
+				OR r.id IN (
+					SELECT cu.role_id FROM core.company_users cu
+					WHERE cu.user_id = $1 AND cu.company_id = $2 AND cu.role_id IS NOT NULL
+					AND cu.is_active = true AND cu.deleted_at IS NULL
+				)
+			)
+		`
+		args = []interface{}{userID, *companyID}
+	}
 
 	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
+		logger.Error("Failed to get user roles", logger.Err(err))
 		return nil, err
 	}
 	defer rows.Close()
@@ -124,11 +360,13 @@ func (r *RoleRepository) FindAll(limit, offset int, search string, includeSystem
 	for rows.Next() {
 		var role domain.Role
 		err := rows.Scan(
-			&role.ID, &role.Name, &role.Description, &role.IsSystem,
+			&role.ID, &role.Code, &role.Name, &role.Description, &role.Permissions,
+			&role.IsSystem, &role.IsActive, &role.CompanyID,
 			&role.CreatedAt, &role.CreatedBy, &role.UpdatedAt, &role.UpdatedBy,
 			&role.DeletedAt, &role.DeletedBy,
 		)
 		if err != nil {
+			logger.Error("Failed to scan role", logger.Err(err))
 			return nil, err
 		}
 		roles = append(roles, role)
@@ -137,257 +375,69 @@ func (r *RoleRepository) FindAll(limit, offset int, search string, includeSystem
 	return roles, nil
 }
 
-// Count counts total roles with filters
-func (r *RoleRepository) Count(search string, includeSystem *bool) (int64, error) {
-	ctx := context.Background()
-	query := `SELECT COUNT(*) FROM core.roles r WHERE r.deleted_at IS NULL`
-
-	args := []interface{}{}
-	argPos := 1
-
-	// Add search filter
-	if search != "" {
-		query += fmt.Sprintf(` AND (r.name ILIKE $%d OR r.description ILIKE $%d)`, argPos, argPos)
-		args = append(args, "%"+search+"%")
-		argPos++
-	}
-
-	// Add includeSystem filter
-	if includeSystem != nil && !*includeSystem {
-		query += ` AND r.is_system = false`
-	}
-
-	var count int64
-	err := r.db.QueryRow(ctx, query, args...).Scan(&count)
-	return count, err
-}
-
-// Create creates a new role
-func (r *RoleRepository) Create(role *domain.Role) error {
-	ctx := context.Background()
-	query := `
-		INSERT INTO core.roles (
-			id, name, description, is_system, created_at, created_by, updated_at, updated_by
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-	`
-
-	_, err := r.db.Exec(ctx, query,
-		role.ID, role.Name, role.Description, role.IsSystem,
-		role.CreatedAt, role.CreatedBy, role.UpdatedAt, role.UpdatedBy,
-	)
-
-	return err
-}
-
-// Update updates a role
-func (r *RoleRepository) Update(role *domain.Role) error {
-	ctx := context.Background()
-	query := `
-		UPDATE core.roles
-		SET name = $1, description = $2, updated_at = $3, updated_by = $4
-		WHERE id = $5 AND deleted_at IS NULL
-	`
-
-	_, err := r.db.Exec(ctx, query,
-		role.Name, role.Description, role.UpdatedAt, role.UpdatedBy, role.ID,
-	)
-
-	return err
-}
-
-// Delete soft deletes a role
-func (r *RoleRepository) Delete(roleID string, deletedBy string) error {
-	ctx := context.Background()
-	query := `
-		UPDATE core.roles
-		SET deleted_at = $1, deleted_by = $2
-		WHERE id = $3 AND deleted_at IS NULL
-	`
-
-	_, err := r.db.Exec(ctx, query, time.Now(), deletedBy, roleID)
-	return err
-}
-
-// Restore restores a soft-deleted role
-func (r *RoleRepository) Restore(roleID string) error {
-	ctx := context.Background()
-	query := `
-		UPDATE core.roles
-		SET deleted_at = NULL, deleted_by = NULL, updated_at = $1
-		WHERE id = $2 AND deleted_at IS NOT NULL
-	`
-
-	_, err := r.db.Exec(ctx, query, time.Now(), roleID)
-	return err
-}
-
-// Permission represents a permission entity
-type Permission struct {
-	ID          string
-	Resource    string
-	Action      string
-	Description string
-}
-
-// GetPermissionsByRoleID gets all permissions for a specific role
-func (r *RoleRepository) GetPermissionsByRoleID(roleID string) ([]Permission, error) {
-	ctx := context.Background()
-	query := `
-		SELECT p.id, p.resource, p.action, p.description
-		FROM core.permissions p
-		INNER JOIN core.role_permissions rp ON p.id = rp.permission_id
-		WHERE rp.role_id = $1 AND rp.deleted_at IS NULL AND p.deleted_at IS NULL
-		ORDER BY p.resource, p.action
-	`
-
-	rows, err := r.db.Query(ctx, query, roleID)
+// GetUserPermissions gets all permissions for a user (merged from all roles, expanded to actions)
+func (r *RoleRepository) GetUserPermissions(ctx context.Context, userID string, companyID *string) ([]string, error) {
+	roles, err := r.GetUserRoles(ctx, userID, companyID)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	var permissions []Permission
-	for rows.Next() {
-		var perm Permission
-		err := rows.Scan(&perm.ID, &perm.Resource, &perm.Action, &perm.Description)
-		if err != nil {
-			return nil, err
+	// Merge all permissions (higher level wins)
+	merged := make(domain.Permissions)
+	for _, role := range roles {
+		if !role.IsActive {
+			continue
 		}
-		permissions = append(permissions, perm)
+		merged.Merge(role.Permissions)
 	}
 
-	return permissions, nil
+	// Expand levels to action-based list for JWT claims
+	return merged.ToStringList(), nil
 }
 
-// ClearPermissions removes all permissions from a role
-func (r *RoleRepository) ClearPermissions(roleID string) error {
-	ctx := context.Background()
-	query := `
-		UPDATE core.role_permissions
-		SET deleted_at = $1
-		WHERE role_id = $2 AND deleted_at IS NULL
-	`
-
-	_, err := r.db.Exec(ctx, query, time.Now(), roleID)
-	return err
-}
-
-// AssignPermission assigns a single permission to a role
-func (r *RoleRepository) AssignPermission(roleID string, permissionID string) error {
-	ctx := context.Background()
-
-	// First check if relation already exists (including soft-deleted ones)
-	checkQuery := `
-		SELECT deleted_at FROM core.role_permissions
-		WHERE role_id = $1 AND permission_id = $2
-	`
-
-	var deletedAt *time.Time
-	err := r.db.QueryRow(ctx, checkQuery, roleID, permissionID).Scan(&deletedAt)
-
+// GetUserRoleNames gets all role codes for a user
+func (r *RoleRepository) GetUserRoleNames(ctx context.Context, userID string, companyID *string) ([]string, error) {
+	roles, err := r.GetUserRoles(ctx, userID, companyID)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			// Relation doesn't exist, create new one
-			insertQuery := `
-				INSERT INTO core.role_permissions (role_id, permission_id, created_at, updated_at)
-				VALUES ($1, $2, $3, $4)
-			`
-			_, err = r.db.Exec(ctx, insertQuery, roleID, permissionID, time.Now(), time.Now())
-			return err
-		}
-		return err
+		return nil, err
 	}
 
-	// Relation exists, check if it's soft-deleted
-	if deletedAt != nil {
-		// Restore the soft-deleted relation
-		updateQuery := `
-			UPDATE core.role_permissions
-			SET deleted_at = NULL, updated_at = $1
-			WHERE role_id = $2 AND permission_id = $3
-		`
-		_, err = r.db.Exec(ctx, updateQuery, time.Now(), roleID, permissionID)
-		return err
+	codes := make([]string, len(roles))
+	for i, role := range roles {
+		codes[i] = role.Code
 	}
 
-	// Relation already exists and is active, no action needed
-	return nil
+	return codes, nil
 }
 
-// AssignPermissions assigns multiple permissions to a role (replacing all existing)
-func (r *RoleRepository) AssignPermissions(roleID string, permissionIDs []string) error {
-	ctx := context.Background()
+// CodeExists checks if a role code already exists within a scope
+func (r *RoleRepository) CodeExists(ctx context.Context, code string, companyID *string, excludeID *string) (bool, error) {
+	var query string
+	var args []interface{}
+	argIndex := 1
 
-	// Start transaction
-	tx, err := r.db.Begin(ctx)
+	if companyID == nil {
+		query = `SELECT EXISTS(SELECT 1 FROM core.roles WHERE code = $1 AND company_id IS NULL AND deleted_at IS NULL`
+		args = []interface{}{code}
+		argIndex = 2
+	} else {
+		query = `SELECT EXISTS(SELECT 1 FROM core.roles WHERE code = $1 AND company_id = $2 AND deleted_at IS NULL`
+		args = []interface{}{code, *companyID}
+		argIndex = 3
+	}
+
+	if excludeID != nil {
+		query += fmt.Sprintf(` AND id != $%d`, argIndex)
+		args = append(args, *excludeID)
+	}
+	query += `)`
+
+	var exists bool
+	err := r.db.QueryRow(ctx, query, args...).Scan(&exists)
 	if err != nil {
-		return err
-	}
-	defer tx.Rollback(ctx)
-
-	// Clear existing permissions (soft delete)
-	clearQuery := `
-		UPDATE core.role_permissions
-		SET deleted_at = $1
-		WHERE role_id = $2 AND deleted_at IS NULL
-	`
-	_, err = tx.Exec(ctx, clearQuery, time.Now(), roleID)
-	if err != nil {
-		return err
+		logger.Error("Failed to check role code existence", logger.Err(err))
+		return false, err
 	}
 
-	// Assign new permissions
-	for _, permissionID := range permissionIDs {
-		// Check if relation exists
-		checkQuery := `
-			SELECT deleted_at FROM core.role_permissions
-			WHERE role_id = $1 AND permission_id = $2
-		`
-
-		var deletedAt *time.Time
-		err = tx.QueryRow(ctx, checkQuery, roleID, permissionID).Scan(&deletedAt)
-
-		if err != nil {
-			if errors.Is(err, pgx.ErrNoRows) {
-				// Insert new relation
-				insertQuery := `
-					INSERT INTO core.role_permissions (role_id, permission_id, created_at, updated_at)
-					VALUES ($1, $2, $3, $4)
-				`
-				_, err = tx.Exec(ctx, insertQuery, roleID, permissionID, time.Now(), time.Now())
-				if err != nil {
-					return err
-				}
-			} else {
-				return err
-			}
-		} else if deletedAt != nil {
-			// Restore soft-deleted relation
-			updateQuery := `
-				UPDATE core.role_permissions
-				SET deleted_at = NULL, updated_at = $1
-				WHERE role_id = $2 AND permission_id = $3
-			`
-			_, err = tx.Exec(ctx, updateQuery, time.Now(), roleID, permissionID)
-			if err != nil {
-				return err
-			}
-		}
-		// If relation exists and is active, skip
-	}
-
-	return tx.Commit(ctx)
-}
-
-// RemovePermission removes a single permission from a role (soft delete)
-func (r *RoleRepository) RemovePermission(roleID string, permissionID string) error {
-	ctx := context.Background()
-	query := `
-		UPDATE core.role_permissions
-		SET deleted_at = $1
-		WHERE role_id = $2 AND permission_id = $3 AND deleted_at IS NULL
-	`
-
-	_, err := r.db.Exec(ctx, query, time.Now(), roleID, permissionID)
-	return err
+	return exists, nil
 }

@@ -1,34 +1,22 @@
 package main
 
 import (
-	_ "venturo-skeleton-go/docs/swagger" // Import generated swagger docs
+	"time"
+
 	"venturo-skeleton-go/internal/config"
 	"venturo-skeleton-go/internal/database"
 	"venturo-skeleton-go/internal/router"
+	"venturo-skeleton-go/pkg/jwt"
 	"venturo-skeleton-go/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 )
 
-// @title Venturo Skeleton API
-// @version 1.0
-// @description Backend API Skeleton - Multi-tenant Business Management Platform
-// @termsOfService http://swagger.io/terms/
-
-// @contact.name API Support
-// @contact.url https://www.venturo.id/support
-// @contact.email support@venturo.id
-
-// @license.name Apache 2.0
-// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
-
-// @host localhost:8080
-// @BasePath /core/v1
-
-// @securityDefinitions.apikey BearerAuth
-// @in header
-// @name Authorization
-// @description Type "Bearer" followed by a space and JWT token.
+func init() {
+	// Force UTC timezone for the entire application
+	// This ensures all time.Now() calls return UTC time
+	time.Local = time.UTC
+}
 
 func main() {
 	// Load configuration
@@ -40,7 +28,13 @@ func main() {
 	}
 	defer logger.Sync()
 
-	logger.Info("Starting Venturo Skeleton API")
+	logger.Info("Starting Wizhub API")
+
+	// Validate JWT secret configuration
+	if err := jwt.ValidateSecret(cfg.Server.Env); err != nil {
+		logger.Fatal("JWT secret validation failed: " + err.Error())
+	}
+	logger.Info("JWT secret validation passed")
 
 	// Initialize database
 	db, err := database.New(cfg.Database.GetDSN())

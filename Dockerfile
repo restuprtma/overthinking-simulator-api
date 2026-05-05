@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.25-alpine AS builder
+FROM golang:1.26-alpine AS builder
 
 # Install build dependencies
 RUN apk add --no-cache git make
@@ -20,11 +20,18 @@ COPY . .
 RUN go install github.com/swaggo/swag/cmd/swag@latest && \
     swag init -g cmd/api/main.go -o docs/swagger --parseDependency --parseInternal
 
-# Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main cmd/api/main.go
+# Build API binary
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o api cmd/api/main.go
 
 # Final stage
 FROM alpine:latest
+
+# Set timezone to UTC
+ENV TZ=UTC
+RUN apk --no-cache add tzdata && \
+    cp /usr/share/zoneinfo/UTC /etc/localtime && \
+    echo "UTC" > /etc/timezone && \
+    apk del tzdata
 
 # Install ca-certificates for HTTPS, postgresql-client for migrations, curl for health checks, and bash for entrypoint
 RUN apk --no-cache add ca-certificates postgresql-client curl bash
@@ -40,12 +47,15 @@ RUN addgroup -g 1000 appuser && \
 
 WORKDIR /app
 
-# Copy the binary from builder
-COPY --from=builder /app/main .
+# Copy API binary from builder
+COPY --from=builder /app/api .
 
 # Copy migrations and seeders
 COPY --from=builder /app/internal/database/migrations ./internal/database/migrations
 COPY --from=builder /app/internal/database/seeders ./internal/database/seeders
+
+# Copy email templates
+COPY --from=builder /app/pkg/email/templates ./pkg/email/templates
 
 # Copy entrypoint script
 COPY deployments/docker/docker-entrypoint.sh /usr/local/bin/
@@ -67,5 +77,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 # Use entrypoint script
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
-# Default command (can be overridden)
-CMD ["./main"]
+# Default command: run API server (can be overridden in Kubernetes to run worker)
+CMD ["/app/api"]

@@ -1,95 +1,69 @@
 package company
 
 import (
+	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
+
 	"venturo-skeleton-go/internal/middleware"
 	"venturo-skeleton-go/internal/modules/core/company/handler"
 	"venturo-skeleton-go/internal/modules/core/company/repository"
 	"venturo-skeleton-go/internal/modules/core/company/service"
-
-	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type CompanyModule struct {
-	Handler *handler.CompanyHandler
+	Handler         *handler.CompanyHandler
+	Service         *service.CompanyService
+	Repository      *repository.CompanyRepository
+	UserRepository  *repository.CompanyUserRepository
 }
 
 // Initialize initializes the company module with all dependencies
 func Initialize(db *pgxpool.Pool) *CompanyModule {
-	// Initialize repositories
 	companyRepo := repository.NewCompanyRepository(db)
 	companyUserRepo := repository.NewCompanyUserRepository(db)
-
-	// Initialize services
 	companyService := service.NewCompanyService(companyRepo, companyUserRepo)
-
-	// Initialize handlers
 	companyHandler := handler.NewCompanyHandler(companyService)
 
 	return &CompanyModule{
-		Handler: companyHandler,
+		Handler:        companyHandler,
+		Service:        companyService,
+		Repository:     companyRepo,
+		UserRepository: companyUserRepo,
 	}
 }
 
-// SetupRoutes sets up company routes with permission-based authorization
+// SetupRoutes registers all company module routes
 func (m *CompanyModule) SetupRoutes(router *gin.RouterGroup) {
 	companies := router.Group("/companies")
-
-	// Apply JWT authentication to all company routes
 	companies.Use(middleware.JWTAuth())
-
 	{
-		// READ operations - Require core.companies:read permission
-		companies.GET("",
-			middleware.RequirePermission("core.companies:read"),
-			m.Handler.GetAll,
-		)
-		companies.GET("/:id",
-			middleware.RequirePermission("core.companies:read"),
-			m.Handler.GetByID,
-		)
+		// Company CRUD
+		companies.GET("", m.Handler.GetAll)
+		companies.GET("/trash", middleware.RequirePermission("companies:delete"), m.Handler.GetTrash)
+		companies.GET("/:id", m.Handler.GetByID)
+		companies.POST("", m.Handler.Create)
+		companies.PUT("/:id", middleware.RequirePermission("companies:update"), m.Handler.Update)
+		companies.DELETE("/:id", middleware.RequirePermission("companies:delete"), m.Handler.Delete)
+		companies.PATCH("/:id/restore", middleware.RequirePermission("companies:delete"), m.Handler.Restore)
 
-		// CREATE - Require core.companies:create permission
-		companies.POST("",
-			middleware.RequirePermission("core.companies:create"),
-			m.Handler.Create,
-		)
+		// Hierarchy endpoints
+		companies.GET("/:id/children", m.Handler.GetChildren)
+		companies.GET("/:id/ancestors", m.Handler.GetAncestors)
 
-		// UPDATE - Require core.companies:update permission
-		companies.PUT("/:id",
-			middleware.RequirePermission("core.companies:update"),
-			m.Handler.Update,
-		)
+		// Company user management
+		companies.GET("/:id/users", m.Handler.GetUsers)
+		companies.POST("/:id/users", middleware.RequirePermission("company_users:create"), m.Handler.AddUser)
+		companies.PUT("/:id/users/:user_id", middleware.RequirePermission("company_users:update"), m.Handler.UpdateUser)
+		companies.DELETE("/:id/users/:user_id", middleware.RequirePermission("company_users:delete"), m.Handler.RemoveUser)
+	}
+}
 
-		// DELETE - Require core.companies:delete permission
-		companies.DELETE("/:id",
-			middleware.RequirePermission("core.companies:delete"),
-			m.Handler.Delete,
-		)
-
-		// Company Users Management
-		// Get users in company - Require core.companies:read permission
-		companies.GET("/:id/users",
-			middleware.RequirePermission("core.companies:read"),
-			m.Handler.GetUsers,
-		)
-
-		// Add user to company - Require core.companies:manage_users permission
-		companies.POST("/:id/users",
-			middleware.RequirePermission("core.companies:manage_users"),
-			m.Handler.AddUser,
-		)
-
-		// Update user role in company - Require core.companies:manage_users permission
-		companies.PUT("/:id/users/:user_id",
-			middleware.RequirePermission("core.companies:manage_users"),
-			m.Handler.UpdateUserRole,
-		)
-
-		// Remove user from company - Require core.companies:manage_users permission
-		companies.DELETE("/:id/users/:user_id",
-			middleware.RequirePermission("core.companies:manage_users"),
-			m.Handler.RemoveUser,
-		)
+// SetupUserCompanyRoutes registers user-company management routes under /users
+func (m *CompanyModule) SetupUserCompanyRoutes(router *gin.RouterGroup) {
+	users := router.Group("/users")
+	users.Use(middleware.JWTAuth())
+	{
+		users.GET("/:id/companies", m.Handler.GetUserCompanies)
+		users.PUT("/:id/companies", middleware.RequirePermission("company_users:update"), m.Handler.SyncUserCompanies)
 	}
 }

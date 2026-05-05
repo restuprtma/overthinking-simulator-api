@@ -12,13 +12,3 @@ type RefreshTokenResponse struct {
 	TokenType    string `json:"token_type"`
 	ExpiresIn    int    `json:"expires_in"`
 }
-
-// RevokeTokenRequest represents the revoke token request payload
-type RevokeTokenRequest struct {
-	RefreshToken string `json:"refresh_token" binding:"required"`
-}
-
-// RevokeTokenResponse represents the revoke token response
-type RevokeTokenResponse struct {
-	Message string `json:"message"`
-}

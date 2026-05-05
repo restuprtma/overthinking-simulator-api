@@ -4,12 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
-	"venturo-skeleton-go/internal/modules/core/user/domain"
-
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"venturo-skeleton-go/internal/modules/core/user/domain"
+	"venturo-skeleton-go/internal/modules/core/user/dto"
+	"venturo-skeleton-go/pkg/logger"
 )
 
 type UserRepository struct {
@@ -20,33 +24,153 @@ func NewUserRepository(db *pgxpool.Pool) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-// FindByEmail finds a user by email
-func (r *UserRepository) FindByEmail(email string) (*domain.User, error) {
-	ctx := context.Background()
+// Create creates a new user
+func (r *UserRepository) Create(ctx context.Context, user *domain.User) error {
+	return r.createWith(ctx, r.db, user)
+}
+
+// CreateTx creates a new user inside an existing transaction. Use this when
+// the caller needs to atomically create the user together with related rows
+// (e.g. core.company_users) so a partial state cannot leak on failure.
+func (r *UserRepository) CreateTx(ctx context.Context, tx pgx.Tx, user *domain.User) error {
+	return r.createWith(ctx, tx, user)
+}
+
+// dbExec is the minimal subset of *pgxpool.Pool / pgx.Tx that we need for
+// shared write helpers. Both types satisfy this implicitly.
+type dbExec interface {
+	Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
+}
+
+func (r *UserRepository) createWith(ctx context.Context, q dbExec, user *domain.User) error {
 	query := `
-		SELECT u.id, u.email, u.username, u.password_hash, u.full_name, u.phone, u.is_active,
-		       u.is_email_verified, u.last_login_at, u.created_at, COALESCE(u1.full_name, u.created_by::TEXT) as created_by,
-		       u.updated_at, COALESCE(u2.full_name, u.updated_by::TEXT) as updated_by,
-		       u.deleted_at, COALESCE(u3.full_name, u.deleted_by::TEXT) as deleted_by
-		FROM core.users u
-		LEFT JOIN core.users u1 ON u.created_by = u1.id
-		LEFT JOIN core.users u2 ON u.updated_by = u2.id
-		LEFT JOIN core.users u3 ON u.deleted_by = u3.id
-		WHERE u.email = $1 AND u.deleted_at IS NULL
+		INSERT INTO core.users (
+			id, email, username, password_hash, full_name, phone, avatar_url,
+			is_active, is_email_verified, created_at, created_by, updated_at, updated_by
+		) VALUES (
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
+		)
+	`
+
+	_, err := q.Exec(ctx, query,
+		user.ID, user.Email, user.Username, user.PasswordHash,
+		user.FullName, user.Phone, user.AvatarURL,
+		user.IsActive, user.IsEmailVerified,
+		user.CreatedAt, user.CreatedBy, user.UpdatedAt, user.UpdatedBy,
+	)
+
+	if err != nil {
+		logger.Error("Failed to create user", logger.Err(err))
+		return err
+	}
+
+	return nil
+}
+
+// BeginTx exposes the underlying pool's transaction starter to higher layers
+// (e.g. UserService) that need to coordinate cross-repository writes.
+func (r *UserRepository) BeginTx(ctx context.Context) (pgx.Tx, error) {
+	return r.db.Begin(ctx)
+}
+
+// FindByID finds a user by ID
+func (r *UserRepository) FindByID(ctx context.Context, id string) (*domain.User, error) {
+	query := `
+		SELECT id, email, username, password_hash, full_name, phone, avatar_url,
+		       is_active, is_email_verified, email_verified_at,
+		       failed_login_count, locked_until, last_login_at,
+		       created_at, created_by, updated_at, updated_by, deleted_at, deleted_by
+		FROM core.users
+		WHERE id = $1 AND deleted_at IS NULL
+	`
+
+	var user domain.User
+	err := r.db.QueryRow(ctx, query, id).Scan(
+		&user.ID, &user.Email, &user.Username, &user.PasswordHash,
+		&user.FullName, &user.Phone, &user.AvatarURL,
+		&user.IsActive, &user.IsEmailVerified, &user.EmailVerifiedAt,
+		&user.FailedLoginCount, &user.LockedUntil, &user.LastLoginAt,
+		&user.CreatedAt, &user.CreatedBy, &user.UpdatedAt, &user.UpdatedBy,
+		&user.DeletedAt, &user.DeletedBy,
+	)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
+		logger.Error("Failed to find user by ID", logger.Err(err))
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+// IsUserVisibleToScope reports whether userID is visible to a non-super-admin
+// caller whose tenant scope is anchored at scopeCompanyID (and who is
+// identified as callerUserID for the self-created fallback).
+//
+// Visibility rules mirror FindAll: membership in scopeCompanyID or any of its
+// descendants, OR the user was created by the caller.
+func (r *UserRepository) IsUserVisibleToScope(ctx context.Context, userID, scopeCompanyID, callerUserID string) (bool, error) {
+	query := `
+		WITH RECURSIVE visible_companies AS (
+			SELECT id FROM core.companies
+			 WHERE id = $2 AND deleted_at IS NULL
+			UNION ALL
+			SELECT c.id FROM core.companies c
+			  JOIN visible_companies v ON c.parent_id = v.id
+			 WHERE c.deleted_at IS NULL
+		)
+		SELECT EXISTS (
+			SELECT 1 FROM core.users u
+			 WHERE u.id = $1
+			   AND u.deleted_at IS NULL
+			   AND (
+				EXISTS (
+					SELECT 1 FROM core.company_users cu
+					 WHERE cu.user_id = u.id
+					   AND cu.deleted_at IS NULL
+					   AND cu.company_id IN (SELECT id FROM visible_companies)
+				)
+				OR u.created_by = $3
+			   )
+		)
+	`
+
+	var visible bool
+	if err := r.db.QueryRow(ctx, query, userID, scopeCompanyID, callerUserID).Scan(&visible); err != nil {
+		logger.Error("Failed to check user visibility", logger.Err(err))
+		return false, err
+	}
+	return visible, nil
+}
+
+// FindByEmail finds a user by email
+func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
+	query := `
+		SELECT id, email, username, password_hash, full_name, phone, avatar_url,
+		       is_active, is_email_verified, email_verified_at,
+		       failed_login_count, locked_until, last_login_at,
+		       created_at, created_by, updated_at, updated_by, deleted_at, deleted_by
+		FROM core.users
+		WHERE email = $1 AND deleted_at IS NULL
 	`
 
 	var user domain.User
 	err := r.db.QueryRow(ctx, query, email).Scan(
 		&user.ID, &user.Email, &user.Username, &user.PasswordHash,
-		&user.FullName, &user.Phone, &user.IsActive, &user.IsEmailVerified,
-		&user.LastLoginAt, &user.CreatedAt, &user.CreatedBy,
-		&user.UpdatedAt, &user.UpdatedBy, &user.DeletedAt, &user.DeletedBy,
+		&user.FullName, &user.Phone, &user.AvatarURL,
+		&user.IsActive, &user.IsEmailVerified, &user.EmailVerifiedAt,
+		&user.FailedLoginCount, &user.LockedUntil, &user.LastLoginAt,
+		&user.CreatedAt, &user.CreatedBy, &user.UpdatedAt, &user.UpdatedBy,
+		&user.DeletedAt, &user.DeletedBy,
 	)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil // User not found
+			return nil, nil
 		}
+		logger.Error("Failed to find user by email", logger.Err(err))
 		return nil, err
 	}
 
@@ -54,246 +178,187 @@ func (r *UserRepository) FindByEmail(email string) (*domain.User, error) {
 }
 
 // FindByUsername finds a user by username
-func (r *UserRepository) FindByUsername(username string) (*domain.User, error) {
-	ctx := context.Background()
+func (r *UserRepository) FindByUsername(ctx context.Context, username string) (*domain.User, error) {
 	query := `
-		SELECT u.id, u.email, u.username, u.password_hash, u.full_name, u.phone, u.is_active,
-		       u.is_email_verified, u.last_login_at, u.created_at, COALESCE(u1.full_name, u.created_by::TEXT) as created_by,
-		       u.updated_at, COALESCE(u2.full_name, u.updated_by::TEXT) as updated_by,
-		       u.deleted_at, COALESCE(u3.full_name, u.deleted_by::TEXT) as deleted_by
-		FROM core.users u
-		LEFT JOIN core.users u1 ON u.created_by = u1.id
-		LEFT JOIN core.users u2 ON u.updated_by = u2.id
-		LEFT JOIN core.users u3 ON u.deleted_by = u3.id
-		WHERE u.username = $1 AND u.deleted_at IS NULL
+		SELECT id, email, username, password_hash, full_name, phone, avatar_url,
+		       is_active, is_email_verified, email_verified_at,
+		       failed_login_count, locked_until, last_login_at,
+		       created_at, created_by, updated_at, updated_by, deleted_at, deleted_by
+		FROM core.users
+		WHERE username = $1 AND deleted_at IS NULL
 	`
 
 	var user domain.User
 	err := r.db.QueryRow(ctx, query, username).Scan(
 		&user.ID, &user.Email, &user.Username, &user.PasswordHash,
-		&user.FullName, &user.Phone, &user.IsActive, &user.IsEmailVerified,
-		&user.LastLoginAt, &user.CreatedAt, &user.CreatedBy,
-		&user.UpdatedAt, &user.UpdatedBy, &user.DeletedAt, &user.DeletedBy,
+		&user.FullName, &user.Phone, &user.AvatarURL,
+		&user.IsActive, &user.IsEmailVerified, &user.EmailVerifiedAt,
+		&user.FailedLoginCount, &user.LockedUntil, &user.LastLoginAt,
+		&user.CreatedAt, &user.CreatedBy, &user.UpdatedAt, &user.UpdatedBy,
+		&user.DeletedAt, &user.DeletedBy,
 	)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil // User not found
+			return nil, nil
 		}
+		logger.Error("Failed to find user by username", logger.Err(err))
 		return nil, err
 	}
 
 	return &user, nil
 }
 
-// FindByID finds a user by ID
-func (r *UserRepository) FindByID(id string) (*domain.User, error) {
-	ctx := context.Background()
+// FindByEmailOrUsername finds a user by email or username
+func (r *UserRepository) FindByEmailOrUsername(ctx context.Context, login string) (*domain.User, error) {
 	query := `
-		SELECT u.id, u.email, u.username, u.password_hash, u.full_name, u.phone, u.is_active,
-		       u.is_email_verified, u.last_login_at, u.created_at, COALESCE(u1.full_name, u.created_by::TEXT) as created_by,
-		       u.updated_at, COALESCE(u2.full_name, u.updated_by::TEXT) as updated_by,
-		       u.deleted_at, COALESCE(u3.full_name, u.deleted_by::TEXT) as deleted_by
-		FROM core.users u
-		LEFT JOIN core.users u1 ON u.created_by = u1.id
-		LEFT JOIN core.users u2 ON u.updated_by = u2.id
-		LEFT JOIN core.users u3 ON u.deleted_by = u3.id
-		WHERE u.id = $1 AND u.deleted_at IS NULL
+		SELECT id, email, username, password_hash, full_name, phone, avatar_url,
+		       is_active, is_email_verified, email_verified_at,
+		       failed_login_count, locked_until, last_login_at,
+		       created_at, created_by, updated_at, updated_by, deleted_at, deleted_by
+		FROM core.users
+		WHERE (email = $1 OR username = $1) AND deleted_at IS NULL
 	`
 
 	var user domain.User
-	err := r.db.QueryRow(ctx, query, id).Scan(
+	err := r.db.QueryRow(ctx, query, login).Scan(
 		&user.ID, &user.Email, &user.Username, &user.PasswordHash,
-		&user.FullName, &user.Phone, &user.IsActive, &user.IsEmailVerified,
-		&user.LastLoginAt, &user.CreatedAt, &user.CreatedBy,
-		&user.UpdatedAt, &user.UpdatedBy, &user.DeletedAt, &user.DeletedBy,
+		&user.FullName, &user.Phone, &user.AvatarURL,
+		&user.IsActive, &user.IsEmailVerified, &user.EmailVerifiedAt,
+		&user.FailedLoginCount, &user.LockedUntil, &user.LastLoginAt,
+		&user.CreatedAt, &user.CreatedBy, &user.UpdatedAt, &user.UpdatedBy,
+		&user.DeletedAt, &user.DeletedBy,
 	)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil // User not found
+			return nil, nil
 		}
+		logger.Error("Failed to find user by email or username", logger.Err(err))
 		return nil, err
 	}
 
 	return &user, nil
 }
 
-// UpdateLastLogin updates the last login timestamp
-func (r *UserRepository) UpdateLastLogin(userID string) error {
-	ctx := context.Background()
-	query := `
-		UPDATE core.users
-		SET last_login_at = $1, updated_at = $1
-		WHERE id = $2
-	`
+// FindAll finds all users with pagination and filtering.
+//
+// Tenant visibility rules (applied when params.ScopeCompanyID is set, i.e. the
+// caller is NOT a super admin):
+//
+//  1. User has a membership in core.company_users for the scope company itself
+//     or any of its descendants (traversed recursively via parent_id), OR
+//  2. User was created by the caller (fallback, so freshly-created users that
+//     have not yet been attached to a company are still visible to their
+//     creator).
+//
+// The tree walk is one-directional (root → descendants), so a subsidiary admin
+// cannot see users of its parent holding company. Super admins pass nil for
+// ScopeCompanyID to bypass this filter entirely.
+func (r *UserRepository) FindAll(ctx context.Context, params *dto.UserQueryParams) ([]domain.User, int64, error) {
+	var conditions []string
+	var args []interface{}
+	argIndex := 1
 
-	_, err := r.db.Exec(ctx, query, time.Now(), userID)
-	return err
-}
+	conditions = append(conditions, "u.deleted_at IS NULL")
 
-// UpdateEmailVerified updates the email verified status
-func (r *UserRepository) UpdateEmailVerified(userID string, verified bool) error {
-	ctx := context.Background()
-	now := time.Now()
+	// Tenant scope: visible_companies = scope company + all descendants.
+	// Build as a CTE prefix and reference it from the WHERE clause via EXISTS.
+	var ctePrefix string
+	if params.ScopeCompanyID != nil {
+		ctePrefix = fmt.Sprintf(`
+			WITH RECURSIVE visible_companies AS (
+				SELECT id FROM core.companies
+				 WHERE id = $%d AND deleted_at IS NULL
+				UNION ALL
+				SELECT c.id FROM core.companies c
+				  JOIN visible_companies v ON c.parent_id = v.id
+				 WHERE c.deleted_at IS NULL
+			)
+		`, argIndex)
+		args = append(args, *params.ScopeCompanyID)
+		argIndex++
 
-	query := `
-		UPDATE core.users
-		SET is_email_verified = $1, updated_at = $2
-		WHERE id = $3
-	`
-
-	_, err := r.db.Exec(ctx, query, verified, now, userID)
-	return err
-}
-
-// Create creates a new user
-func (r *UserRepository) Create(user *domain.User) error {
-	ctx := context.Background()
-	query := `
-		INSERT INTO core.users (
-			id, email, username, password_hash, full_name, phone,
-			is_active, is_email_verified, created_at, created_by, updated_at, updated_by
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-	`
-
-	_, err := r.db.Exec(ctx, query,
-		user.ID, user.Email, user.Username, user.PasswordHash,
-		user.FullName, user.Phone, user.IsActive, user.IsEmailVerified,
-		user.CreatedAt, user.CreatedBy, user.UpdatedAt, user.UpdatedBy,
-	)
-
-	return err
-}
-
-// Update updates a user
-func (r *UserRepository) Update(user *domain.User) error {
-	ctx := context.Background()
-	query := `
-		UPDATE core.users
-		SET email = $1, username = $2, full_name = $3, phone = $4,
-		    is_active = $5, updated_at = $6, updated_by = $7
-		WHERE id = $8 AND deleted_at IS NULL
-	`
-
-	_, err := r.db.Exec(ctx, query,
-		user.Email, user.Username, user.FullName, user.Phone,
-		user.IsActive, user.UpdatedAt, user.UpdatedBy, user.ID,
-	)
-
-	return err
-}
-
-// UpdatePassword updates user password
-func (r *UserRepository) UpdatePassword(userID string, passwordHash string, updatedBy string) error {
-	ctx := context.Background()
-	query := `
-		UPDATE core.users
-		SET password_hash = $1, updated_at = $2, updated_by = $3
-		WHERE id = $4 AND deleted_at IS NULL
-	`
-
-	_, err := r.db.Exec(ctx, query, passwordHash, time.Now(), updatedBy, userID)
-	return err
-}
-
-// Delete soft deletes a user
-func (r *UserRepository) Delete(userID string, deletedBy string) error {
-	ctx := context.Background()
-	query := `
-		UPDATE core.users
-		SET deleted_at = $1, deleted_by = $2
-		WHERE id = $3 AND deleted_at IS NULL
-	`
-
-	_, err := r.db.Exec(ctx, query, time.Now(), deletedBy, userID)
-	return err
-}
-
-// Restore restores a soft-deleted user
-func (r *UserRepository) Restore(userID string) error {
-	ctx := context.Background()
-	query := `
-		UPDATE core.users
-		SET deleted_at = NULL, deleted_by = NULL, updated_at = $1
-		WHERE id = $2 AND deleted_at IS NOT NULL
-	`
-
-	_, err := r.db.Exec(ctx, query, time.Now(), userID)
-	return err
-}
-
-// UserWithRoles represents a user with their associated roles
-type UserWithRoles struct {
-	User  domain.User
-	Roles []RoleInfo
-}
-
-// RoleInfo represents role information
-type RoleInfo struct {
-	ID          string
-	Name        string
-	Description *string
-	IsSystem    bool
-}
-
-// FindAll finds all users with pagination and filters
-func (r *UserRepository) FindAll(limit, offset int, search, fullName, username, email string, isActive *bool) ([]domain.User, error) {
-	ctx := context.Background()
-	query := `
-		SELECT u.id, u.email, u.username, u.password_hash, u.full_name, u.phone, u.is_active,
-		       u.is_email_verified, u.last_login_at, u.created_at, COALESCE(u1.full_name, u.created_by::TEXT) as created_by,
-		       u.updated_at, COALESCE(u2.full_name, u.updated_by::TEXT) as updated_by,
-		       u.deleted_at, COALESCE(u3.full_name, u.deleted_by::TEXT) as deleted_by
-		FROM core.users u
-		LEFT JOIN core.users u1 ON u.created_by = u1.id
-		LEFT JOIN core.users u2 ON u.updated_by = u2.id
-		LEFT JOIN core.users u3 ON u.deleted_by = u3.id
-		WHERE u.deleted_at IS NULL
-	`
-
-	args := []interface{}{}
-	argPos := 1
-
-	// Add search filter (OR condition across multiple fields)
-	if search != "" {
-		query += fmt.Sprintf(` AND (u.email ILIKE $%d OR u.username ILIKE $%d OR u.full_name ILIKE $%d)`, argPos, argPos, argPos)
-		args = append(args, "%"+search+"%")
-		argPos++
+		visibilityClause := `EXISTS (
+			SELECT 1 FROM core.company_users cu
+			 WHERE cu.user_id = u.id
+			   AND cu.deleted_at IS NULL
+			   AND cu.company_id IN (SELECT id FROM visible_companies)
+		)`
+		if params.ScopeCreatedBy != nil {
+			visibilityClause = fmt.Sprintf("(%s OR u.created_by = $%d)", visibilityClause, argIndex)
+			args = append(args, *params.ScopeCreatedBy)
+			argIndex++
+		}
+		conditions = append(conditions, visibilityClause)
 	}
 
-	// Add specific field filters (AND conditions)
-	if fullName != "" {
-		query += fmt.Sprintf(` AND u.full_name ILIKE $%d`, argPos)
-		args = append(args, "%"+fullName+"%")
-		argPos++
+	if params.Search != "" {
+		conditions = append(conditions, fmt.Sprintf(
+			"(u.email ILIKE $%d OR u.username ILIKE $%d OR u.full_name ILIKE $%d)",
+			argIndex, argIndex, argIndex,
+		))
+		args = append(args, "%"+params.Search+"%")
+		argIndex++
 	}
 
-	if username != "" {
-		query += fmt.Sprintf(` AND u.username ILIKE $%d`, argPos)
-		args = append(args, "%"+username+"%")
-		argPos++
+	if params.IsActive != nil {
+		conditions = append(conditions, fmt.Sprintf("u.is_active = $%d", argIndex))
+		args = append(args, *params.IsActive)
+		argIndex++
 	}
 
-	if email != "" {
-		query += fmt.Sprintf(` AND u.email ILIKE $%d`, argPos)
-		args = append(args, "%"+email+"%")
-		argPos++
+	if params.BranchID != nil {
+		// A user matches the branch filter when either:
+		//  (a) they have an explicit assignment to this branch, OR
+		//  (b) they have no branch assignments at all (unrestricted access —
+		//      consistent with BranchScope middleware semantics).
+		conditions = append(conditions, fmt.Sprintf(`(
+			EXISTS (
+				SELECT 1 FROM core.user_branches ub
+				 WHERE ub.user_id = u.id
+				   AND ub.branch_id = $%d
+				   AND ub.deleted_at IS NULL
+			)
+			OR NOT EXISTS (
+				SELECT 1 FROM core.user_branches ub
+				 WHERE ub.user_id = u.id
+				   AND ub.deleted_at IS NULL
+			)
+		)`, argIndex))
+		args = append(args, *params.BranchID)
+		argIndex++
 	}
 
-	// Add isActive filter
-	if isActive != nil {
-		query += fmt.Sprintf(` AND u.is_active = $%d`, argPos)
-		args = append(args, *isActive)
-		argPos++
-	}
+	whereClause := strings.Join(conditions, " AND ")
 
-	query += fmt.Sprintf(` ORDER BY u.created_at DESC LIMIT $%d OFFSET $%d`, argPos, argPos+1)
-	args = append(args, limit, offset)
-
-	rows, err := r.db.Query(ctx, query, args...)
+	// Count query
+	countQuery := fmt.Sprintf("%sSELECT COUNT(*) FROM core.users u WHERE %s", ctePrefix, whereClause)
+	var total int64
+	err := r.db.QueryRow(ctx, countQuery, args...).Scan(&total)
 	if err != nil {
-		return nil, err
+		logger.Error("Failed to count users", logger.Err(err))
+		return nil, 0, err
+	}
+
+	// Data query
+	offset := (params.Page - 1) * params.Limit
+	dataQuery := fmt.Sprintf(`%sSELECT u.id, u.email, u.username, u.password_hash, u.full_name, u.phone, u.avatar_url,
+		       u.is_active, u.is_email_verified, u.email_verified_at,
+		       u.failed_login_count, u.locked_until, u.last_login_at,
+		       u.created_at, u.created_by, u.updated_at, u.updated_by, u.deleted_at, u.deleted_by
+		FROM core.users u
+		WHERE %s
+		ORDER BY u.created_at DESC
+		LIMIT $%d OFFSET $%d
+	`, ctePrefix, whereClause, argIndex, argIndex+1)
+
+	args = append(args, params.Limit, offset)
+
+	rows, err := r.db.Query(ctx, dataQuery, args...)
+	if err != nil {
+		logger.Error("Failed to find users", logger.Err(err))
+		return nil, 0, err
 	}
 	defer rows.Close()
 
@@ -302,496 +367,185 @@ func (r *UserRepository) FindAll(limit, offset int, search, fullName, username, 
 		var user domain.User
 		err := rows.Scan(
 			&user.ID, &user.Email, &user.Username, &user.PasswordHash,
-			&user.FullName, &user.Phone, &user.IsActive, &user.IsEmailVerified,
-			&user.LastLoginAt, &user.CreatedAt, &user.CreatedBy,
-			&user.UpdatedAt, &user.UpdatedBy, &user.DeletedAt, &user.DeletedBy,
+			&user.FullName, &user.Phone, &user.AvatarURL,
+			&user.IsActive, &user.IsEmailVerified, &user.EmailVerifiedAt,
+			&user.FailedLoginCount, &user.LockedUntil, &user.LastLoginAt,
+			&user.CreatedAt, &user.CreatedBy, &user.UpdatedAt, &user.UpdatedBy,
+			&user.DeletedAt, &user.DeletedBy,
 		)
 		if err != nil {
-			return nil, err
+			logger.Error("Failed to scan user", logger.Err(err))
+			return nil, 0, err
 		}
 		users = append(users, user)
 	}
 
-	return users, nil
+	return users, total, nil
 }
 
-// FindAllWithRoles finds all users with their roles
-func (r *UserRepository) FindAllWithRoles(limit, offset int, search, fullName, username, email string, isActive *bool) ([]UserWithRoles, error) {
-	ctx := context.Background()
-
-	// First, get the users
-	users, err := r.FindAll(limit, offset, search, fullName, username, email, isActive)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(users) == 0 {
-		return []UserWithRoles{}, nil
-	}
-
-	// Collect user IDs
-	userIDs := make([]string, len(users))
-	for i, user := range users {
-		userIDs[i] = user.ID
-	}
-
-	// Fetch roles for all users in a single query
-	rolesQuery := `
-		SELECT
-			ur.user_id,
-			r.id,
-			r.name,
-			r.description,
-			r.is_system
-		FROM core.user_roles ur
-		INNER JOIN core.roles r ON ur.role_id = r.id
-		WHERE ur.user_id = ANY($1)
-		  AND ur.deleted_at IS NULL
-		  AND r.deleted_at IS NULL
-		ORDER BY r.name
-	`
-
-	rows, err := r.db.Query(ctx, rolesQuery, userIDs)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	// Map user ID to their roles
-	userRolesMap := make(map[string][]RoleInfo)
-	for rows.Next() {
-		var userID string
-		var role RoleInfo
-
-		err := rows.Scan(
-			&userID,
-			&role.ID,
-			&role.Name,
-			&role.Description,
-			&role.IsSystem,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		userRolesMap[userID] = append(userRolesMap[userID], role)
-	}
-
-	// Combine users with their roles
-	result := make([]UserWithRoles, len(users))
-	for i, user := range users {
-		result[i] = UserWithRoles{
-			User:  user,
-			Roles: userRolesMap[user.ID],
-		}
-		// Initialize empty slice if user has no roles
-		if result[i].Roles == nil {
-			result[i].Roles = []RoleInfo{}
-		}
-	}
-
-	return result, nil
-}
-
-// Count counts total users with filters
-func (r *UserRepository) Count(search, fullName, username, email string, isActive *bool) (int64, error) {
-	ctx := context.Background()
-	query := `SELECT COUNT(*) FROM core.users u WHERE u.deleted_at IS NULL`
-
-	args := []interface{}{}
-	argPos := 1
-
-	// Add search filter (OR condition across multiple fields)
-	if search != "" {
-		query += fmt.Sprintf(` AND (u.email ILIKE $%d OR u.username ILIKE $%d OR u.full_name ILIKE $%d)`, argPos, argPos, argPos)
-		args = append(args, "%"+search+"%")
-		argPos++
-	}
-
-	// Add specific field filters (AND conditions)
-	if fullName != "" {
-		query += fmt.Sprintf(` AND u.full_name ILIKE $%d`, argPos)
-		args = append(args, "%"+fullName+"%")
-		argPos++
-	}
-
-	if username != "" {
-		query += fmt.Sprintf(` AND u.username ILIKE $%d`, argPos)
-		args = append(args, "%"+username+"%")
-		argPos++
-	}
-
-	if email != "" {
-		query += fmt.Sprintf(` AND u.email ILIKE $%d`, argPos)
-		args = append(args, "%"+email+"%")
-		argPos++
-	}
-
-	// Add isActive filter
-	if isActive != nil {
-		query += fmt.Sprintf(` AND u.is_active = $%d`, argPos)
-		args = append(args, *isActive)
-	}
-
-	var count int64
-	err := r.db.QueryRow(ctx, query, args...).Scan(&count)
-	return count, err
-}
-
-// FindByIDWithRoles finds a user by ID and includes their roles and permissions
-func (r *UserRepository) FindByIDWithRoles(id string) (*domain.User, []string, []string, error) {
-	ctx := context.Background()
+// Update updates a user
+func (r *UserRepository) Update(ctx context.Context, user *domain.User) error {
 	query := `
-		SELECT
-			u.id, u.email, u.username, u.password_hash, u.full_name, u.phone,
-			u.is_active, u.is_email_verified, u.last_login_at, u.created_at,
-			u.created_by, u.updated_at, u.updated_by, u.deleted_at, u.deleted_by,
-			COALESCE(
-				json_agg(DISTINCT r.name) FILTER (WHERE r.name IS NOT NULL),
-				'[]'
-			) as roles,
-			COALESCE(
-				json_agg(DISTINCT (p.resource || ':' || p.action)) FILTER (WHERE p.resource IS NOT NULL),
-				'[]'
-			) as permissions
-		FROM core.users u
-		LEFT JOIN core.user_roles ur ON u.id = ur.user_id AND ur.deleted_at IS NULL
-		LEFT JOIN core.roles r ON ur.role_id = r.id AND r.deleted_at IS NULL
-		LEFT JOIN core.role_permissions rp ON r.id = rp.role_id AND rp.deleted_at IS NULL
-		LEFT JOIN core.permissions p ON rp.permission_id = p.id AND p.deleted_at IS NULL
-		WHERE u.id = $1 AND u.deleted_at IS NULL
-		GROUP BY u.id
+		UPDATE core.users
+		SET email = $2, username = $3, full_name = $4, phone = $5, avatar_url = $6,
+		    is_active = $7, updated_at = $8, updated_by = $9
+		WHERE id = $1 AND deleted_at IS NULL
 	`
 
-	var user domain.User
-	var rolesJSON, permissionsJSON []byte
-
-	err := r.db.QueryRow(ctx, query, id).Scan(
-		&user.ID, &user.Email, &user.Username, &user.PasswordHash,
-		&user.FullName, &user.Phone, &user.IsActive, &user.IsEmailVerified,
-		&user.LastLoginAt, &user.CreatedAt, &user.CreatedBy,
-		&user.UpdatedAt, &user.UpdatedBy, &user.DeletedAt, &user.DeletedBy,
-		&rolesJSON, &permissionsJSON,
+	_, err := r.db.Exec(ctx, query,
+		user.ID, user.Email, user.Username, user.FullName, user.Phone, user.AvatarURL,
+		user.IsActive, user.UpdatedAt, user.UpdatedBy,
 	)
 
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil, nil, nil // User not found
-		}
-		return nil, nil, nil, err
-	}
-
-	// Parse roles JSON
-	var roles []string
-	if len(rolesJSON) > 0 && string(rolesJSON) != "[]" {
-		// Simple JSON array parsing (e.g., ["admin","user"])
-		rolesStr := string(rolesJSON)
-		rolesStr = rolesStr[1 : len(rolesStr)-1] // Remove [ ]
-		if rolesStr != "" {
-			// Split by comma and clean quotes
-			parts := splitAndClean(rolesStr)
-			roles = parts
-		}
-	}
-
-	// Parse permissions JSON
-	var permissions []string
-	if len(permissionsJSON) > 0 && string(permissionsJSON) != "[]" {
-		permStr := string(permissionsJSON)
-		permStr = permStr[1 : len(permStr)-1] // Remove [ ]
-		if permStr != "" {
-			parts := splitAndClean(permStr)
-			permissions = parts
-		}
-	}
-
-	return &user, roles, permissions, nil
-}
-
-// FindByEmailWithRoles finds a user by email and includes their roles and permissions
-func (r *UserRepository) FindByEmailWithRoles(email string) (*domain.User, []string, []string, error) {
-	ctx := context.Background()
-	query := `
-		SELECT
-			u.id, u.email, u.username, u.password_hash, u.full_name, u.phone,
-			u.is_active, u.is_email_verified, u.last_login_at, u.created_at,
-			u.created_by, u.updated_at, u.updated_by, u.deleted_at, u.deleted_by,
-			COALESCE(
-				json_agg(DISTINCT r.name) FILTER (WHERE r.name IS NOT NULL),
-				'[]'
-			) as roles,
-			COALESCE(
-				json_agg(DISTINCT (p.resource || ':' || p.action)) FILTER (WHERE p.resource IS NOT NULL),
-				'[]'
-			) as permissions
-		FROM core.users u
-		LEFT JOIN core.user_roles ur ON u.id = ur.user_id AND ur.deleted_at IS NULL
-		LEFT JOIN core.roles r ON ur.role_id = r.id AND r.deleted_at IS NULL
-		LEFT JOIN core.role_permissions rp ON r.id = rp.role_id AND rp.deleted_at IS NULL
-		LEFT JOIN core.permissions p ON rp.permission_id = p.id AND p.deleted_at IS NULL
-		WHERE u.email = $1 AND u.deleted_at IS NULL
-		GROUP BY u.id
-	`
-
-	var user domain.User
-	var rolesJSON, permissionsJSON []byte
-
-	err := r.db.QueryRow(ctx, query, email).Scan(
-		&user.ID, &user.Email, &user.Username, &user.PasswordHash,
-		&user.FullName, &user.Phone, &user.IsActive, &user.IsEmailVerified,
-		&user.LastLoginAt, &user.CreatedAt, &user.CreatedBy,
-		&user.UpdatedAt, &user.UpdatedBy, &user.DeletedAt, &user.DeletedBy,
-		&rolesJSON, &permissionsJSON,
-	)
-
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil, nil, nil // User not found
-		}
-		return nil, nil, nil, err
-	}
-
-	// Parse roles JSON
-	var roles []string
-	if len(rolesJSON) > 0 && string(rolesJSON) != "[]" {
-		rolesStr := string(rolesJSON)
-		rolesStr = rolesStr[1 : len(rolesStr)-1] // Remove [ ]
-		if rolesStr != "" {
-			parts := splitAndClean(rolesStr)
-			roles = parts
-		}
-	}
-
-	// Parse permissions JSON
-	var permissions []string
-	if len(permissionsJSON) > 0 && string(permissionsJSON) != "[]" {
-		permStr := string(permissionsJSON)
-		permStr = permStr[1 : len(permStr)-1] // Remove [ ]
-		if permStr != "" {
-			parts := splitAndClean(permStr)
-			permissions = parts
-		}
-	}
-
-	return &user, roles, permissions, nil
-}
-
-// FindByUsernameWithRoles finds a user by username and includes their roles and permissions
-func (r *UserRepository) FindByUsernameWithRoles(username string) (*domain.User, []string, []string, error) {
-	ctx := context.Background()
-	query := `
-		SELECT
-			u.id, u.email, u.username, u.password_hash, u.full_name, u.phone,
-			u.is_active, u.is_email_verified, u.last_login_at, u.created_at,
-			u.created_by, u.updated_at, u.updated_by, u.deleted_at, u.deleted_by,
-			COALESCE(
-				json_agg(DISTINCT r.name) FILTER (WHERE r.name IS NOT NULL),
-				'[]'
-			) as roles,
-			COALESCE(
-				json_agg(DISTINCT (p.resource || ':' || p.action)) FILTER (WHERE p.resource IS NOT NULL),
-				'[]'
-			) as permissions
-		FROM core.users u
-		LEFT JOIN core.user_roles ur ON u.id = ur.user_id AND ur.deleted_at IS NULL
-		LEFT JOIN core.roles r ON ur.role_id = r.id AND r.deleted_at IS NULL
-		LEFT JOIN core.role_permissions rp ON r.id = rp.role_id AND rp.deleted_at IS NULL
-		LEFT JOIN core.permissions p ON rp.permission_id = p.id AND p.deleted_at IS NULL
-		WHERE u.username = $1 AND u.deleted_at IS NULL
-		GROUP BY u.id
-	`
-
-	var user domain.User
-	var rolesJSON, permissionsJSON []byte
-
-	err := r.db.QueryRow(ctx, query, username).Scan(
-		&user.ID, &user.Email, &user.Username, &user.PasswordHash,
-		&user.FullName, &user.Phone, &user.IsActive, &user.IsEmailVerified,
-		&user.LastLoginAt, &user.CreatedAt, &user.CreatedBy,
-		&user.UpdatedAt, &user.UpdatedBy, &user.DeletedAt, &user.DeletedBy,
-		&rolesJSON, &permissionsJSON,
-	)
-
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil, nil, nil // User not found
-		}
-		return nil, nil, nil, err
-	}
-
-	// Parse roles JSON
-	var roles []string
-	if len(rolesJSON) > 0 && string(rolesJSON) != "[]" {
-		rolesStr := string(rolesJSON)
-		rolesStr = rolesStr[1 : len(rolesStr)-1] // Remove [ ]
-		if rolesStr != "" {
-			parts := splitAndClean(rolesStr)
-			roles = parts
-		}
-	}
-
-	// Parse permissions JSON
-	var permissions []string
-	if len(permissionsJSON) > 0 && string(permissionsJSON) != "[]" {
-		permStr := string(permissionsJSON)
-		permStr = permStr[1 : len(permStr)-1] // Remove [ ]
-		if permStr != "" {
-			parts := splitAndClean(permStr)
-			permissions = parts
-		}
-	}
-
-	return &user, roles, permissions, nil
-}
-
-// AssignRole assigns a role to a user
-func (r *UserRepository) AssignRole(userID, roleID, createdBy string) error {
-	ctx := context.Background()
-	query := `
-		INSERT INTO core.user_roles (user_id, role_id, created_by, updated_by)
-		VALUES ($1, $2, $3, $3)
-		ON CONFLICT (user_id, role_id) DO UPDATE
-		SET deleted_at = NULL, deleted_by = NULL, updated_at = CURRENT_TIMESTAMP, updated_by = $3
-	`
-	_, err := r.db.Exec(ctx, query, userID, roleID, createdBy)
-	return err
-}
-
-// RemoveRole removes a role from a user (soft delete)
-func (r *UserRepository) RemoveRole(userID, roleID, deletedBy string) error {
-	ctx := context.Background()
-	query := `
-		UPDATE core.user_roles
-		SET deleted_at = CURRENT_TIMESTAMP, deleted_by = $3, updated_at = CURRENT_TIMESTAMP, updated_by = $3
-		WHERE user_id = $1 AND role_id = $2 AND deleted_at IS NULL
-	`
-	_, err := r.db.Exec(ctx, query, userID, roleID, deletedBy)
-	return err
-}
-
-// SyncRoles replaces all user roles with new set (soft delete old, insert new)
-func (r *UserRepository) SyncRoles(userID string, roleIDs []string, updatedBy string) error {
-	ctx := context.Background()
-
-	// Start transaction
-	tx, err := r.db.Begin(ctx)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback(ctx)
-
-	// Soft delete all existing roles
-	deleteQuery := `
-		UPDATE core.user_roles
-		SET deleted_at = CURRENT_TIMESTAMP, deleted_by = $2, updated_at = CURRENT_TIMESTAMP, updated_by = $2
-		WHERE user_id = $1 AND deleted_at IS NULL
-	`
-	_, err = tx.Exec(ctx, deleteQuery, userID, updatedBy)
-	if err != nil {
+		logger.Error("Failed to update user", logger.Err(err))
 		return err
 	}
 
-	// Insert/restore new roles
-	if len(roleIDs) > 0 {
-		insertQuery := `
-			INSERT INTO core.user_roles (user_id, role_id, created_by, updated_by)
-			VALUES ($1, $2, $3, $3)
-			ON CONFLICT (user_id, role_id) DO UPDATE
-			SET deleted_at = NULL, deleted_by = NULL, updated_at = CURRENT_TIMESTAMP, updated_by = $3
-		`
-		for _, roleID := range roleIDs {
-			_, err = tx.Exec(ctx, insertQuery, userID, roleID, updatedBy)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	return tx.Commit(ctx)
+	return nil
 }
 
-// AssignRoles assigns multiple roles to a user at once
-func (r *UserRepository) AssignRoles(userID string, roleIDs []string, createdBy string) error {
-	ctx := context.Background()
+// SoftDelete soft deletes a user
+func (r *UserRepository) SoftDelete(ctx context.Context, id, deletedBy string) error {
+	query := `
+		UPDATE core.users
+		SET deleted_at = $2, deleted_by = $3, updated_at = $2, updated_by = $3
+		WHERE id = $1 AND deleted_at IS NULL
+	`
 
-	if len(roleIDs) == 0 {
-		return nil
-	}
-
-	// Use transaction for atomicity
-	tx, err := r.db.Begin(ctx)
+	now := time.Now()
+	_, err := r.db.Exec(ctx, query, id, now, deletedBy)
 	if err != nil {
+		logger.Error("Failed to soft delete user", logger.Err(err))
 		return err
 	}
-	defer tx.Rollback(ctx)
 
-	query := `
-		INSERT INTO core.user_roles (user_id, role_id, created_by, updated_by)
-		VALUES ($1, $2, $3, $3)
-		ON CONFLICT (user_id, role_id) DO UPDATE
-		SET deleted_at = NULL, deleted_by = NULL, updated_at = CURRENT_TIMESTAMP, updated_by = $3
-	`
-
-	for _, roleID := range roleIDs {
-		_, err = tx.Exec(ctx, query, userID, roleID, createdBy)
-		if err != nil {
-			return err
-		}
-	}
-
-	return tx.Commit(ctx)
+	return nil
 }
 
-// GetUserRoleIDs gets all active role IDs for a user
-func (r *UserRepository) GetUserRoleIDs(userID string) ([]string, error) {
-	ctx := context.Background()
+// UpdatePassword updates user password
+func (r *UserRepository) UpdatePassword(ctx context.Context, id, passwordHash, updatedBy string) error {
 	query := `
-		SELECT role_id
-		FROM core.user_roles
-		WHERE user_id = $1 AND deleted_at IS NULL
-		ORDER BY created_at
+		UPDATE core.users
+		SET password_hash = $2, updated_at = $3, updated_by = $4
+		WHERE id = $1 AND deleted_at IS NULL
 	`
 
-	rows, err := r.db.Query(ctx, query, userID)
+	_, err := r.db.Exec(ctx, query, id, passwordHash, time.Now(), updatedBy)
 	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var roleIDs []string
-	for rows.Next() {
-		var roleID string
-		if err := rows.Scan(&roleID); err != nil {
-			return nil, err
-		}
-		roleIDs = append(roleIDs, roleID)
+		logger.Error("Failed to update password", logger.Err(err))
+		return err
 	}
 
-	return roleIDs, nil
+	return nil
 }
 
-// Helper function to split and clean JSON array string
-func splitAndClean(str string) []string {
-	var result []string
-	current := ""
-	inQuote := false
+// UpdateLastLogin updates last login timestamp
+func (r *UserRepository) UpdateLastLogin(ctx context.Context, id string) error {
+	query := `
+		UPDATE core.users
+		SET last_login_at = $2, failed_login_count = 0, locked_until = NULL
+		WHERE id = $1 AND deleted_at IS NULL
+	`
 
-	for _, char := range str {
-		if char == '"' {
-			inQuote = !inQuote
-		} else if char == ',' && !inQuote {
-			if current != "" {
-				result = append(result, current)
-				current = ""
-			}
-		} else if inQuote {
-			current += string(char)
-		}
+	_, err := r.db.Exec(ctx, query, id, time.Now())
+	if err != nil {
+		logger.Error("Failed to update last login", logger.Err(err))
+		return err
 	}
 
-	if current != "" {
-		result = append(result, current)
+	return nil
+}
+
+// IncrementFailedLogin increments failed login count
+func (r *UserRepository) IncrementFailedLogin(ctx context.Context, id string) error {
+	query := `
+		UPDATE core.users
+		SET failed_login_count = failed_login_count + 1
+		WHERE id = $1 AND deleted_at IS NULL
+	`
+
+	_, err := r.db.Exec(ctx, query, id)
+	if err != nil {
+		logger.Error("Failed to increment failed login count", logger.Err(err))
+		return err
 	}
 
-	return result
+	return nil
+}
+
+// LockUser locks a user account
+func (r *UserRepository) LockUser(ctx context.Context, id string, until time.Time) error {
+	query := `
+		UPDATE core.users
+		SET locked_until = $2
+		WHERE id = $1 AND deleted_at IS NULL
+	`
+
+	_, err := r.db.Exec(ctx, query, id, until)
+	if err != nil {
+		logger.Error("Failed to lock user", logger.Err(err))
+		return err
+	}
+
+	return nil
+}
+
+// VerifyEmail marks user email as verified
+func (r *UserRepository) VerifyEmail(ctx context.Context, id string) error {
+	query := `
+		UPDATE core.users
+		SET is_email_verified = true, email_verified_at = $2
+		WHERE id = $1 AND deleted_at IS NULL
+	`
+
+	_, err := r.db.Exec(ctx, query, id, time.Now())
+	if err != nil {
+		logger.Error("Failed to verify email", logger.Err(err))
+		return err
+	}
+
+	return nil
+}
+
+// EmailExists checks if email already exists
+func (r *UserRepository) EmailExists(ctx context.Context, email string, excludeID *string) (bool, error) {
+	query := `SELECT EXISTS(SELECT 1 FROM core.users WHERE email = $1 AND deleted_at IS NULL`
+	args := []interface{}{email}
+
+	if excludeID != nil {
+		query += ` AND id != $2`
+		args = append(args, *excludeID)
+	}
+	query += `)`
+
+	var exists bool
+	err := r.db.QueryRow(ctx, query, args...).Scan(&exists)
+	if err != nil {
+		logger.Error("Failed to check email existence", logger.Err(err))
+		return false, err
+	}
+
+	return exists, nil
+}
+
+// UsernameExists checks if username already exists
+func (r *UserRepository) UsernameExists(ctx context.Context, username string, excludeID *string) (bool, error) {
+	query := `SELECT EXISTS(SELECT 1 FROM core.users WHERE username = $1 AND deleted_at IS NULL`
+	args := []interface{}{username}
+
+	if excludeID != nil {
+		query += ` AND id != $2`
+		args = append(args, *excludeID)
+	}
+	query += `)`
+
+	var exists bool
+	err := r.db.QueryRow(ctx, query, args...).Scan(&exists)
+	if err != nil {
+		logger.Error("Failed to check username existence", logger.Err(err))
+		return false, err
+	}
+
+	return exists, nil
 }

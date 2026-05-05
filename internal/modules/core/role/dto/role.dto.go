@@ -2,87 +2,76 @@ package dto
 
 import "time"
 
-// CreateRoleRequest represents request to create a new role
+// CreateRoleRequest represents request to create a new role.
+// Note: CompanyID is NOT accepted from the client. It is always set by the
+// handler from the authenticated user's JWT context to prevent cross-tenant
+// role leakage.
 type CreateRoleRequest struct {
-	Name            string            `json:"name" binding:"required,min=3,max=100"`
-	Description     *string           `json:"description" binding:"omitempty,max=1000"`
-	ModuleTemplates map[string]string `json:"module_templates" binding:"omitempty"` // map[module_id]permission_template_id
-	Permissions     []string          `json:"permissions" binding:"omitempty"`      // For backward compatibility
+	Code        string            `json:"code" binding:"required,min=2,max=50"`
+	Name        string            `json:"name" binding:"required,min=2,max=100"`
+	Description *string           `json:"description" binding:"omitempty,max=1000"`
+	Permissions map[string]string `json:"permissions" binding:"required"`
+	IsActive    *bool             `json:"is_active"`
+	CompanyID   *string           `json:"-"` // Set by handler from JWT, never from body
 }
 
-// UpdateRoleRequest represents request to update role
+// UpdateRoleRequest represents request to update a role
 type UpdateRoleRequest struct {
-	Name            *string           `json:"name" binding:"omitempty,min=3,max=100"`
-	Description     *string           `json:"description" binding:"omitempty,max=1000"`
-	ModuleTemplates map[string]string `json:"module_templates" binding:"omitempty"` // map[module_id]permission_template_id
-	Permissions     []string          `json:"permissions" binding:"omitempty"`      // For backward compatibility
+	Name        *string           `json:"name" binding:"omitempty,min=2,max=100"`
+	Description *string           `json:"description" binding:"omitempty,max=1000"`
+	Permissions map[string]string `json:"permissions" binding:"omitempty"`
+	IsActive    *bool             `json:"is_active"`
+}
+
+// UpdatePermissionsRequest represents request to update role permissions
+type UpdatePermissionsRequest struct {
+	Permissions map[string]string `json:"permissions" binding:"required"`
 }
 
 // RoleResponse represents role data in response
 type RoleResponse struct {
-	ID          string     `json:"id"`
-	Name        string     `json:"name"`
-	Description *string    `json:"description,omitempty"`
-	IsSystem    bool       `json:"is_system"`
-	CreatedAt   time.Time  `json:"created_at"`
-	CreatedBy   *string    `json:"created_by,omitempty"`
-	UpdatedAt   time.Time  `json:"updated_at"`
-	UpdatedBy   *string    `json:"updated_by,omitempty"`
-	DeletedAt   *time.Time `json:"deleted_at,omitempty"`
-	DeletedBy   *string    `json:"deleted_by,omitempty"`
+	ID          string            `json:"id"`
+	Code        string            `json:"code"`
+	Name        string            `json:"name"`
+	Description *string           `json:"description,omitempty"`
+	Permissions map[string]string `json:"permissions"`
+	IsSystem    bool              `json:"is_system"`
+	IsActive    bool              `json:"is_active"`
+	CompanyID   *string           `json:"company_id,omitempty"`
+	CreatedAt   time.Time         `json:"created_at"`
+	CreatedBy   *string           `json:"created_by,omitempty"`
+	UpdatedAt   time.Time         `json:"updated_at"`
 }
 
-// RoleListResponse represents paginated role list
+// RoleListResponse represents paginated role list (used internally)
 type RoleListResponse struct {
-	Roles      []RoleResponse `json:"roles"`
-	Total      int64          `json:"total"`
-	Page       int            `json:"page"`
-	PageSize   int            `json:"page_size"`
-	TotalPages int            `json:"total_pages"`
+	Roles []RoleResponse `json:"roles"`
+	Total int64          `json:"total"`
+	Page  int            `json:"page"`
+	Limit int            `json:"limit"`
 }
 
 // RoleQueryParams represents query parameters for listing roles
 type RoleQueryParams struct {
-	Page          int    `form:"page,default=1" binding:"omitempty,min=1"`
-	PageSize      int    `form:"page_size,default=10" binding:"omitempty,min=1,max=100"`
-	Search        string `form:"search" binding:"omitempty,max=255"`
-	IncludeSystem *bool  `form:"include_system" binding:"omitempty"`
+	Page          int      `form:"page,default=1" binding:"min=1"`
+	Limit         int      `form:"limit,default=10" binding:"min=1,max=100"`
+	Search        string   `form:"search" binding:"omitempty,max=255"`
+	CompanyID     *string  `form:"company_id" binding:"omitempty,uuid"`
+	IncludeGlobal *bool    `form:"include_global"`
+	ExcludeSystem *bool    `form:"-"` // Internal use only: exclude is_system roles
+	ExcludeCodes  []string `form:"-"` // Internal use only: exclude roles with these codes
 }
 
-// PermissionResponse represents permission data in response
-type PermissionResponse struct {
-	ID          string `json:"id"`
-	Resource    string `json:"resource"`
-	Action      string `json:"action"`
-	Description string `json:"description"`
+// AssignRoleRequest represents request to assign a role to a user
+type AssignRoleRequest struct {
+	UserID    string  `json:"user_id" binding:"required,uuid"`
+	RoleID    string  `json:"role_id" binding:"required,uuid"`
+	CompanyID *string `json:"company_id" binding:"omitempty,uuid"`
 }
 
-// RoleWithPermissionsResponse represents role with its permissions
-type RoleWithPermissionsResponse struct {
-	ID              string                       `json:"id"`
-	Name            string                       `json:"name"`
-	Description     *string                      `json:"description,omitempty"`
-	IsSystem        bool                         `json:"is_system"`
-	Permissions     []PermissionResponse         `json:"permissions"`
-	ModuleTemplates []RoleModuleTemplateResponse `json:"module_templates,omitempty"`
-	CreatedAt       time.Time                    `json:"created_at"`
-	CreatedBy       *string                      `json:"created_by,omitempty"`
-	UpdatedAt       time.Time                    `json:"updated_at"`
-	UpdatedBy       *string                      `json:"updated_by,omitempty"`
-	DeletedAt       *time.Time                   `json:"deleted_at,omitempty"`
-	DeletedBy       *string                      `json:"deleted_by,omitempty"`
-}
-
-// RoleModuleTemplateResponse represents a module-template mapping
-type RoleModuleTemplateResponse struct {
-	ModuleID               string `json:"module_id"`
-	ModuleCode             string `json:"module_code"`
-	ModuleName             string `json:"module_name"`
-	PermissionTemplateID   string `json:"permission_template_id"`
-	PermissionTemplateName string `json:"permission_template_name"`
-}
-
-// AssignPermissionsRequest represents request to assign permissions to a role
-type AssignPermissionsRequest struct {
-	PermissionIDs []string `json:"permission_ids" binding:"required,min=1,dive,uuid"`
+// RemoveRoleRequest represents request to remove a role from a user
+type RemoveRoleRequest struct {
+	UserID    string  `json:"user_id" binding:"required,uuid"`
+	RoleID    string  `json:"role_id" binding:"required,uuid"`
+	CompanyID *string `json:"company_id" binding:"omitempty,uuid"`
 }

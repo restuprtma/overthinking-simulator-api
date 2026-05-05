@@ -10,7 +10,10 @@ import (
 // EmailService defines the interface for sending emails
 type EmailService interface {
 	SendVerificationEmail(to, name, token string) error
+	SendOTPVerificationEmail(to, name, otpCode string) error
+	SendVerificationEmailWithOTP(to, name, token, otpCode string) error
 	SendPasswordResetEmail(to, name, token string) error
+	SendPasswordResetOTP(to, name, otpCode string) error
 	SendWelcomeEmail(to, name string) error
 	SendAccountLockedEmail(to, name string) error
 	SendPasswordChangedEmail(to, name string) error
@@ -23,6 +26,7 @@ type EmailData struct {
 	AppURL            string
 	VerificationURL   string
 	ResetPasswordURL  string
+	OTPCode           string
 	SupportEmail      string
 	Year              int
 }
@@ -55,8 +59,23 @@ func (s *NoOpEmailService) SendVerificationEmail(to, name, token string) error {
 	return nil
 }
 
+func (s *NoOpEmailService) SendOTPVerificationEmail(to, name, otpCode string) error {
+	fmt.Printf("[NoOpEmail] OTP verification email to %s (OTP: %s)\n", to, otpCode)
+	return nil
+}
+
+func (s *NoOpEmailService) SendVerificationEmailWithOTP(to, name, token, otpCode string) error {
+	fmt.Printf("[NoOpEmail] Verification email with OTP to %s (token: %s, OTP: %s)\n", to, token, otpCode)
+	return nil
+}
+
 func (s *NoOpEmailService) SendPasswordResetEmail(to, name, token string) error {
 	fmt.Printf("[NoOpEmail] Password reset email to %s (token: %s)\n", to, token)
+	return nil
+}
+
+func (s *NoOpEmailService) SendPasswordResetOTP(to, name, otpCode string) error {
+	fmt.Printf("[NoOpEmail] Password reset OTP email to %s (OTP: %s)\n", to, otpCode)
 	return nil
 }
 

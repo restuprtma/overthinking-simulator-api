@@ -6,6 +6,9 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"math/big"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 // GenerateSecureToken generates a cryptographically secure random token
@@ -45,4 +48,34 @@ func GenerateRefreshToken() (string, error) {
 func HashRefreshToken(token string) string {
 	hash := sha256.Sum256([]byte(token))
 	return hex.EncodeToString(hash[:])
+}
+
+// GenerateOTP generates a cryptographically secure 6-digit OTP code
+func GenerateOTP() (string, error) {
+	// Generate a random number between 100000 and 999999
+	max := big.NewInt(900000) // 999999 - 100000
+	n, err := rand.Int(rand.Reader, max)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate OTP: %w", err)
+	}
+
+	// Add 100000 to ensure 6 digits
+	otp := n.Int64() + 100000
+	return fmt.Sprintf("%06d", otp), nil
+}
+
+// HashOTP creates a bcrypt hash of the OTP for secure storage
+// Uses bcrypt instead of SHA256 for better security against rainbow table attacks
+func HashOTP(otp string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(otp), bcrypt.DefaultCost)
+	if err != nil {
+		return "", fmt.Errorf("failed to hash OTP: %w", err)
+	}
+	return string(hash), nil
+}
+
+// VerifyOTP verifies if the provided OTP matches the hashed OTP
+func VerifyOTP(otp, hashedOTP string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hashedOTP), []byte(otp))
+	return err == nil
 }

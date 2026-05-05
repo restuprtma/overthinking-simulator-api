@@ -12,7 +12,8 @@ type Pagination struct {
 
 // Meta represents response metadata
 type Meta struct {
-	Pagination *Pagination `json:"pagination,omitempty"`
+	Pagination *Pagination      `json:"pagination,omitempty"`
+	Counts     map[string]int64 `json:"counts,omitempty"`
 }
 
 // Response represents standard API response structure
@@ -48,6 +49,32 @@ func SuccessWithPagination(c *gin.Context, statusCode int, message string, data 
 				Total:      total,
 				TotalPages: totalPages,
 			},
+		},
+	})
+}
+
+// SuccessWithPaginationAndCounts is like SuccessWithPagination but attaches
+// a `counts` map in meta — used for per-status (or any categorical) counts
+// alongside a paginated list. Counts are independent of pagination: they
+// should be computed by the caller over the same filter set as the list
+// minus the dimension being counted (e.g. status).
+func SuccessWithPaginationAndCounts(c *gin.Context, statusCode int, message string, data interface{}, page, limit int, total int64, counts map[string]int64) {
+	totalPages := int(total) / limit
+	if int(total)%limit > 0 {
+		totalPages++
+	}
+
+	c.JSON(statusCode, Response{
+		Data:    data,
+		Message: message,
+		Meta: &Meta{
+			Pagination: &Pagination{
+				Page:       page,
+				Limit:      limit,
+				Total:      total,
+				TotalPages: totalPages,
+			},
+			Counts: counts,
 		},
 	})
 }

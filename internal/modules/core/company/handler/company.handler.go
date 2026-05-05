@@ -2,15 +2,14 @@ package handler
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 
 	"venturo-skeleton-go/internal/middleware"
 	"venturo-skeleton-go/internal/modules/core/company/dto"
 	"venturo-skeleton-go/internal/modules/core/company/service"
 	"venturo-skeleton-go/internal/shared/response"
-
-	"github.com/gin-gonic/gin"
 )
 
 type CompanyHandler struct {
@@ -23,136 +22,88 @@ func NewCompanyHandler(companyService *service.CompanyService) *CompanyHandler {
 	}
 }
 
-// Create creates a new company
-// @Summary Create new company
-// @Description Create a new company with the authenticated user as owner
-// @Tags Companies
-// @Accept json
-// @Produce json
-// @Param request body dto.CreateCompanyRequest true "Company details"
-// @Success 201 {object} response.Response{data=dto.CompanyResponse} "Company created successfully"
-// @Failure 400 {object} response.Response "Invalid request payload"
-// @Failure 409 {object} response.Response "Company code already exists"
-// @Failure 500 {object} response.Response "Internal server error"
-// @Security BearerAuth
-// @Router /companies [post]
-func (h *CompanyHandler) Create(c *gin.Context) {
-	var req dto.CreateCompanyRequest
-
-	// Bind and validate request
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, "Invalid request payload", err.Error())
-		return
-	}
-
-	// Get user ID from context
-	userID, err := middleware.GetUserID(c)
-	if err != nil {
-		response.Error(c, http.StatusUnauthorized, "Unauthorized", err.Error())
-		return
-	}
-
-	// Call service
-	result, err := h.companyService.Create(&req, userID)
-	if err != nil {
-		if errors.Is(err, service.ErrCodeAlreadyExists) {
-			response.Error(c, http.StatusConflict, "Company code already exists", "")
-			return
-		}
-		response.Error(c, http.StatusInternalServerError, "Failed to create company", err.Error())
-		return
-	}
-
-	response.Success(c, http.StatusCreated, "Company created successfully", result)
-}
-
-// GetAll gets all companies with pagination
-// @Summary Get all companies
-// @Description Get list of companies with pagination and filters
-// @Tags Companies
-// @Accept json
-// @Produce json
-// @Param page query int false "Page number" default(1)
-// @Param page_size query int false "Page size" default(10)
-// @Param search query string false "Search by name, code, or email"
-// @Param is_active query bool false "Filter by active status"
-// @Param owner_id query string false "Filter by owner ID"
-// @Success 200 {object} response.Response{data=dto.CompanyListResponse} "Companies retrieved successfully"
-// @Failure 400 {object} response.Response "Invalid query parameters"
-// @Failure 500 {object} response.Response "Internal server error"
-// @Security BearerAuth
-// @Router /companies [get]
 func (h *CompanyHandler) GetAll(c *gin.Context) {
 	var params dto.CompanyQueryParams
-
-	// Bind query parameters
 	if err := c.ShouldBindQuery(&params); err != nil {
 		response.Error(c, http.StatusBadRequest, "Invalid query parameters", err.Error())
 		return
 	}
 
-	// Set defaults
-	if params.Page == 0 {
-		params.Page = 1
-	}
-	if params.PageSize == 0 {
-		params.PageSize = 10
+	claims, _ := middleware.GetUserFromContext(c)
+	isSuperAdmin := claims != nil && claims.HasRole("super_admin")
+	var userID string
+	if claims != nil {
+		userID = claims.UserID
 	}
 
-	// Call service
-	result, err := h.companyService.GetAll(&params)
+	ctx := c.Request.Context()
+	result, err := h.companyService.GetAll(ctx, &params, userID, isSuperAdmin)
 	if err != nil {
-		response.Error(c, http.StatusInternalServerError, "Failed to fetch companies", err.Error())
+		response.Error(c, http.StatusInternalServerError, "Failed to get companies", err.Error())
 		return
 	}
 
-	response.SuccessWithPagination(c, http.StatusOK, "Companies retrieved successfully", result.Companies, result.Page, result.PageSize, result.Total)
+	response.SuccessWithPagination(c, http.StatusOK, "Companies retrieved successfully",
+		result.Companies, result.Page, result.Limit, result.Total)
 }
 
-// GetByID gets a company by ID
-// @Summary Get company by ID
-// @Description Get company details by ID
-// @Tags Companies
-// @Accept json
-// @Produce json
-// @Param id path string true "Company ID"
-// @Success 200 {object} response.Response{data=dto.CompanyResponse} "Company retrieved successfully"
-// @Failure 404 {object} response.Response "Company not found"
-// @Failure 500 {object} response.Response "Internal server error"
-// @Security BearerAuth
-// @Router /companies/{id} [get]
 func (h *CompanyHandler) GetByID(c *gin.Context) {
 	id := c.Param("id")
+	if id == "" {
+		response.Error(c, http.StatusBadRequest, "Company ID is required", "")
+		return
+	}
 
-	result, err := h.companyService.GetByID(id)
+	ctx := c.Request.Context()
+	result, err := h.companyService.GetByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, service.ErrCompanyNotFound) {
 			response.Error(c, http.StatusNotFound, "Company not found", "")
 			return
 		}
-		response.Error(c, http.StatusInternalServerError, "Failed to fetch company", err.Error())
+		response.Error(c, http.StatusInternalServerError, "Failed to get company", err.Error())
 		return
 	}
 
 	response.Success(c, http.StatusOK, "Company retrieved successfully", result)
 }
 
-// Update updates a company
-// @Summary Update company
-// @Description Update company details
-// @Tags Companies
-// @Accept json
-// @Produce json
-// @Param id path string true "Company ID"
-// @Param request body dto.UpdateCompanyRequest true "Company details to update"
-// @Success 200 {object} response.Response{data=dto.CompanyResponse} "Company updated successfully"
-// @Failure 400 {object} response.Response "Invalid request payload"
-// @Failure 404 {object} response.Response "Company not found"
-// @Failure 500 {object} response.Response "Internal server error"
-// @Security BearerAuth
-// @Router /companies/{id} [put]
+func (h *CompanyHandler) Create(c *gin.Context) {
+	var req dto.CreateCompanyRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid request payload", err.Error())
+		return
+	}
+
+	createdBy := middleware.MustGetUserID(c)
+	ctx := c.Request.Context()
+
+	// Check if caller is super_admin (needed for assigning different owner)
+	claims, _ := middleware.GetUserFromContext(c)
+	isSuperAdmin := claims != nil && claims.HasRole("super_admin")
+
+	result, err := h.companyService.Create(ctx, &req, createdBy, isSuperAdmin)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrParentNotFound):
+			response.Error(c, http.StatusBadRequest, "Parent company not found", "")
+		case errors.Is(err, service.ErrOwnerAssignOnly):
+			response.Error(c, http.StatusForbidden, "Only super_admin can assign a different owner", "")
+		default:
+			response.Error(c, http.StatusInternalServerError, "Failed to create company", err.Error())
+		}
+		return
+	}
+
+	response.Success(c, http.StatusCreated, "Company created successfully", result)
+}
+
 func (h *CompanyHandler) Update(c *gin.Context) {
 	id := c.Param("id")
+	if id == "" {
+		response.Error(c, http.StatusBadRequest, "Company ID is required", "")
+		return
+	}
 
 	var req dto.UpdateCompanyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -160,49 +111,40 @@ func (h *CompanyHandler) Update(c *gin.Context) {
 		return
 	}
 
-	// Get user ID from context
-	userID, err := middleware.GetUserID(c)
-	if err != nil {
-		response.Error(c, http.StatusUnauthorized, "Unauthorized", err.Error())
-		return
-	}
+	updatedBy := middleware.MustGetUserID(c)
+	ctx := c.Request.Context()
 
-	result, err := h.companyService.Update(id, &req, userID)
+	// Check if caller is super_admin (needed for owner transfer)
+	claims, _ := middleware.GetUserFromContext(c)
+	isSuperAdmin := claims != nil && claims.HasRole("super_admin")
+
+	result, err := h.companyService.Update(ctx, id, &req, updatedBy, isSuperAdmin)
 	if err != nil {
-		if errors.Is(err, service.ErrCompanyNotFound) {
+		switch {
+		case errors.Is(err, service.ErrCompanyNotFound):
 			response.Error(c, http.StatusNotFound, "Company not found", "")
-			return
+		case errors.Is(err, service.ErrOwnerTransferOnly):
+			response.Error(c, http.StatusForbidden, "Only super_admin can transfer ownership", "")
+		default:
+			response.Error(c, http.StatusInternalServerError, "Failed to update company", err.Error())
 		}
-		response.Error(c, http.StatusInternalServerError, "Failed to update company", err.Error())
 		return
 	}
 
 	response.Success(c, http.StatusOK, "Company updated successfully", result)
 }
 
-// Delete deletes a company
-// @Summary Delete company
-// @Description Soft delete a company
-// @Tags Companies
-// @Accept json
-// @Produce json
-// @Param id path string true "Company ID"
-// @Success 200 {object} response.Response "Company deleted successfully"
-// @Failure 404 {object} response.Response "Company not found"
-// @Failure 500 {object} response.Response "Internal server error"
-// @Security BearerAuth
-// @Router /companies/{id} [delete]
 func (h *CompanyHandler) Delete(c *gin.Context) {
 	id := c.Param("id")
-
-	// Get user ID from context
-	userID, err := middleware.GetUserID(c)
-	if err != nil {
-		response.Error(c, http.StatusUnauthorized, "Unauthorized", err.Error())
+	if id == "" {
+		response.Error(c, http.StatusBadRequest, "Company ID is required", "")
 		return
 	}
 
-	err = h.companyService.Delete(id, userID)
+	deletedBy := middleware.MustGetUserID(c)
+	ctx := c.Request.Context()
+
+	err := h.companyService.Delete(ctx, id, deletedBy)
 	if err != nil {
 		if errors.Is(err, service.ErrCompanyNotFound) {
 			response.Error(c, http.StatusNotFound, "Company not found", "")
@@ -215,116 +157,156 @@ func (h *CompanyHandler) Delete(c *gin.Context) {
 	response.Success(c, http.StatusOK, "Company deleted successfully", nil)
 }
 
-// AddUser adds a user to a company
-// @Summary Add user to company
-// @Description Add a user to a company with a specific role
-// @Tags Companies
-// @Accept json
-// @Produce json
-// @Param id path string true "Company ID"
-// @Param request body dto.AddUserToCompanyRequest true "User details"
-// @Success 201 {object} response.Response{data=dto.CompanyUserResponse} "User added to company successfully"
-// @Failure 400 {object} response.Response "Invalid request payload"
-// @Failure 404 {object} response.Response "Company not found"
-// @Failure 409 {object} response.Response "User already in company or max users reached"
-// @Failure 500 {object} response.Response "Internal server error"
-// @Security BearerAuth
-// @Router /companies/{id}/users [post]
-func (h *CompanyHandler) AddUser(c *gin.Context) {
-	companyID := c.Param("id")
+func (h *CompanyHandler) GetTrash(c *gin.Context) {
+	var params dto.CompanyTrashQueryParams
+	if err := c.ShouldBindQuery(&params); err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid query parameters", err.Error())
+		return
+	}
 
-	var req dto.AddUserToCompanyRequest
+	ctx := c.Request.Context()
+	result, err := h.companyService.GetTrash(ctx, &params)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to get deleted companies", err.Error())
+		return
+	}
+
+	response.SuccessWithPagination(c, http.StatusOK, "Deleted companies retrieved successfully",
+		result.Companies, result.Page, result.Limit, result.Total)
+}
+
+func (h *CompanyHandler) Restore(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		response.Error(c, http.StatusBadRequest, "Company ID is required", "")
+		return
+	}
+
+	restoredBy := middleware.MustGetUserID(c)
+	ctx := c.Request.Context()
+
+	result, err := h.companyService.Restore(ctx, id, restoredBy)
+	if err != nil {
+		if errors.Is(err, service.ErrCompanyNotFound) {
+			response.Error(c, http.StatusNotFound, "Company not found", "")
+			return
+		}
+		response.Error(c, http.StatusInternalServerError, "Failed to restore company", err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Company restored successfully", result)
+}
+
+func (h *CompanyHandler) GetChildren(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		response.Error(c, http.StatusBadRequest, "Company ID is required", "")
+		return
+	}
+
+	ctx := c.Request.Context()
+	result, err := h.companyService.GetChildren(ctx, id)
+	if err != nil {
+		if errors.Is(err, service.ErrCompanyNotFound) {
+			response.Error(c, http.StatusNotFound, "Company not found", "")
+			return
+		}
+		response.Error(c, http.StatusInternalServerError, "Failed to get children", err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Children retrieved successfully", result)
+}
+
+func (h *CompanyHandler) GetAncestors(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		response.Error(c, http.StatusBadRequest, "Company ID is required", "")
+		return
+	}
+
+	ctx := c.Request.Context()
+	result, err := h.companyService.GetAncestors(ctx, id)
+	if err != nil {
+		if errors.Is(err, service.ErrCompanyNotFound) {
+			response.Error(c, http.StatusNotFound, "Company not found", "")
+			return
+		}
+		response.Error(c, http.StatusInternalServerError, "Failed to get ancestors", err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Ancestors retrieved successfully", result)
+}
+
+func (h *CompanyHandler) GetUsers(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		response.Error(c, http.StatusBadRequest, "Company ID is required", "")
+		return
+	}
+
+	var params dto.CompanyUserQueryParams
+	if err := c.ShouldBindQuery(&params); err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid query parameters", err.Error())
+		return
+	}
+
+	ctx := c.Request.Context()
+	result, err := h.companyService.GetUsers(ctx, id, &params)
+	if err != nil {
+		if errors.Is(err, service.ErrCompanyNotFound) {
+			response.Error(c, http.StatusNotFound, "Company not found", "")
+			return
+		}
+		response.Error(c, http.StatusInternalServerError, "Failed to get users", err.Error())
+		return
+	}
+
+	response.SuccessWithPagination(c, http.StatusOK, "Users retrieved successfully",
+		result.Users, result.Page, result.Limit, result.Total)
+}
+
+func (h *CompanyHandler) AddUser(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		response.Error(c, http.StatusBadRequest, "Company ID is required", "")
+		return
+	}
+
+	var req dto.AddCompanyUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, http.StatusBadRequest, "Invalid request payload", err.Error())
 		return
 	}
 
-	// Get user ID from context (inviter)
-	inviterID, err := middleware.GetUserID(c)
-	if err != nil {
-		response.Error(c, http.StatusUnauthorized, "Unauthorized", err.Error())
-		return
-	}
+	invitedBy := middleware.MustGetUserID(c)
+	ctx := c.Request.Context()
 
-	result, err := h.companyService.AddUserToCompany(companyID, &req, inviterID)
+	result, err := h.companyService.AddUser(ctx, id, &req, invitedBy)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrCompanyNotFound):
 			response.Error(c, http.StatusNotFound, "Company not found", "")
-		case errors.Is(err, service.ErrUserAlreadyInCompany):
-			response.Error(c, http.StatusConflict, "User already in company", "")
-		case errors.Is(err, service.ErrMaxUsersReached):
-			response.Error(c, http.StatusConflict, "Maximum users limit reached", "")
-		case errors.Is(err, service.ErrInvalidRole):
-			response.Error(c, http.StatusBadRequest, "Invalid role", "")
+		case errors.Is(err, service.ErrUserAlreadyMember):
+			response.Error(c, http.StatusConflict, "User is already a member", "")
 		default:
-			response.Error(c, http.StatusInternalServerError, "Failed to add user to company", err.Error())
+			response.Error(c, http.StatusInternalServerError, "Failed to add user", err.Error())
 		}
 		return
 	}
 
-	response.Success(c, http.StatusCreated, "User added to company successfully", result)
+	response.Success(c, http.StatusCreated, "User added successfully", result)
 }
 
-// RemoveUser removes a user from a company
-// @Summary Remove user from company
-// @Description Remove a user from a company
-// @Tags Companies
-// @Accept json
-// @Produce json
-// @Param id path string true "Company ID"
-// @Param user_id path string true "User ID"
-// @Success 200 {object} response.Response "User removed from company successfully"
-// @Failure 400 {object} response.Response "Cannot remove primary owner"
-// @Failure 404 {object} response.Response "User not in company"
-// @Failure 500 {object} response.Response "Internal server error"
-// @Security BearerAuth
-// @Router /companies/{id}/users/{user_id} [delete]
-func (h *CompanyHandler) RemoveUser(c *gin.Context) {
-	companyID := c.Param("id")
+func (h *CompanyHandler) UpdateUser(c *gin.Context) {
+	id := c.Param("id")
 	userID := c.Param("user_id")
-
-	// Get user ID from context (who is removing)
-	deletedBy, err := middleware.GetUserID(c)
-	if err != nil {
-		response.Error(c, http.StatusUnauthorized, "Unauthorized", err.Error())
+	if id == "" || userID == "" {
+		response.Error(c, http.StatusBadRequest, "Company ID and User ID are required", "")
 		return
 	}
-
-	err = h.companyService.RemoveUserFromCompany(companyID, userID, deletedBy)
-	if err != nil {
-		switch {
-		case errors.Is(err, service.ErrUserNotInCompany):
-			response.Error(c, http.StatusNotFound, "User not in company", "")
-		case errors.Is(err, service.ErrCannotRemoveOwner):
-			response.Error(c, http.StatusBadRequest, "Cannot remove primary owner from company", "")
-		default:
-			response.Error(c, http.StatusInternalServerError, "Failed to remove user from company", err.Error())
-		}
-		return
-	}
-
-	response.Success(c, http.StatusOK, "User removed from company successfully", nil)
-}
-
-// UpdateUserRole updates a user's role in a company
-// @Summary Update user role in company
-// @Description Update a user's role or status in a company
-// @Tags Companies
-// @Accept json
-// @Produce json
-// @Param id path string true "Company ID"
-// @Param user_id path string true "User ID"
-// @Param request body dto.UpdateCompanyUserRequest true "Update details"
-// @Success 200 {object} response.Response{data=dto.CompanyUserResponse} "User role updated successfully"
-// @Failure 400 {object} response.Response "Invalid request payload"
-// @Failure 404 {object} response.Response "User not in company"
-// @Failure 500 {object} response.Response "Internal server error"
-// @Security BearerAuth
-// @Router /companies/{id}/users/{user_id} [put]
-func (h *CompanyHandler) UpdateUserRole(c *gin.Context) {
-	companyID := c.Param("id")
-	userID := c.Param("user_id")
 
 	var req dto.UpdateCompanyUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -332,78 +314,92 @@ func (h *CompanyHandler) UpdateUserRole(c *gin.Context) {
 		return
 	}
 
-	// Get user ID from context
-	updatedBy, err := middleware.GetUserID(c)
-	if err != nil {
-		response.Error(c, http.StatusUnauthorized, "Unauthorized", err.Error())
-		return
-	}
+	updatedBy := middleware.MustGetUserID(c)
+	ctx := c.Request.Context()
 
-	result, err := h.companyService.UpdateUserRole(companyID, userID, &req, updatedBy)
+	result, err := h.companyService.UpdateUser(ctx, id, userID, &req, updatedBy)
 	if err != nil {
 		switch {
-		case errors.Is(err, service.ErrUserNotInCompany):
-			response.Error(c, http.StatusNotFound, "User not in company", "")
-		case errors.Is(err, service.ErrInvalidRole):
-			response.Error(c, http.StatusBadRequest, "Invalid role", "")
+		case errors.Is(err, service.ErrMembershipNotFound):
+			response.Error(c, http.StatusNotFound, "Membership not found", "")
+		case errors.Is(err, service.ErrCannotDeactivateOwner):
+			response.Error(c, http.StatusForbidden, "Cannot deactivate company owner", "")
 		default:
-			response.Error(c, http.StatusInternalServerError, "Failed to update user role", err.Error())
+			response.Error(c, http.StatusInternalServerError, "Failed to update user", err.Error())
 		}
 		return
 	}
 
-	response.Success(c, http.StatusOK, "User role updated successfully", result)
+	response.Success(c, http.StatusOK, "User updated successfully", result)
 }
 
-// GetUsers gets all users in a company
-// @Summary Get company users
-// @Description Get list of users in a company
-// @Tags Companies
-// @Accept json
-// @Produce json
-// @Param id path string true "Company ID"
-// @Param page query int false "Page number" default(1)
-// @Param page_size query int false "Page size" default(10)
-// @Param role query string false "Filter by role"
-// @Param is_active query bool false "Filter by active status"
-// @Success 200 {object} response.Response{data=dto.CompanyUserListResponse} "Company users retrieved successfully"
-// @Failure 400 {object} response.Response "Invalid query parameters"
-// @Failure 500 {object} response.Response "Internal server error"
-// @Security BearerAuth
-// @Router /companies/{id}/users [get]
-func (h *CompanyHandler) GetUsers(c *gin.Context) {
-	companyID := c.Param("id")
-
-	// Get query params
-	page := 1
-	pageSize := 10
-	role := c.Query("role")
-	var isActive *bool
-
-	if c.Query("page") != "" {
-		if _, err := fmt.Sscanf(c.Query("page"), "%d", &page); err != nil {
-			response.Error(c, http.StatusBadRequest, "Invalid page parameter", "")
-			return
-		}
-	}
-
-	if c.Query("page_size") != "" {
-		if _, err := fmt.Sscanf(c.Query("page_size"), "%d", &pageSize); err != nil {
-			response.Error(c, http.StatusBadRequest, "Invalid page_size parameter", "")
-			return
-		}
-	}
-
-	if c.Query("is_active") != "" {
-		val := c.Query("is_active") == "true"
-		isActive = &val
-	}
-
-	result, err := h.companyService.GetCompanyUsers(companyID, page, pageSize, role, isActive)
-	if err != nil {
-		response.Error(c, http.StatusInternalServerError, "Failed to fetch company users", err.Error())
+func (h *CompanyHandler) RemoveUser(c *gin.Context) {
+	id := c.Param("id")
+	userID := c.Param("user_id")
+	if id == "" || userID == "" {
+		response.Error(c, http.StatusBadRequest, "Company ID and User ID are required", "")
 		return
 	}
 
-	response.SuccessWithPagination(c, http.StatusOK, "Company users retrieved successfully", result.Users, result.Page, result.PageSize, result.Total)
+	deletedBy := middleware.MustGetUserID(c)
+	ctx := c.Request.Context()
+
+	err := h.companyService.RemoveUser(ctx, id, userID, deletedBy)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrCompanyNotFound):
+			response.Error(c, http.StatusNotFound, "Company not found", "")
+		case errors.Is(err, service.ErrMembershipNotFound):
+			response.Error(c, http.StatusNotFound, "Membership not found", "")
+		case errors.Is(err, service.ErrCannotRemoveOwner):
+			response.Error(c, http.StatusForbidden, "Cannot remove company owner", "")
+		default:
+			response.Error(c, http.StatusInternalServerError, "Failed to remove user", err.Error())
+		}
+		return
+	}
+
+	response.Success(c, http.StatusOK, "User removed successfully", nil)
+}
+
+func (h *CompanyHandler) SyncUserCompanies(c *gin.Context) {
+	userID := c.Param("id")
+	if userID == "" {
+		response.Error(c, http.StatusBadRequest, "User ID is required", "")
+		return
+	}
+
+	var req dto.SyncUserCompaniesRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid request payload", err.Error())
+		return
+	}
+
+	updatedBy := middleware.MustGetUserID(c)
+	ctx := c.Request.Context()
+
+	err := h.companyService.SyncUserCompanies(ctx, userID, &req, updatedBy)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to sync companies", err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, "User companies synced successfully", nil)
+}
+
+func (h *CompanyHandler) GetUserCompanies(c *gin.Context) {
+	userID := c.Param("id")
+	if userID == "" {
+		response.Error(c, http.StatusBadRequest, "User ID is required", "")
+		return
+	}
+
+	ctx := c.Request.Context()
+	companyIDs, err := h.companyService.GetUserCompanyIDs(ctx, userID)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to get user companies", err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, "User companies retrieved successfully", companyIDs)
 }

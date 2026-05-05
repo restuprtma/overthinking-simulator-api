@@ -1,11 +1,10 @@
-.PHONY: help migrate-up migrate-down migrate-create migrate-force migrate-version seed seed-core seed-crm db-setup db-reset swagger-gen dev build run
+.PHONY: help migrate-up migrate-down migrate-create migrate-force migrate-version seed seed-core db-setup db-reset dev build run
 
 help:
 	@echo "Available commands:"
 	@echo ""
 	@echo "Development:"
 	@echo "  make dev                     - Run with hot reload (Air)"
-	@echo "  make swagger-gen             - Generate Swagger documentation"
 	@echo "  make build                   - Build application binary"
 	@echo "  make run                     - Run application"
 	@echo ""
@@ -17,9 +16,8 @@ help:
 	@echo "  make migrate-version         - Show current migration version"
 	@echo ""
 	@echo "Seeding commands:"
-	@echo "  make seed                    - Run all seeders (core + crm)"
+	@echo "  make seed                    - Run all seeders"
 	@echo "  make seed-core               - Run core module seeders only"
-	@echo "  make seed-crm                - Run CRM module seeders only"
 	@echo ""
 	@echo "Setup commands:"
 	@echo "  make db-setup                - Run migrations + seeders (fresh setup)"
@@ -40,32 +38,25 @@ migrate-up:
 		echo "Running core migrations..."; \
 		migrate -path $(MIGRATIONS_PATH)/core -database "$(DB_URL)&x-migrations-table=schema_migrations_core" up; \
 	fi
-	@if [ -d "$(MIGRATIONS_PATH)/crm" ]; then \
-		echo "Running CRM migrations..."; \
-		migrate -path $(MIGRATIONS_PATH)/crm -database "$(DB_URL)&x-migrations-table=schema_migrations_crm" up; \
-	fi
 
 migrate-down:
 	@echo "Rolling back migrations..."
-	migrate -path $(MIGRATIONS_PATH)/crm -database "$(DB_URL)&x-migrations-table=schema_migrations_crm" down 1
 	migrate -path $(MIGRATIONS_PATH)/core -database "$(DB_URL)&x-migrations-table=schema_migrations_core" down 1
 
 migrate-create:
 	@if [ -z "$(NAME)" ]; then echo "Error: NAME is required. Usage: make migrate-create NAME=your_migration_name MODULE=core"; exit 1; fi
-	@if [ -z "$(MODULE)" ]; then echo "Error: MODULE is required. Available: core, crm"; exit 1; fi
+	@if [ -z "$(MODULE)" ]; then echo "Error: MODULE is required. Available: core"; exit 1; fi
 	@echo "Creating migration: $(NAME) in module $(MODULE)"
 	migrate create -ext sql -dir $(MIGRATIONS_PATH)/$(MODULE) -seq $(NAME)
 
 migrate-force:
 	@if [ -z "$(V)" ]; then echo "Error: V is required. Usage: make migrate-force V=1 MODULE=core"; exit 1; fi
-	@if [ -z "$(MODULE)" ]; then echo "Error: MODULE is required. Available: core, crm"; exit 1; fi
+	@if [ -z "$(MODULE)" ]; then echo "Error: MODULE is required. Available: core"; exit 1; fi
 	migrate -path $(MIGRATIONS_PATH)/$(MODULE) -database "$(DB_URL)&x-migrations-table=schema_migrations_$(MODULE)" force $(V)
 
 migrate-version:
 	@echo "Core module version:"
 	@migrate -path $(MIGRATIONS_PATH)/core -database "$(DB_URL)&x-migrations-table=schema_migrations_core" version
-	@echo "CRM module version:"
-	@migrate -path $(MIGRATIONS_PATH)/crm -database "$(DB_URL)&x-migrations-table=schema_migrations_crm" version
 
 # Database seeders
 seed-core:
@@ -80,19 +71,7 @@ seed-core:
 	fi
 	@echo "✅ Core seeders completed!"
 
-seed-crm:
-	@echo "Running CRM seeders..."
-	@if [ -d "$(SEEDERS_PATH)/crm" ]; then \
-		for file in $(SEEDERS_PATH)/crm/*.sql; do \
-			if [ -f "$$file" ]; then \
-				echo "Running seeder: $$(basename $$file)"; \
-				PGPASSWORD=$(DB_PASSWORD) psql -h $(DB_HOST) -p $(DB_PORT) -U $(DB_USER) -d $(DB_NAME) -f $$file; \
-			fi; \
-		done; \
-	fi
-	@echo "✅ CRM seeders completed!"
-
-seed: seed-core seed-crm
+seed: seed-core
 	@echo "✅ All seeders completed!"
 
 # Database setup commands
@@ -111,15 +90,10 @@ db-reset:
 	@make db-setup
 
 # Development commands
-swagger-gen:
-	@echo "📚 Generating Swagger documentation..."
-	@~/go/bin/swag init -g cmd/api/main.go -o docs/swagger --parseDependency --parseInternal
-	@echo "✅ Swagger documentation generated!"
-
 build:
 	@echo "🔨 Building application..."
-	@go build -o bin/venturo-skeleton-api cmd/api/main.go
-	@echo "✅ Build completed: bin/venturo-skeleton-api"
+	@go build -o bin/wizhub-api cmd/api/main.go
+	@echo "✅ Build completed: bin/wizhub-api"
 
 run:
 	@echo "🚀 Running application..."
@@ -127,5 +101,4 @@ run:
 
 dev:
 	@echo "🔥 Starting development server with hot reload..."
-	@make swagger-gen
 	@~/go/bin/air

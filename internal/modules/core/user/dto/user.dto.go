@@ -4,83 +4,100 @@ import "time"
 
 // CreateUserRequest represents request to create a new user
 type CreateUserRequest struct {
-	Email    string   `json:"email" binding:"required,email"`
-	Username string   `json:"username" binding:"required,min=3,max=50,alphanum"`
-	Password string   `json:"password" binding:"required,min=8,max=72"`
-	FullName *string  `json:"full_name" binding:"omitempty,min=3,max=255"`
-	Phone    *string  `json:"phone" binding:"omitempty,min=10,max=20"`
-	RoleIDs  []string `json:"role_ids" binding:"omitempty,dive,uuid"` // Optional: assign roles on creation
+	Email      string   `json:"email" binding:"required,email"`
+	Username   string   `json:"username" binding:"required,min=3,max=100"`
+	Password   string   `json:"password" binding:"required,min=8"`
+	FullName   *string  `json:"full_name" binding:"omitempty,max=255"`
+	Phone      *string  `json:"phone" binding:"omitempty,max=20"`
+	RoleID     *string  `json:"role_id" binding:"omitempty,uuid"`
+	CompanyIDs []string `json:"company_ids" binding:"omitempty,dive,uuid"`
+	// BranchIDs narrows which branches the new user can operate under. Every
+	// branch must belong to one of CompanyIDs; for non-super-admin callers the
+	// service also enforces the caller's company scope.
+	BranchIDs []string `json:"branch_ids" binding:"omitempty,dive,uuid"`
 }
 
-// UpdateUserRequest represents request to update user
+// UpdateUserRequest represents request to update a user
 type UpdateUserRequest struct {
-	Email    *string  `json:"email" binding:"omitempty,email"`
-	Username *string  `json:"username" binding:"omitempty,min=3,max=50,alphanum"`
-	FullName *string  `json:"full_name" binding:"omitempty,min=3,max=255"`
-	Phone    *string  `json:"phone" binding:"omitempty,min=10,max=20"`
-	IsActive *bool    `json:"is_active" binding:"omitempty"`
-	RoleIDs  []string `json:"role_ids" binding:"omitempty,dive,uuid"` // Optional: update/sync roles
+	Email      *string  `json:"email" binding:"omitempty,email"`
+	Username   *string  `json:"username" binding:"omitempty,min=3,max=100"`
+	FullName   *string  `json:"full_name" binding:"omitempty,max=255"`
+	Phone      *string  `json:"phone" binding:"omitempty,max=20"`
+	AvatarURL  *string  `json:"avatar_url" binding:"omitempty,url,max=500"`
+	IsActive   *bool    `json:"is_active"`
+	RoleID     *string  `json:"role_id" binding:"omitempty,uuid"`
+	CompanyIDs []string `json:"company_ids" binding:"omitempty,dive,uuid"`
+	// BranchIDs, when non-nil, replaces the user's branch access entirely.
+	// Nil means "leave branch assignments untouched"; an empty slice means
+	// "revoke all branch access".
+	BranchIDs *[]string `json:"branch_ids" binding:"omitempty,dive,uuid"`
+}
+
+// UpdateMeRequest represents request to update current user profile
+type UpdateMeRequest struct {
+	FullName  *string `json:"full_name" binding:"omitempty,max=255"`
+	Phone     *string `json:"phone" binding:"omitempty,max=20"`
+	AvatarURL *string `json:"avatar_url" binding:"omitempty,url,max=500"`
 }
 
 // ChangePasswordRequest represents request to change password
 type ChangePasswordRequest struct {
-	OldPassword string `json:"old_password" binding:"required"`
-	NewPassword string `json:"new_password" binding:"required,min=8,max=72"`
-}
-
-// RoleInfo represents basic role information in user response
-type RoleInfo struct {
-	ID          string  `json:"id"`
-	Name        string  `json:"name"`
-	Description *string `json:"description,omitempty"`
-	IsSystem    bool    `json:"is_system"`
+	CurrentPassword string `json:"current_password" binding:"required"`
+	NewPassword     string `json:"new_password" binding:"required,min=8"`
 }
 
 // UserResponse represents user data in response
 type UserResponse struct {
-	ID              string     `json:"id"`
-	Email           string     `json:"email"`
-	Username        string     `json:"username"`
-	FullName        *string    `json:"full_name,omitempty"`
-	Phone           *string    `json:"phone,omitempty"`
-	IsActive        bool       `json:"is_active"`
-	IsEmailVerified bool       `json:"is_email_verified"`
-	LastLoginAt     *time.Time `json:"last_login_at,omitempty"`
-	Roles           []RoleInfo `json:"roles,omitempty"`
-	CreatedAt       time.Time  `json:"created_at"`
-	CreatedBy       *string    `json:"created_by,omitempty"`
-	UpdatedAt       time.Time  `json:"updated_at"`
-	UpdatedBy       *string    `json:"updated_by,omitempty"`
-	DeletedAt       *time.Time `json:"deleted_at,omitempty"`
-	DeletedBy       *string    `json:"deleted_by,omitempty"`
+	ID              string             `json:"id"`
+	Email           string             `json:"email"`
+	Username        string             `json:"username"`
+	FullName        *string            `json:"full_name,omitempty"`
+	Phone           *string            `json:"phone,omitempty"`
+	AvatarURL       *string            `json:"avatar_url,omitempty"`
+	IsActive        bool               `json:"is_active"`
+	IsEmailVerified bool               `json:"is_email_verified"`
+	RoleName        *string            `json:"role_name,omitempty"`
+	Companies       []UserCompanyItem  `json:"companies,omitempty"`
+	Branches        []UserBranchItem   `json:"branches,omitempty"`
+	LastLoginAt     *time.Time         `json:"last_login_at,omitempty"`
+	CreatedAt       time.Time          `json:"created_at"`
+	UpdatedAt       time.Time          `json:"updated_at"`
 }
 
-// UserListResponse represents paginated user list
+// UserCompanyItem represents a company in the user's membership list
+type UserCompanyItem struct {
+	CompanyID   string `json:"company_id"`
+	CompanyName string `json:"company_name"`
+	IsOwner     bool   `json:"is_owner"`
+}
+
+// UserBranchItem represents a branch in the user's access list
+type UserBranchItem struct {
+	BranchID   string `json:"branch_id"`
+	BranchCode string `json:"branch_code"`
+	BranchName string `json:"branch_name"`
+	CompanyID  string `json:"company_id"`
+}
+
+// UserListResponse represents paginated user list (used internally)
 type UserListResponse struct {
-	Users      []UserResponse `json:"users"`
-	Total      int64          `json:"total"`
-	Page       int            `json:"page"`
-	PageSize   int            `json:"page_size"`
-	TotalPages int            `json:"total_pages"`
-}
-
-// AssignRolesRequest represents request to assign roles to a user
-type AssignRolesRequest struct {
-	RoleIDs []string `json:"role_ids" binding:"required,min=1,dive,uuid"`
-}
-
-// SyncRolesRequest represents request to sync/replace all user roles
-type SyncRolesRequest struct {
-	RoleIDs []string `json:"role_ids" binding:"required,dive,uuid"` // Can be empty array to remove all roles
+	Users []UserResponse `json:"users"`
+	Total int64          `json:"total"`
+	Page  int            `json:"page"`
+	Limit int            `json:"limit"`
 }
 
 // UserQueryParams represents query parameters for listing users
 type UserQueryParams struct {
-	Page     int    `form:"page,default=1" binding:"omitempty,min=1"`
-	PageSize int    `form:"page_size,default=10" binding:"omitempty,min=1,max=100"`
-	Search   string `form:"search" binding:"omitempty,max=255"`      // Search across email, username, full_name
-	FullName string `form:"full_name" binding:"omitempty,max=255"`   // Filter by full_name
-	Username string `form:"username" binding:"omitempty,max=50"`     // Filter by username
-	Email    string `form:"email" binding:"omitempty,email,max=255"` // Filter by email
-	IsActive *bool  `form:"is_active" binding:"omitempty"`           // Filter by is_active status
+	Page     int     `form:"page,default=1" binding:"min=1"`
+	Limit    int     `form:"limit,default=10" binding:"min=1,max=1000"`
+	Search   string  `form:"search" binding:"omitempty,max=255"`
+	IsActive *bool   `form:"is_active"`
+	BranchID *string `form:"branch_id" binding:"omitempty,uuid"`
+
+	// Internal tenant-scope fields. These are populated by the handler from
+	// the authenticated caller's claims and MUST NOT be bound from the query
+	// string (no `form` tag), otherwise a client could bypass tenant isolation.
+	ScopeCompanyID *string `form:"-" json:"-"`
+	ScopeCreatedBy *string `form:"-" json:"-"`
 }

@@ -65,12 +65,24 @@ run_migrations() {
         echo "CRM migrations completed successfully!"
     fi
 
+    # Run Finance migrations
+    if [ -d "/app/internal/database/migrations/finance" ]; then
+        echo "Running Finance migrations..."
+        migrate -path /app/internal/database/migrations/finance \
+                -database "${DB_URL}&x-migrations-table=schema_migrations_finance" \
+                up || {
+                    echo "ERROR: Finance migrations failed"
+                    exit 1
+                }
+        echo "Finance migrations completed successfully!"
+    fi
+
     echo "All migrations completed successfully!"
 }
 
 # Main execution
 echo "==================================="
-echo "Venturo Skeleton Backend - Starting up"
+echo "Wizhub Backend - Starting up"
 echo "==================================="
 echo ""
 echo "Database Configuration:"

@@ -1,31 +1,74 @@
 package service
 
 import (
+	"context"
 	"errors"
-	"math"
+	"fmt"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+
+	branchDomain "venturo-skeleton-go/internal/modules/core/branch/domain"
+	clientDomain "venturo-skeleton-go/internal/modules/core/client/domain"
 	"venturo-skeleton-go/internal/modules/core/company/domain"
 	"venturo-skeleton-go/internal/modules/core/company/dto"
 	"venturo-skeleton-go/internal/modules/core/company/repository"
 	"venturo-skeleton-go/pkg/logger"
-
-	"github.com/google/uuid"
 )
 
+// BranchRepository is the minimal branch dependency used by CompanyService
+// to seed a default branch when a company is created.
+type BranchRepository interface {
+	Create(ctx context.Context, branch *branchDomain.Branch) error
+}
+
+// ClientLookup is the minimal client dependency CompanyService needs to
+// resolve a caller's client_id when the caller creates a new company
+// without an ambient company context (e.g. super_admin hitting POST
+// /companies with no CompanyContext).
+type ClientLookup interface {
+	FindByOwnerUserID(ctx context.Context, ownerID string) (*clientDomain.Client, error)
+}
+
 var (
-	ErrCompanyNotFound       = errors.New("company not found")
-	ErrCodeAlreadyExists     = errors.New("company code already exists")
-	ErrUserAlreadyInCompany  = errors.New("user already in company")
-	ErrUserNotInCompany      = errors.New("user not in company")
-	ErrMaxUsersReached       = errors.New("maximum users limit reached for this company")
-	ErrCannotRemoveOwner     = errors.New("cannot remove primary owner from company")
-	ErrInvalidRole           = errors.New("invalid role")
+	ErrCompanyNotFound    = errors.New("company not found")
+	ErrParentNotFound     = errors.New("parent company not found")
+	ErrUserAlreadyMember  = errors.New("user is already a member")
+	ErrMembershipNotFound = errors.New("membership not found")
+	ErrCannotRemoveOwner  = errors.New("cannot remove company owner")
+	ErrNotAuthorized      = errors.New("not authorized")
+	ErrOwnerTransferOnly  = errors.New("only super_admin can transfer ownership")
+	ErrOwnerAssignOnly        = errors.New("only super_admin can assign a different owner")
+	ErrCannotDeactivateOwner  = errors.New("cannot deactivate company owner")
+	ErrClientUnresolved        = errors.New("could not resolve client for new company")
 )
 
 type CompanyService struct {
-	companyRepo     *repository.CompanyRepository
-	companyUserRepo *repository.CompanyUserRepository
+	companyRepo        *repository.CompanyRepository
+	companyUserRepo    *repository.CompanyUserRepository
+	branchRepo         BranchRepository
+	clientLookup       ClientLookup
+	defaultAdminRoleID string
+}
+
+// SetBranchRepo injects the branch repository so Create can seed a default branch.
+func (s *CompanyService) SetBranchRepo(repo BranchRepository) {
+	s.branchRepo = repo
+}
+
+// SetClientLookup injects the client repository so Create can resolve a
+// caller's client_id via their owned client when they have no parent
+// company to inherit from.
+func (s *CompanyService) SetClientLookup(c ClientLookup) {
+	s.clientLookup = c
+}
+
+// SetDefaultAdminRoleID injects the role assigned to the creator when they
+// create a new company, so the owner has full company-scoped permissions
+// out of the box (mirrors the SignUp flow).
+func (s *CompanyService) SetDefaultAdminRoleID(roleID string) {
+	s.defaultAdminRoleID = roleID
 }
 
 func NewCompanyService(
@@ -38,545 +81,906 @@ func NewCompanyService(
 	}
 }
 
-// Create creates a new company and assigns the creator as owner
-func (s *CompanyService) Create(req *dto.CreateCompanyRequest, ownerID string) (*dto.CompanyResponse, error) {
-	logger.Info("Creating new company", logger.String("name", req.Name), logger.String("owner_id", ownerID))
+// GetAll returns paginated list of companies.
+// Super admin sees all companies. Non-super admin sees every company they are a
+// member of (via core.company_users) plus each of those companies' descendants.
+func (s *CompanyService) GetAll(ctx context.Context, params *dto.CompanyQueryParams, userID string, isSuperAdmin bool) (*dto.CompanyListResponse, error) {
+	if params.Page == 0 {
+		params.Page = 1
+	}
+	if params.Limit == 0 {
+		params.Limit = 10
+	}
 
-	// Check if code already exists
-	existingCompany, err := s.companyRepo.FindByCode(req.Code)
+	var (
+		companies []domain.Company
+		total     int64
+		err       error
+	)
+
+	if isSuperAdmin {
+		companies, total, err = s.companyRepo.FindAll(ctx, params)
+	} else {
+		memberships, mErr := s.companyUserRepo.FindByUser(ctx, userID)
+		if mErr != nil {
+			return nil, mErr
+		}
+		companyIDs := make([]string, 0, len(memberships))
+		for _, m := range memberships {
+			companyIDs = append(companyIDs, m.CompanyID)
+		}
+		companies, total, err = s.companyRepo.FindAllScoped(ctx, params, companyIDs)
+	}
+
 	if err != nil {
-		logger.Error("Failed to check existing code", logger.Err(err))
 		return nil, err
 	}
-	if existingCompany != nil {
-		logger.Warn("Company code already exists", logger.String("code", req.Code))
-		return nil, ErrCodeAlreadyExists
+
+	companyResponses := make([]dto.CompanyResponse, len(companies))
+	for i, company := range companies {
+		companyResponses[i] = s.toCompanyResponse(&company)
 	}
 
-	// Set default values if not provided
-	maxUsers := 5
-	if req.MaxUsers != nil {
-		maxUsers = *req.MaxUsers
+	return &dto.CompanyListResponse{
+		Companies: companyResponses,
+		Total:     total,
+		Page:      params.Page,
+		Limit:     params.Limit,
+	}, nil
+}
+
+// GetByID returns a company by ID
+func (s *CompanyService) GetByID(ctx context.Context, id string) (*dto.CompanyResponse, error) {
+	company, err := s.companyRepo.FindByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if company == nil {
+		return nil, ErrCompanyNotFound
 	}
 
-	maxBranches := 1
-	if req.MaxBranches != nil {
-		maxBranches = *req.MaxBranches
+	response := s.toCompanyResponse(company)
+	return &response, nil
+}
+
+// Create creates a new company.
+// By default, creator becomes owner. Super admin can specify a different owner via req.OwnerID.
+// ClientID is resolved in this order:
+//  1. Parent company's client_id (if ParentID is set — subsidiaries always share client with parent)
+//  2. req.ClientID (super_admin only, required when creating a standalone holding for a specific client)
+//  3. Caller's primary company's client_id (for regular users adding a company under their existing client)
+func (s *CompanyService) Create(ctx context.Context, req *dto.CreateCompanyRequest, createdBy string, isSuperAdmin bool) (*dto.CompanyResponse, error) {
+	// Determine owner: use req.OwnerID if provided (super_admin only), otherwise creator
+	ownerID := createdBy
+	if req.OwnerID != nil && *req.OwnerID != createdBy {
+		if !isSuperAdmin {
+			return nil, ErrOwnerAssignOnly
+		}
+		ownerID = *req.OwnerID
 	}
 
-	// Create company
+	// Verify parent exists if specified, and capture its client_id for
+	// inheritance (step 1 in the resolution order documented above).
+	var parentClientID *string
+	if req.ParentID != nil {
+		parent, err := s.companyRepo.FindByID(ctx, *req.ParentID)
+		if err != nil {
+			return nil, err
+		}
+		if parent == nil {
+			return nil, ErrParentNotFound
+		}
+		parentClientID = &parent.ClientID
+	}
+
+	clientID, err := s.resolveClientID(ctx, req, createdBy, isSuperAdmin, parentClientID)
+	if err != nil {
+		return nil, err
+	}
+
+	now := time.Now()
 	company := &domain.Company{
-		ID:          uuid.New().String(),
-		OwnerID:     ownerID,
-		Name:        req.Name,
-		Code:        req.Code,
-		TaxID:       req.TaxID,
-		Phone:       req.Phone,
-		Email:       req.Email,
-		Website:     req.Website,
-		LogoURL:     req.LogoURL,
-		Address:     req.Address,
-		VillageID:   req.VillageID,
-		MaxUsers:    maxUsers,
-		MaxBranches: maxBranches,
-		IsActive:    true,
-		CreatedAt:   time.Now(),
-		CreatedBy:   &ownerID,
-		UpdatedAt:   time.Now(),
-		UpdatedBy:   &ownerID,
+		ID:        uuid.New().String(),
+		ClientID:  clientID,
+		ParentID:  req.ParentID,
+		Name:      req.Name,
+		Type:      domain.CompanyType(req.Type),
+		LogoURL:   req.LogoURL,
+		OwnerID:   ownerID,
+		IsActive:  true,
+		CreatedAt: now,
+		CreatedBy: &createdBy,
+		UpdatedAt: now,
+		UpdatedBy: &createdBy,
 	}
 
-	err = s.companyRepo.Create(company)
+	err = s.companyRepo.Create(ctx, company)
 	if err != nil {
-		logger.Error("Failed to create company", logger.Err(err))
 		return nil, err
 	}
 
-	// Assign creator as primary owner
+	// Add owner as company member with the default admin role so the owner
+	// has full company-scoped permissions out of the box (mirrors SignUp).
+	// Only set as primary if owner has no existing primary company.
+	hasPrimary, _ := s.companyUserRepo.GetPrimaryCompany(ctx, ownerID)
+	var defaultRoleID *string
+	if s.defaultAdminRoleID != "" {
+		id := s.defaultAdminRoleID
+		defaultRoleID = &id
+	}
 	companyUser := &domain.CompanyUser{
 		ID:        uuid.New().String(),
 		CompanyID: company.ID,
 		UserID:    ownerID,
-		RoleID:    nil, // Owner inherits global role (no company-specific role)
-		Role:      domain.RoleOwner, // DEPRECATED: kept for backward compatibility
-		IsPrimary: true,
+		RoleID:    defaultRoleID,
+		IsPrimary: hasPrimary == nil,
 		IsActive:  true,
-		JoinedAt:  time.Now(),
-		CreatedAt: time.Now(),
-		CreatedBy: &ownerID,
-		UpdatedAt: time.Now(),
-		UpdatedBy: &ownerID,
+		InvitedBy: &createdBy,
+		JoinedAt:  now,
+		CreatedAt: now,
+		CreatedBy: &createdBy,
+		UpdatedAt: now,
+		UpdatedBy: &createdBy,
 	}
 
-	err = s.companyUserRepo.Create(companyUser)
+	err = s.companyUserRepo.Create(ctx, companyUser)
 	if err != nil {
-		logger.Error("Failed to assign owner to company", logger.Err(err))
-		return nil, err
+		logger.Error("Failed to add owner as company member", logger.Err(err))
 	}
 
-	logger.Info("Company created successfully",
+	// Seed default branch "Cabang Pusat" (CB-01) so downstream flows
+	// (which require a branch_id) work out-of-the-box for the new tenant.
+	if s.branchRepo != nil {
+		defaultBranch := &branchDomain.Branch{
+			ID:        uuid.New().String(),
+			CompanyID: company.ID,
+			Code:      "CB-01",
+			Name:      "Cabang Pusat",
+			Sort:      1,
+			IsDefault: true,
+			IsActive:  true,
+			CreatedAt: now,
+			CreatedBy: &createdBy,
+			UpdatedAt: now,
+			UpdatedBy: &createdBy,
+		}
+		if err := s.branchRepo.Create(ctx, defaultBranch); err != nil {
+			logger.Error("Failed to create default branch for new company", logger.Err(err))
+		}
+	}
+
+	logger.Info("Company created",
 		logger.String("company_id", company.ID),
+		logger.String("name", company.Name),
 		logger.String("owner_id", ownerID),
-	)
+		logger.String("created_by", createdBy))
 
-	return s.toCompanyResponse(company), nil
+	response := s.toCompanyResponse(company)
+	return &response, nil
 }
 
-// GetAll gets all companies with pagination
-func (s *CompanyService) GetAll(params *dto.CompanyQueryParams) (*dto.CompanyListResponse, error) {
-	logger.Info("Fetching companies list",
-		logger.Int("page", params.Page),
-		logger.Int("page_size", params.PageSize),
-		logger.String("search", params.Search),
-	)
-
-	// Calculate offset
-	offset := (params.Page - 1) * params.PageSize
-
-	// Get companies
-	companies, err := s.companyRepo.FindAll(params.PageSize, offset, params.Search, params.IsActive, params.OwnerID)
-	if err != nil {
-		logger.Error("Failed to fetch companies", logger.Err(err))
-		return nil, err
+// resolveClientID picks the client_id for a new company. Resolution
+// order (see Create's doc comment for the full rationale):
+//
+//  1. parentClientID (FromParent): subsidiaries always share the
+//     parent's client — the caller has already looked up the parent.
+//  2. req.ClientID: super_admin only; lets an admin create a standalone
+//     holding under a specific client.
+//  3. Caller's primary company's client_id (via company_users +
+//     companies): regular users adding a second holding under their own
+//     existing client.
+//  4. Caller's owned client (via ClientLookup.FindByOwnerUserID): the
+//     registrant creating their very first post-signup holding before
+//     primary-company resolution has settled.
+//
+// Returns ErrClientUnresolved if nothing resolves — callers should
+// surface a 400 with a hint to either switch company first or pass
+// client_id explicitly (super_admin).
+func (s *CompanyService) resolveClientID(
+	ctx context.Context,
+	req *dto.CreateCompanyRequest,
+	callerUserID string,
+	isSuperAdmin bool,
+	parentClientID *string,
+) (string, error) {
+	if parentClientID != nil {
+		return *parentClientID, nil
 	}
 
-	// Get total count
-	total, err := s.companyRepo.Count(params.Search, params.IsActive, params.OwnerID)
-	if err != nil {
-		logger.Error("Failed to count companies", logger.Err(err))
-		return nil, err
+	if req.ClientID != nil && *req.ClientID != "" {
+		if !isSuperAdmin {
+			return "", ErrNotAuthorized
+		}
+		return *req.ClientID, nil
 	}
 
-	// Convert to response
-	companyResponses := make([]dto.CompanyResponse, len(companies))
-	for i, company := range companies {
-		companyResponses[i] = *s.toCompanyResponse(&company)
+	// Try primary company → client.
+	if primary, err := s.companyUserRepo.GetPrimaryCompany(ctx, callerUserID); err == nil && primary != nil {
+		if co, err := s.companyRepo.FindByID(ctx, primary.CompanyID); err == nil && co != nil {
+			return co.ClientID, nil
+		}
 	}
 
-	totalPages := int(math.Ceil(float64(total) / float64(params.PageSize)))
-
-	return &dto.CompanyListResponse{
-		Companies:  companyResponses,
-		Total:      total,
-		Page:       params.Page,
-		PageSize:   params.PageSize,
-		TotalPages: totalPages,
-	}, nil
-}
-
-// GetByID gets a company by ID
-func (s *CompanyService) GetByID(id string) (*dto.CompanyResponse, error) {
-	logger.Info("Fetching company by ID", logger.String("company_id", id))
-
-	company, err := s.companyRepo.FindByID(id)
-	if err != nil {
-		logger.Error("Failed to fetch company", logger.Err(err))
-		return nil, err
+	// Fallback: client owned by caller (used by fresh registrants).
+	if s.clientLookup != nil {
+		if c, err := s.clientLookup.FindByOwnerUserID(ctx, callerUserID); err == nil && c != nil {
+			return c.ID, nil
+		}
 	}
 
-	if company == nil {
-		logger.Warn("Company not found", logger.String("company_id", id))
-		return nil, ErrCompanyNotFound
-	}
-
-	return s.toCompanyResponse(company), nil
+	return "", ErrClientUnresolved
 }
 
 // Update updates a company
-func (s *CompanyService) Update(id string, req *dto.UpdateCompanyRequest, updatedBy string) (*dto.CompanyResponse, error) {
-	logger.Info("Updating company", logger.String("company_id", id))
-
-	// Get existing company
-	company, err := s.companyRepo.FindByID(id)
+func (s *CompanyService) Update(ctx context.Context, id string, req *dto.UpdateCompanyRequest, updatedBy string, isSuperAdmin bool) (*dto.CompanyResponse, error) {
+	company, err := s.companyRepo.FindByID(ctx, id)
 	if err != nil {
-		logger.Error("Failed to fetch company", logger.Err(err))
 		return nil, err
 	}
-
 	if company == nil {
-		logger.Warn("Company not found", logger.String("company_id", id))
 		return nil, ErrCompanyNotFound
 	}
 
-	// Update fields if provided
 	if req.Name != nil {
 		company.Name = *req.Name
 	}
-	if req.TaxID != nil {
-		company.TaxID = req.TaxID
-	}
-	if req.Phone != nil {
-		company.Phone = req.Phone
-	}
-	if req.Email != nil {
-		company.Email = req.Email
-	}
-	if req.Website != nil {
-		company.Website = req.Website
+	if req.Type != nil {
+		company.Type = domain.CompanyType(*req.Type)
 	}
 	if req.LogoURL != nil {
 		company.LogoURL = req.LogoURL
 	}
-	if req.Address != nil {
-		company.Address = req.Address
-	}
-	if req.VillageID != nil {
-		company.VillageID = req.VillageID
-	}
-	if req.MaxUsers != nil {
-		company.MaxUsers = *req.MaxUsers
-	}
-	if req.MaxBranches != nil {
-		company.MaxBranches = *req.MaxBranches
-	}
 	if req.IsActive != nil {
 		company.IsActive = *req.IsActive
+	}
+	if req.Sort != nil {
+		company.Sort = *req.Sort
+	}
+
+	// Owner transfer — only super_admin
+	if req.OwnerID != nil && *req.OwnerID != company.OwnerID {
+		if !isSuperAdmin {
+			return nil, ErrOwnerTransferOnly
+		}
+
+		newOwnerID := *req.OwnerID
+		oldOwnerID := company.OwnerID
+		company.OwnerID = newOwnerID
+
+		// Ensure new owner is a member of this company
+		exists, err := s.companyUserRepo.MembershipExists(ctx, id, newOwnerID)
+		if err != nil {
+			return nil, err
+		}
+		if !exists {
+			now := time.Now()
+			cu := &domain.CompanyUser{
+				ID:        uuid.New().String(),
+				CompanyID: id,
+				UserID:    newOwnerID,
+				IsPrimary: false,
+				IsActive:  true,
+				InvitedBy: &updatedBy,
+				JoinedAt:  now,
+				CreatedAt: now,
+				CreatedBy: &updatedBy,
+				UpdatedAt: now,
+				UpdatedBy: &updatedBy,
+			}
+			if err := s.companyUserRepo.Create(ctx, cu); err != nil {
+				return nil, err
+			}
+		}
+
+		logger.Info("Company ownership transferred",
+			logger.String("company_id", id),
+			logger.String("old_owner", oldOwnerID),
+			logger.String("new_owner", newOwnerID))
 	}
 
 	company.UpdatedAt = time.Now()
 	company.UpdatedBy = &updatedBy
 
-	err = s.companyRepo.Update(company)
+	err = s.companyRepo.Update(ctx, company)
 	if err != nil {
-		logger.Error("Failed to update company", logger.Err(err))
 		return nil, err
 	}
 
-	logger.Info("Company updated successfully", logger.String("company_id", id))
-
-	return s.toCompanyResponse(company), nil
+	response := s.toCompanyResponse(company)
+	return &response, nil
 }
 
 // Delete soft deletes a company
-func (s *CompanyService) Delete(id string, deletedBy string) error {
-	logger.Info("Deleting company", logger.String("company_id", id))
-
-	// Check if company exists
-	company, err := s.companyRepo.FindByID(id)
+func (s *CompanyService) Delete(ctx context.Context, id, deletedBy string) error {
+	company, err := s.companyRepo.FindByID(ctx, id)
 	if err != nil {
-		logger.Error("Failed to fetch company", logger.Err(err))
 		return err
 	}
-
 	if company == nil {
-		logger.Warn("Company not found", logger.String("company_id", id))
 		return ErrCompanyNotFound
 	}
 
-	err = s.companyRepo.Delete(id, deletedBy)
-	if err != nil {
-		logger.Error("Failed to delete company", logger.Err(err))
-		return err
-	}
-
-	logger.Info("Company deleted successfully", logger.String("company_id", id))
-
-	return nil
+	return s.companyRepo.SoftDelete(ctx, id, deletedBy)
 }
 
-// AddUserToCompany adds a user to a company
-func (s *CompanyService) AddUserToCompany(companyID string, req *dto.AddUserToCompanyRequest, invitedBy string) (*dto.CompanyUserResponse, error) {
-	// Log request details for debugging
-	roleIDStr := "nil"
-	if req.RoleID != nil {
-		roleIDStr = *req.RoleID
+// GetTrash returns paginated list of soft-deleted companies (super admin only)
+func (s *CompanyService) GetTrash(ctx context.Context, params *dto.CompanyTrashQueryParams) (*dto.CompanyListResponse, error) {
+	if params.Page == 0 {
+		params.Page = 1
 	}
-	logger.Info("Adding user to company",
-		logger.String("company_id", companyID),
-		logger.String("user_id", req.UserID),
-		logger.String("role_id", roleIDStr),
-		logger.String("role_deprecated", req.Role),
-	)
-
-	// Validate role_id if provided
-	if req.RoleID != nil && *req.RoleID != "" {
-		// Validate UUID format
-		if _, err := uuid.Parse(*req.RoleID); err != nil {
-			logger.Error("Invalid role_id format", logger.String("role_id", *req.RoleID))
-			return nil, errors.New("invalid role_id: must be a valid UUID")
-		}
+	if params.Limit == 0 {
+		params.Limit = 10
 	}
 
-	// Validate role if using deprecated role field
-	// Priority: role_id > role (deprecated)
-	if req.RoleID == nil && req.Role != "" {
-		if !domain.IsValidRole(req.Role) {
-			return nil, ErrInvalidRole
-		}
-	}
-
-	// Check if company exists
-	company, err := s.companyRepo.FindByID(companyID)
+	companies, total, err := s.companyRepo.FindAllDeleted(ctx, params)
 	if err != nil {
-		logger.Error("Failed to fetch company", logger.Err(err))
+		return nil, err
+	}
+
+	companyResponses := make([]dto.CompanyResponse, len(companies))
+	for i, company := range companies {
+		companyResponses[i] = s.toCompanyResponse(&company)
+	}
+
+	return &dto.CompanyListResponse{
+		Companies: companyResponses,
+		Total:     total,
+		Page:      params.Page,
+		Limit:     params.Limit,
+	}, nil
+}
+
+// Restore restores a soft-deleted company
+func (s *CompanyService) Restore(ctx context.Context, id, restoredBy string) (*dto.CompanyResponse, error) {
+	company, err := s.companyRepo.FindDeletedByID(ctx, id)
+	if err != nil {
 		return nil, err
 	}
 	if company == nil {
 		return nil, ErrCompanyNotFound
 	}
 
-	// Check if user already in company
-	existing, err := s.companyUserRepo.FindByCompanyAndUser(companyID, req.UserID)
+	err = s.companyRepo.Restore(ctx, id, restoredBy)
 	if err != nil {
-		logger.Error("Failed to check existing user", logger.Err(err))
-		return nil, err
-	}
-	if existing != nil {
-		return nil, ErrUserAlreadyInCompany
-	}
-
-	// Check max users limit
-	activeCount, err := s.companyUserRepo.CountActiveUsersByCompany(companyID)
-	if err != nil {
-		logger.Error("Failed to count active users", logger.Err(err))
-		return nil, err
-	}
-	if int(activeCount) >= company.MaxUsers {
-		return nil, ErrMaxUsersReached
-	}
-
-	// Determine role value for backward compatibility
-	roleValue := req.Role
-	if roleValue == "" {
-		roleValue = domain.RoleMember // Default to MEMBER if not specified
-	}
-
-	// Add user to company
-	companyUser := &domain.CompanyUser{
-		ID:        uuid.New().String(),
-		CompanyID: companyID,
-		UserID:    req.UserID,
-		RoleID:    req.RoleID, // Company-specific role ID (can be nil for global role)
-		Role:      roleValue,  // DEPRECATED: kept for backward compatibility
-		IsPrimary: false,
-		IsActive:  true,
-		InvitedBy: &invitedBy,
-		JoinedAt:  time.Now(),
-		CreatedAt: time.Now(),
-		CreatedBy: &invitedBy,
-		UpdatedAt: time.Now(),
-		UpdatedBy: &invitedBy,
-	}
-
-	err = s.companyUserRepo.Create(companyUser)
-	if err != nil {
-		logger.Error("Failed to add user to company", logger.Err(err))
 		return nil, err
 	}
 
-	logger.Info("User added to company successfully",
-		logger.String("company_id", companyID),
-		logger.String("user_id", req.UserID),
-	)
+	// Fetch the restored company
+	restored, err := s.companyRepo.FindByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if restored == nil {
+		return nil, ErrCompanyNotFound
+	}
 
-	return s.toCompanyUserResponse(companyUser), nil
+	logger.Info("Company restored",
+		logger.String("company_id", id),
+		logger.String("restored_by", restoredBy))
+
+	resp := s.toCompanyResponse(restored)
+	return &resp, nil
 }
 
-// RemoveUserFromCompany removes a user from a company
-func (s *CompanyService) RemoveUserFromCompany(companyID, userID, deletedBy string) error {
-	logger.Info("Removing user from company",
-		logger.String("company_id", companyID),
-		logger.String("user_id", userID),
-	)
-
-	// Check if user in company
-	companyUser, err := s.companyUserRepo.FindByCompanyAndUser(companyID, userID)
+// GetChildren returns direct children of a company
+func (s *CompanyService) GetChildren(ctx context.Context, id string) ([]dto.CompanyResponse, error) {
+	company, err := s.companyRepo.FindByID(ctx, id)
 	if err != nil {
-		logger.Error("Failed to fetch company user", logger.Err(err))
-		return err
+		return nil, err
 	}
-	if companyUser == nil {
-		return ErrUserNotInCompany
-	}
-
-	// Cannot remove primary owner
-	if companyUser.IsPrimary {
-		return ErrCannotRemoveOwner
+	if company == nil {
+		return nil, ErrCompanyNotFound
 	}
 
-	err = s.companyUserRepo.Delete(companyUser.ID, deletedBy)
+	children, err := s.companyRepo.GetChildren(ctx, id)
 	if err != nil {
-		logger.Error("Failed to remove user from company", logger.Err(err))
-		return err
+		return nil, err
 	}
 
-	logger.Info("User removed from company successfully",
-		logger.String("company_id", companyID),
-		logger.String("user_id", userID),
-	)
+	responses := make([]dto.CompanyResponse, len(children))
+	for i, child := range children {
+		responses[i] = s.toCompanyResponse(&child)
+	}
 
-	return nil
+	return responses, nil
 }
 
-// UpdateUserRole updates a user's role in a company
-func (s *CompanyService) UpdateUserRole(companyID, userID string, req *dto.UpdateCompanyUserRequest, updatedBy string) (*dto.CompanyUserResponse, error) {
-	// Log request details for debugging
-	roleIDStr := "not provided"
-	if req.RoleID != nil {
-		if *req.RoleID == "" {
-			roleIDStr = "empty string (will set to nil)"
-		} else {
-			roleIDStr = *req.RoleID
-		}
-	}
-	logger.Info("Updating user role in company",
-		logger.String("company_id", companyID),
-		logger.String("user_id", userID),
-		logger.String("role_id", roleIDStr),
-	)
-
-	// Check if user in company
-	companyUser, err := s.companyUserRepo.FindByCompanyAndUser(companyID, userID)
+// GetAncestors returns all ancestors of a company
+func (s *CompanyService) GetAncestors(ctx context.Context, id string) ([]dto.CompanyResponse, error) {
+	company, err := s.companyRepo.FindByID(ctx, id)
 	if err != nil {
-		logger.Error("Failed to fetch company user", logger.Err(err))
 		return nil, err
 	}
-	if companyUser == nil {
-		return nil, ErrUserNotInCompany
+	if company == nil {
+		return nil, ErrCompanyNotFound
 	}
 
-	// Update fields if provided
-	// Priority: role_id > role (deprecated)
-	if req.RoleID != nil {
-		// Validate UUID format if not empty
-		if *req.RoleID != "" {
-			if _, err := uuid.Parse(*req.RoleID); err != nil {
-				logger.Error("Invalid role_id format", logger.String("role_id", *req.RoleID))
-				return nil, errors.New("invalid role_id: must be a valid UUID")
-			}
-		} else {
-			// Empty string means set to nil (inherit global role)
-			req.RoleID = nil
-		}
-		// Update company-specific role ID (can be set to nil to use global role)
-		companyUser.RoleID = req.RoleID
-	}
-
-	if req.Role != nil {
-		// DEPRECATED: Only validate and update if role_id not provided
-		if req.RoleID == nil {
-			if !domain.IsValidRole(*req.Role) {
-				return nil, ErrInvalidRole
-			}
-			companyUser.Role = *req.Role
-		}
-	}
-
-	if req.IsActive != nil {
-		companyUser.IsActive = *req.IsActive
-	}
-
-	companyUser.UpdatedAt = time.Now()
-	companyUser.UpdatedBy = &updatedBy
-
-	err = s.companyUserRepo.Update(companyUser)
+	ancestors, err := s.companyRepo.GetAncestors(ctx, id)
 	if err != nil {
-		logger.Error("Failed to update user role", logger.Err(err))
 		return nil, err
 	}
 
-	logger.Info("User role updated successfully",
-		logger.String("company_id", companyID),
-		logger.String("user_id", userID),
-	)
+	responses := make([]dto.CompanyResponse, len(ancestors))
+	for i, ancestor := range ancestors {
+		responses[i] = s.toCompanyResponse(&ancestor)
+	}
 
-	return s.toCompanyUserResponse(companyUser), nil
+	return responses, nil
 }
 
-// GetCompanyUsers gets all users in a company
-func (s *CompanyService) GetCompanyUsers(companyID string, page, pageSize int, role string, isActive *bool) (*dto.CompanyUserListResponse, error) {
-	logger.Info("Fetching company users",
-		logger.String("company_id", companyID),
-		logger.Int("page", page),
-		logger.Int("page_size", pageSize),
-	)
+// GetUsers returns paginated list of company users
+func (s *CompanyService) GetUsers(ctx context.Context, companyID string, params *dto.CompanyUserQueryParams) (*dto.CompanyUserListResponse, error) {
+	if params.Page == 0 {
+		params.Page = 1
+	}
+	if params.Limit == 0 {
+		params.Limit = 10
+	}
 
-	// Calculate offset
-	offset := (page - 1) * pageSize
-
-	// Get users
-	companyUsers, err := s.companyUserRepo.FindByCompany(companyID, pageSize, offset, role, isActive)
+	company, err := s.companyRepo.FindByID(ctx, companyID)
 	if err != nil {
-		logger.Error("Failed to fetch company users", logger.Err(err))
+		return nil, err
+	}
+	if company == nil {
+		return nil, ErrCompanyNotFound
+	}
+
+	users, total, err := s.companyUserRepo.FindByCompany(ctx, companyID, params)
+	if err != nil {
 		return nil, err
 	}
 
-	// Get total count
-	total, err := s.companyUserRepo.CountByCompany(companyID, role, isActive)
-	if err != nil {
-		logger.Error("Failed to count company users", logger.Err(err))
-		return nil, err
+	userResponses := make([]dto.CompanyUserResponse, len(users))
+	for i, user := range users {
+		userResponses[i] = s.toCompanyUserResponse(&user)
 	}
-
-	// Convert to response
-	userResponses := make([]dto.CompanyUserResponse, len(companyUsers))
-	for i, cu := range companyUsers {
-		userResponses[i] = *s.toCompanyUserResponse(&cu)
-	}
-
-	totalPages := int(math.Ceil(float64(total) / float64(pageSize)))
 
 	return &dto.CompanyUserListResponse{
-		Users:      userResponses,
-		Total:      total,
-		Page:       page,
-		PageSize:   pageSize,
-		TotalPages: totalPages,
+		Users: userResponses,
+		Total: total,
+		Page:  params.Page,
+		Limit: params.Limit,
 	}, nil
 }
 
-// Helper methods
-
-func (s *CompanyService) toCompanyResponse(company *domain.Company) *dto.CompanyResponse {
-	return &dto.CompanyResponse{
-		ID:          company.ID,
-		OwnerID:     company.OwnerID,
-		Name:        company.Name,
-		Code:        company.Code,
-		TaxID:       company.TaxID,
-		Phone:       company.Phone,
-		Email:       company.Email,
-		Website:     company.Website,
-		LogoURL:     company.LogoURL,
-		Address:     company.Address,
-		VillageID:   company.VillageID,
-		MaxUsers:    company.MaxUsers,
-		MaxBranches: company.MaxBranches,
-		IsActive:    company.IsActive,
-		CreatedAt:   company.CreatedAt,
-		CreatedBy:   company.CreatedBy,
-		UpdatedAt:   company.UpdatedAt,
-		UpdatedBy:   company.UpdatedBy,
-		DeletedAt:   company.DeletedAt,
-		DeletedBy:   company.DeletedBy,
+// AddUser adds a user to a company
+func (s *CompanyService) AddUser(ctx context.Context, companyID string, req *dto.AddCompanyUserRequest, invitedBy string) (*dto.CompanyUserResponse, error) {
+	company, err := s.companyRepo.FindByID(ctx, companyID)
+	if err != nil {
+		return nil, err
 	}
+	if company == nil {
+		return nil, ErrCompanyNotFound
+	}
+
+	// Check if user is already a member
+	exists, err := s.companyUserRepo.MembershipExists(ctx, companyID, req.UserID)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return nil, ErrUserAlreadyMember
+	}
+
+	now := time.Now()
+	cu := &domain.CompanyUser{
+		ID:        uuid.New().String(),
+		CompanyID: companyID,
+		UserID:    req.UserID,
+		RoleID:    req.RoleID,
+		IsPrimary: false,
+		IsActive:  true,
+		InvitedBy: &invitedBy,
+		JoinedAt:  now,
+		CreatedAt: now,
+		CreatedBy: &invitedBy,
+		UpdatedAt: now,
+		UpdatedBy: &invitedBy,
+	}
+
+	err = s.companyUserRepo.Create(ctx, cu)
+	if err != nil {
+		return nil, err
+	}
+
+	// Fetch with details
+	users, _, err := s.companyUserRepo.FindByCompany(ctx, companyID, &dto.CompanyUserQueryParams{
+		Page:  1,
+		Limit: 1,
+	})
+	if err != nil || len(users) == 0 {
+		return &dto.CompanyUserResponse{
+			ID:        cu.ID,
+			CompanyID: cu.CompanyID,
+			UserID:    cu.UserID,
+			RoleID:    cu.RoleID,
+			IsPrimary: cu.IsPrimary,
+			IsActive:  cu.IsActive,
+			JoinedAt:  cu.JoinedAt,
+			CreatedAt: cu.CreatedAt,
+		}, nil
+	}
+
+	response := s.toCompanyUserResponse(&users[0])
+	return &response, nil
 }
 
-func (s *CompanyService) toCompanyUserResponse(cu *domain.CompanyUser) *dto.CompanyUserResponse {
-	createdBy := ""
-	if cu.CreatedBy != nil {
-		createdBy = *cu.CreatedBy
+// UpdateUser updates a user's membership in a company
+func (s *CompanyService) UpdateUser(ctx context.Context, companyID, userID string, req *dto.UpdateCompanyUserRequest, updatedBy string) (*dto.CompanyUserResponse, error) {
+	cu, err := s.companyUserRepo.FindByCompanyAndUser(ctx, companyID, userID)
+	if err != nil {
+		return nil, err
+	}
+	if cu == nil {
+		return nil, ErrMembershipNotFound
+	}
+
+	// Prevent deactivating company owner
+	if req.IsActive != nil && !*req.IsActive {
+		company, err := s.companyRepo.FindByID(ctx, companyID)
+		if err != nil {
+			return nil, err
+		}
+		if company != nil && company.OwnerID == userID {
+			return nil, ErrCannotDeactivateOwner
+		}
+	}
+
+	if req.RoleID != nil {
+		cu.RoleID = req.RoleID
+	}
+	if req.IsActive != nil {
+		cu.IsActive = *req.IsActive
+	}
+	if req.IsPrimary != nil && *req.IsPrimary {
+		err = s.companyUserRepo.SetPrimaryCompany(ctx, userID, companyID)
+		if err != nil {
+			return nil, err
+		}
+		cu.IsPrimary = true
+	}
+
+	cu.UpdatedAt = time.Now()
+	cu.UpdatedBy = &updatedBy
+
+	err = s.companyUserRepo.Update(ctx, cu)
+	if err != nil {
+		return nil, err
 	}
 
 	return &dto.CompanyUserResponse{
 		ID:        cu.ID,
 		CompanyID: cu.CompanyID,
 		UserID:    cu.UserID,
-		RoleID:    cu.RoleID, // Company-specific role ID (nil = inherit global role)
-		Role:      cu.Role,   // DEPRECATED: kept for backward compatibility
+		RoleID:    cu.RoleID,
 		IsPrimary: cu.IsPrimary,
 		IsActive:  cu.IsActive,
-		// User information
+		JoinedAt:  cu.JoinedAt,
+		CreatedAt: cu.CreatedAt,
+	}, nil
+}
+
+// RemoveUser removes a user from a company
+func (s *CompanyService) RemoveUser(ctx context.Context, companyID, userID, deletedBy string) error {
+	company, err := s.companyRepo.FindByID(ctx, companyID)
+	if err != nil {
+		return err
+	}
+	if company == nil {
+		return ErrCompanyNotFound
+	}
+
+	// Cannot remove owner
+	if company.OwnerID == userID {
+		return ErrCannotRemoveOwner
+	}
+
+	cu, err := s.companyUserRepo.FindByCompanyAndUser(ctx, companyID, userID)
+	if err != nil {
+		return err
+	}
+	if cu == nil {
+		return ErrMembershipNotFound
+	}
+
+	return s.companyUserRepo.SoftDelete(ctx, cu.ID, deletedBy)
+}
+
+// SyncUserCompanies batch syncs a user's company memberships.
+// Adds missing memberships and removes ones not in the list.
+// Does not remove the user from companies where they are the owner.
+//
+// Errors from individual add/update/remove operations are now returned to the
+// caller (previously they were silently logged, which masked partial failures
+// and could leave a user with no memberships at all).
+func (s *CompanyService) SyncUserCompanies(ctx context.Context, userID string, req *dto.SyncUserCompaniesRequest, updatedBy string) error {
+	// Get current memberships
+	currentMemberships, err := s.companyUserRepo.FindByUser(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	// Build set of desired company IDs
+	desired := make(map[string]bool, len(req.CompanyIDs))
+	for _, id := range req.CompanyIDs {
+		desired[id] = true
+	}
+
+	// Build set of current company IDs
+	current := make(map[string]string, len(currentMemberships)) // companyID -> membershipID
+	for _, m := range currentMemberships {
+		current[m.CompanyID] = m.ID
+	}
+
+	// Does the user already have a primary company among their active
+	// memberships? If not, the first new (or surviving) company we process
+	// will be promoted so SignIn can resolve company_id. This heals users
+	// whose create-time assignment never got a primary (legacy bug).
+	hasPrimary := false
+	for _, m := range currentMemberships {
+		if m.IsPrimary {
+			hasPrimary = true
+			break
+		}
+	}
+	promotedPrimary := hasPrimary
+
+	now := time.Now()
+
+	// Add missing memberships and update role for existing ones
+	for _, companyID := range req.CompanyIDs {
+		if membershipID, exists := current[companyID]; exists {
+			// Update role for existing membership if role_id is provided
+			if req.RoleID != nil {
+				cu, err := s.companyUserRepo.FindByID(ctx, membershipID)
+				if err != nil {
+					return err
+				}
+				if cu != nil {
+					cu.RoleID = req.RoleID
+					cu.UpdatedAt = now
+					cu.UpdatedBy = &updatedBy
+					if err := s.companyUserRepo.Update(ctx, cu); err != nil {
+						return err
+					}
+				}
+			}
+			// Promote this surviving membership to primary if the user has
+			// none yet. SetPrimaryCompany clears any other stray primary
+			// flags atomically.
+			if !promotedPrimary {
+				if err := s.companyUserRepo.SetPrimaryCompany(ctx, userID, companyID); err != nil {
+					return err
+				}
+				promotedPrimary = true
+			}
+			continue
+		}
+		// Verify company exists
+		company, err := s.companyRepo.FindByID(ctx, companyID)
+		if err != nil {
+			return err
+		}
+		if company == nil {
+			// Reject explicitly instead of silently dropping — silently
+			// dropping invalid IDs hides bugs in the caller and can lead to
+			// users being created with zero memberships.
+			return fmt.Errorf("%w: %s", ErrCompanyNotFound, companyID)
+		}
+
+		makePrimary := !promotedPrimary
+		cu := &domain.CompanyUser{
+			ID:        uuid.New().String(),
+			CompanyID: companyID,
+			UserID:    userID,
+			RoleID:    req.RoleID,
+			IsPrimary: makePrimary,
+			IsActive:  true,
+			InvitedBy: &updatedBy,
+			JoinedAt:  now,
+			CreatedAt: now,
+			CreatedBy: &updatedBy,
+			UpdatedAt: now,
+			UpdatedBy: &updatedBy,
+		}
+		if err := s.companyUserRepo.Create(ctx, cu); err != nil {
+			return err
+		}
+		if makePrimary {
+			promotedPrimary = true
+		}
+	}
+
+	// Remove memberships not in desired list (skip owner companies)
+	for _, m := range currentMemberships {
+		if desired[m.CompanyID] {
+			continue
+		}
+		// Check if user is owner of this company — don't remove
+		company, err := s.companyRepo.FindByID(ctx, m.CompanyID)
+		if err != nil {
+			return err
+		}
+		if company != nil && company.OwnerID == userID {
+			continue
+		}
+		if err := s.companyUserRepo.SoftDelete(ctx, m.ID, updatedBy); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// AssignUserToCompaniesTx attaches a freshly-created user to one or more
+// companies inside the caller's transaction. Unlike SyncUserCompanies, this
+// is fail-fast and only inserts (it never removes), so it is safe to use as
+// part of an atomic "create user" flow. Each company_id is verified to exist
+// before insert; an unknown ID returns ErrCompanyNotFound and rolls back the
+// caller's transaction.
+//
+// Primary promotion: when the user has no existing primary company (typical
+// case for a brand-new user created by admin), the FIRST company in the list
+// is marked is_primary=true. Without this, SignIn cannot resolve a
+// company_id and the user's JWT gets `company_id: ""`, which trips the
+// CompanyContext middleware on every scoped endpoint.
+func (s *CompanyService) AssignUserToCompaniesTx(ctx context.Context, tx pgx.Tx, userID string, req *dto.SyncUserCompaniesRequest, createdBy string) error {
+	if len(req.CompanyIDs) == 0 {
+		return nil
+	}
+
+	// Does the user already have a primary company? Read outside the tx is
+	// fine — membership is (userID, companyID)-unique so there's no race
+	// with the concurrent inserts we're about to make for *this* user.
+	existingPrimary, err := s.companyUserRepo.GetPrimaryCompany(ctx, userID)
+	if err != nil {
+		return err
+	}
+	needsPrimary := existingPrimary == nil
+
+	now := time.Now()
+	for i, companyID := range req.CompanyIDs {
+		// Verify company exists. The read uses the pool (not the tx) on
+		// purpose: companies is a slow-changing parent table, so a read
+		// outside the tx is fine and avoids unnecessary lock contention.
+		company, err := s.companyRepo.FindByID(ctx, companyID)
+		if err != nil {
+			return err
+		}
+		if company == nil {
+			return fmt.Errorf("%w: %s", ErrCompanyNotFound, companyID)
+		}
+
+		cu := &domain.CompanyUser{
+			ID:        uuid.New().String(),
+			CompanyID: companyID,
+			UserID:    userID,
+			RoleID:    req.RoleID,
+			IsPrimary: needsPrimary && i == 0,
+			IsActive:  true,
+			InvitedBy: &createdBy,
+			JoinedAt:  now,
+			CreatedAt: now,
+			CreatedBy: &createdBy,
+			UpdatedAt: now,
+			UpdatedBy: &createdBy,
+		}
+		if err := s.companyUserRepo.CreateTx(ctx, tx, cu); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// GetUserCompanyIDs returns the list of company IDs a user is a member of, with ownership flag
+func (s *CompanyService) GetUserCompanyIDs(ctx context.Context, userID string) ([]dto.UserCompanyIDResponse, error) {
+	memberships, err := s.companyUserRepo.FindByUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Collect company IDs to batch-check ownership
+	companyIDs := make([]string, len(memberships))
+	for i, m := range memberships {
+		companyIDs[i] = m.CompanyID
+	}
+
+	// Build ownership set
+	ownerSet := make(map[string]bool)
+	for _, companyID := range companyIDs {
+		company, err := s.companyRepo.FindByID(ctx, companyID)
+		if err != nil {
+			continue
+		}
+		if company != nil && company.OwnerID == userID {
+			ownerSet[companyID] = true
+		}
+	}
+
+	result := make([]dto.UserCompanyIDResponse, len(memberships))
+	for i, m := range memberships {
+		result[i] = dto.UserCompanyIDResponse{
+			CompanyID: m.CompanyID,
+			IsOwner:   ownerSet[m.CompanyID],
+		}
+	}
+	return result, nil
+}
+
+// GetUserCompaniesWithDetails returns companies a user belongs to with name, owner, and role info
+func (s *CompanyService) GetUserCompaniesWithDetails(ctx context.Context, userID string) ([]domain.UserCompanyDetail, error) {
+	return s.companyUserRepo.FindByUserWithDetails(ctx, userID)
+}
+
+// IsCompanyAdmin checks if user is an admin/owner of a company or any of its ancestors.
+// Used for scoped authorization.
+func (s *CompanyService) IsCompanyAdmin(ctx context.Context, userID, companyID string) (bool, error) {
+	// Check if user is owner of this company
+	company, err := s.companyRepo.FindByID(ctx, companyID)
+	if err != nil {
+		return false, err
+	}
+	if company == nil {
+		return false, nil
+	}
+	if company.OwnerID == userID {
+		return true, nil
+	}
+
+	// Check if user is owner of any ancestor
+	ancestors, err := s.companyRepo.GetAncestors(ctx, companyID)
+	if err != nil {
+		return false, err
+	}
+	for _, a := range ancestors {
+		if a.OwnerID == userID {
+			return true, nil
+		}
+	}
+
+	// Check if user is a member with admin-level permission on this company
+	isMember, err := s.companyUserRepo.IsMember(ctx, userID, companyID)
+	if err != nil {
+		return false, err
+	}
+
+	return isMember, nil
+}
+
+// toCompanyResponse converts domain.Company to dto.CompanyResponse
+func (s *CompanyService) toCompanyResponse(company *domain.Company) dto.CompanyResponse {
+	return dto.CompanyResponse{
+		ID:        company.ID,
+		ClientID:  company.ClientID,
+		ParentID:  company.ParentID,
+		Name:      company.Name,
+		Type:      string(company.Type),
+		LogoURL:   company.LogoURL,
+		OwnerID:   company.OwnerID,
+		OwnerName: company.OwnerName,
+		Sort:      company.Sort,
+		IsActive:  company.IsActive,
+		CreatedBy: company.CreatedBy,
+		CreatedAt: company.CreatedAt,
+		UpdatedAt: company.UpdatedAt,
+	}
+}
+
+// toCompanyUserResponse converts domain.CompanyUserWithDetails to dto.CompanyUserResponse
+func (s *CompanyService) toCompanyUserResponse(cu *domain.CompanyUserWithDetails) dto.CompanyUserResponse {
+	return dto.CompanyUserResponse{
+		ID:           cu.ID,
+		CompanyID:    cu.CompanyID,
+		UserID:       cu.UserID,
+		RoleID:       cu.RoleID,
+		RoleName:     cu.RoleName,
+		RoleCode:     cu.RoleCode,
 		UserEmail:    cu.UserEmail,
 		UserUsername: cu.UserUsername,
 		UserFullName: cu.UserFullName,
-		// Timestamps
-		JoinedAt:  cu.JoinedAt,
-		CreatedAt: cu.CreatedAt,
-		CreatedBy: createdBy,
-		UpdatedAt: cu.UpdatedAt,
-		UpdatedBy: cu.UpdatedBy,
-		DeletedAt: cu.DeletedAt,
-		DeletedBy: cu.DeletedBy,
+		IsPrimary:    cu.IsPrimary,
+		IsActive:     cu.IsActive,
+		JoinedAt:     cu.JoinedAt,
+		CreatedAt:    cu.CreatedAt,
 	}
 }

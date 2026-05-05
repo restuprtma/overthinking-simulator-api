@@ -11,6 +11,10 @@ import (
 const (
 	// UserContextKey is the key used to store user claims in gin.Context
 	UserContextKey = "user"
+	// AuthTypeKey is the key used to store the authentication type (jwt or api_key)
+	AuthTypeKey = "auth_type"
+	// ApiKeyIDKey is the key used to store the API key ID when using API key auth
+	ApiKeyIDKey = "api_key_id"
 )
 
 var (
@@ -74,15 +78,6 @@ func GetUserRoles(c *gin.Context) ([]string, error) {
 	return claims.Roles, nil
 }
 
-// GetUserPermissions retrieves user permissions from context
-func GetUserPermissions(c *gin.Context) ([]string, error) {
-	claims, err := GetUserFromContext(c)
-	if err != nil {
-		return nil, err
-	}
-	return claims.Permissions, nil
-}
-
 // GetCompanyID retrieves company ID from context
 func GetCompanyID(c *gin.Context) string {
 	claims, err := GetUserFromContext(c)
@@ -97,4 +92,44 @@ func GetCompanyID(c *gin.Context) string {
 func MustGetUserID(c *gin.Context) string {
 	claims := MustGetUserFromContext(c)
 	return claims.UserID
+}
+
+// SetAuthType stores the authentication type in gin.Context
+func SetAuthType(c *gin.Context, authType string) {
+	c.Set(AuthTypeKey, authType)
+}
+
+// GetAuthType retrieves the authentication type from context
+// Returns "jwt" or "api_key"
+func GetAuthType(c *gin.Context) string {
+	authType, exists := c.Get(AuthTypeKey)
+	if !exists {
+		return "jwt"
+	}
+	if t, ok := authType.(string); ok {
+		return t
+	}
+	return "jwt"
+}
+
+// SetApiKeyID stores the API key ID in gin.Context
+func SetApiKeyID(c *gin.Context, keyID string) {
+	c.Set(ApiKeyIDKey, keyID)
+}
+
+// GetApiKeyID retrieves the API key ID from context
+func GetApiKeyID(c *gin.Context) string {
+	keyID, exists := c.Get(ApiKeyIDKey)
+	if !exists {
+		return ""
+	}
+	if k, ok := keyID.(string); ok {
+		return k
+	}
+	return ""
+}
+
+// IsApiKeyAuth returns true if the current request is authenticated via API key
+func IsApiKeyAuth(c *gin.Context) bool {
+	return GetAuthType(c) == "api_key"
 }

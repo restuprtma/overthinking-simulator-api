@@ -1,18 +1,24 @@
 package service
 
 import (
+	"context"
 	"errors"
-	"math"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+
+	branchDomain "venturo-skeleton-go/internal/modules/core/branch/domain"
+	companyDomain "venturo-skeleton-go/internal/modules/core/company/domain"
+	companyDto "venturo-skeleton-go/internal/modules/core/company/dto"
+	companyService "venturo-skeleton-go/internal/modules/core/company/service"
+	roleDomain "venturo-skeleton-go/internal/modules/core/role/domain"
 	"venturo-skeleton-go/internal/modules/core/user/domain"
 	"venturo-skeleton-go/internal/modules/core/user/dto"
 	"venturo-skeleton-go/internal/modules/core/user/repository"
-	roleRepo "venturo-skeleton-go/internal/modules/core/role/repository"
 	"venturo-skeleton-go/pkg/crypto"
+	jwtpkg "venturo-skeleton-go/pkg/jwt"
 	"venturo-skeleton-go/pkg/logger"
-
-	"github.com/google/uuid"
 )
 
 var (
@@ -20,118 +26,215 @@ var (
 	ErrEmailAlreadyExists    = errors.New("email already exists")
 	ErrUsernameAlreadyExists = errors.New("username already exists")
 	ErrInvalidPassword       = errors.New("invalid password")
-	ErrRoleNotFound          = errors.New("role not found")
-	ErrInvalidRoleID         = errors.New("invalid role ID")
+	ErrRoleNotAllowed        = errors.New("role is not allowed for caller")
+	ErrCompaniesRequired     = errors.New("user must be assigned to at least one company")
+
+	// ErrCompanyNotFound is re-exported so handlers can map the error
+	// returned by AssignUserToCompaniesTx / SyncUserCompanies without
+	// importing the company service package directly.
+	ErrCompanyNotFound = companyService.ErrCompanyNotFound
 )
 
-type UserService struct {
-	userRepo *repository.UserRepository
-	roleRepo *roleRepo.RoleRepository
+// TenantScope limits user visibility for non-super-admin callers. Pass nil to
+// bypass tenant filtering (super admin). See
+// UserRepository.FindAll / IsUserVisibleToScope for the exact visibility rules.
+type TenantScope struct {
+	CompanyID    string // anchor: caller's current company (root of the visible subtree)
+	CallerUserID string // used for the self-created fallback
 }
 
-func NewUserService(userRepo *repository.UserRepository, roleRepo *roleRepo.RoleRepository) *UserService {
+// CompanySyncer syncs user-company memberships and retrieves company data (implemented by company service)
+type CompanySyncer interface {
+	SyncUserCompanies(ctx context.Context, userID string, req *companyDto.SyncUserCompaniesRequest, updatedBy string) error
+	AssignUserToCompaniesTx(ctx context.Context, tx pgx.Tx, userID string, req *companyDto.SyncUserCompaniesRequest, createdBy string) error
+	GetUserCompaniesWithDetails(ctx context.Context, userID string) ([]companyDomain.UserCompanyDetail, error)
+}
+
+// BranchSyncer syncs user-branch access and retrieves branch detail data
+// (implemented by branch/service.UserBranchService). Kept as a narrow
+// interface so the user service does not import the branch service package.
+type BranchSyncer interface {
+	SyncUserBranches(ctx context.Context, userID string, branchIDs []string, updatedBy string, scopeCompanyID *string) error
+	AssignUserToBranchesTx(ctx context.Context, tx pgx.Tx, userID string, branchIDs []string, createdBy string, scopeCompanyID *string) error
+	GetUserBranchesWithDetails(ctx context.Context, userID string) ([]branchDomain.UserBranchDetail, error)
+}
+
+// RoleLookup reads a role by ID. Kept as a narrow interface so the user
+// service does not pull in the full role service package.
+type RoleLookup interface {
+	FindByID(ctx context.Context, id string) (*roleDomain.Role, error)
+}
+
+type UserService struct {
+	userRepo      *repository.UserRepository
+	companySyncer CompanySyncer
+	branchSyncer  BranchSyncer
+	roleLookup    RoleLookup
+}
+
+func NewUserService(userRepo *repository.UserRepository) *UserService {
 	return &UserService{
 		userRepo: userRepo,
-		roleRepo: roleRepo,
 	}
 }
 
-// GetAll gets all users with pagination
-func (s *UserService) GetAll(params *dto.UserQueryParams) (*dto.UserListResponse, error) {
-	logger.Info("Fetching users list",
-		logger.Int("page", params.Page),
-		logger.Int("page_size", params.PageSize),
-		logger.String("search", params.Search),
-		logger.String("full_name", params.FullName),
-		logger.String("username", params.Username),
-		logger.String("email", params.Email),
-	)
+// SetCompanySyncer sets the company syncer dependency (wired from router)
+func (s *UserService) SetCompanySyncer(syncer CompanySyncer) {
+	s.companySyncer = syncer
+}
 
-	// Calculate offset
-	offset := (params.Page - 1) * params.PageSize
+// SetBranchSyncer sets the branch access syncer dependency (wired from router)
+func (s *UserService) SetBranchSyncer(syncer BranchSyncer) {
+	s.branchSyncer = syncer
+}
 
-	// Get users with roles
-	usersWithRoles, err := s.userRepo.FindAllWithRoles(params.PageSize, offset, params.Search, params.FullName, params.Username, params.Email, params.IsActive)
+// SetRoleLookup sets the role lookup dependency (wired from router). Required
+// when tenant scope enforcement needs to validate role_id against caller's
+// scope — see validateRoleForScope.
+func (s *UserService) SetRoleLookup(lookup RoleLookup) {
+	s.roleLookup = lookup
+}
+
+// validateRoleForScope ensures a non-super-admin caller can only assign a
+// role that is either (a) owned by their current company, or (b) a global
+// system role that is NOT super_admin. Pass scope == nil to bypass (super
+// admin). Nil roleID is allowed — it means "no role" and is always valid.
+func (s *UserService) validateRoleForScope(ctx context.Context, roleID *string, scope *TenantScope) error {
+	if roleID == nil || scope == nil {
+		return nil
+	}
+	if s.roleLookup == nil {
+		// Fail closed: if the dependency was not wired, refuse to allow a
+		// non-super-admin caller to pin an unverified role onto a user.
+		return ErrRoleNotAllowed
+	}
+	role, err := s.roleLookup.FindByID(ctx, *roleID)
 	if err != nil {
-		logger.Error("Failed to fetch users", logger.Err(err))
+		return err
+	}
+	if role == nil {
+		return ErrRoleNotAllowed
+	}
+	// Global roles: allowed except super_admin.
+	if role.CompanyID == nil {
+		if role.Code == jwtpkg.RoleSuperAdmin {
+			return ErrRoleNotAllowed
+		}
+		return nil
+	}
+	// Tenant-owned role: must match caller's current company exactly.
+	if *role.CompanyID != scope.CompanyID {
+		return ErrRoleNotAllowed
+	}
+	return nil
+}
+
+// GetAll returns paginated list of users. If scope is non-nil, tenant
+// visibility filters are applied; pass nil for super-admin callers.
+func (s *UserService) GetAll(ctx context.Context, params *dto.UserQueryParams, scope *TenantScope) (*dto.UserListResponse, error) {
+	if params.Page == 0 {
+		params.Page = 1
+	}
+	if params.Limit == 0 {
+		params.Limit = 10
+	}
+
+	if scope != nil {
+		companyID := scope.CompanyID
+		callerID := scope.CallerUserID
+		params.ScopeCompanyID = &companyID
+		params.ScopeCreatedBy = &callerID
+	} else {
+		params.ScopeCompanyID = nil
+		params.ScopeCreatedBy = nil
+	}
+
+	users, total, err := s.userRepo.FindAll(ctx, params)
+	if err != nil {
 		return nil, err
 	}
 
-	// Get total count
-	total, err := s.userRepo.Count(params.Search, params.FullName, params.Username, params.Email, params.IsActive)
-	if err != nil {
-		logger.Error("Failed to count users", logger.Err(err))
-		return nil, err
+	userResponses := make([]dto.UserResponse, len(users))
+	for i, user := range users {
+		resp := s.toUserResponse(&user)
+		s.enrichWithCompanyData(ctx, &resp, user.ID)
+		userResponses[i] = resp
 	}
-
-	// Convert to response
-	userResponses := make([]dto.UserResponse, len(usersWithRoles))
-	for i, userWithRoles := range usersWithRoles {
-		userResponses[i] = s.toUserResponseWithRoles(&userWithRoles.User, userWithRoles.Roles)
-	}
-
-	totalPages := int(math.Ceil(float64(total) / float64(params.PageSize)))
 
 	return &dto.UserListResponse{
-		Users:      userResponses,
-		Total:      total,
-		Page:       params.Page,
-		PageSize:   params.PageSize,
-		TotalPages: totalPages,
+		Users: userResponses,
+		Total: total,
+		Page:  params.Page,
+		Limit: params.Limit,
 	}, nil
 }
 
-// GetByID gets a user by ID
-func (s *UserService) GetByID(id string) (*dto.UserResponse, error) {
-	logger.Info("Fetching user by ID", logger.String("user_id", id))
-
-	user, err := s.userRepo.FindByID(id)
-	if err != nil {
-		logger.Error("Failed to fetch user", logger.Err(err))
-		return nil, err
+// GetByID returns a user by ID. If scope is non-nil, the target user must be
+// visible to the caller's tenant scope; otherwise ErrUserNotFound is returned
+// (we deliberately do NOT return a 403 — leaking the existence of users in
+// other tenants would itself be a minor info-disclosure).
+func (s *UserService) GetByID(ctx context.Context, id string, scope *TenantScope) (*dto.UserResponse, error) {
+	if scope != nil {
+		visible, err := s.userRepo.IsUserVisibleToScope(ctx, id, scope.CompanyID, scope.CallerUserID)
+		if err != nil {
+			return nil, err
+		}
+		if !visible {
+			return nil, ErrUserNotFound
+		}
 	}
 
+	user, err := s.userRepo.FindByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
 	if user == nil {
-		logger.Warn("User not found", logger.String("user_id", id))
 		return nil, ErrUserNotFound
 	}
 
 	response := s.toUserResponse(user)
+	s.enrichWithCompanyData(ctx, &response, user.ID)
 	return &response, nil
 }
 
-// Create creates a new user
-func (s *UserService) Create(createdByUserID string, req *dto.CreateUserRequest) (*dto.UserResponse, error) {
-	logger.Info("Creating new user", logger.String("email", req.Email))
+// Create creates a new user. The insert into core.users AND the assignment
+// into core.company_users run inside a single transaction so the flow is
+// atomic: if membership assignment fails, the user row is rolled back and
+// the caller receives a real error (previously the error was silently
+// swallowed and a user could end up with zero memberships — "orphan").
+//
+// When scope is non-nil (non-super-admin caller), role_id is validated to
+// ensure the caller cannot pin a role they have no authority over (e.g. a
+// role belonging to another tenant, or the global super_admin role).
+func (s *UserService) Create(ctx context.Context, req *dto.CreateUserRequest, createdBy string, scope *TenantScope) (*dto.UserResponse, error) {
+	// Policy: every user must belong to at least one company. The handler
+	// already injects the caller's current company for non-super-admin, so
+	// in practice this only fires for super_admin callers who forgot to
+	// pass company_ids in the body.
+	if len(req.CompanyIDs) == 0 {
+		return nil, ErrCompaniesRequired
+	}
 
-	// Check if email already exists
-	existingUser, err := s.userRepo.FindByEmail(req.Email)
-	if err != nil {
-		logger.Error("Failed to check existing email", logger.Err(err))
+	if err := s.validateRoleForScope(ctx, req.RoleID, scope); err != nil {
 		return nil, err
 	}
-	if existingUser != nil {
-		logger.Warn("Email already exists", logger.String("email", req.Email))
+
+	// Check email uniqueness
+	exists, err := s.userRepo.EmailExists(ctx, req.Email, nil)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
 		return nil, ErrEmailAlreadyExists
 	}
 
-	// Check if username already exists
-	existingUser, err = s.userRepo.FindByUsername(req.Username)
+	// Check username uniqueness
+	exists, err = s.userRepo.UsernameExists(ctx, req.Username, nil)
 	if err != nil {
-		logger.Error("Failed to check existing username", logger.Err(err))
 		return nil, err
 	}
-	if existingUser != nil {
-		logger.Warn("Username already exists", logger.String("username", req.Username))
+	if exists {
 		return nil, ErrUsernameAlreadyExists
-	}
-
-	// Validate role IDs if provided
-	if len(req.RoleIDs) > 0 {
-		if err := s.validateRoleIDs(req.RoleIDs); err != nil {
-			logger.Error("Invalid role IDs", logger.Err(err))
-			return nil, err
-		}
 	}
 
 	// Hash password
@@ -141,103 +244,118 @@ func (s *UserService) Create(createdByUserID string, req *dto.CreateUserRequest)
 		return nil, err
 	}
 
-	// Create user
-	userID := uuid.New().String()
 	now := time.Now()
 	user := &domain.User{
-		ID:              userID,
+		ID:              uuid.New().String(),
 		Email:           req.Email,
 		Username:        req.Username,
 		PasswordHash:    passwordHash,
 		FullName:        req.FullName,
 		Phone:           req.Phone,
 		IsActive:        true,
-		IsEmailVerified: false,
+		IsEmailVerified: true,
 		CreatedAt:       now,
-		CreatedBy:       &createdByUserID,
+		CreatedBy:       &createdBy,
 		UpdatedAt:       now,
-		UpdatedBy:       &createdByUserID,
+		UpdatedBy:       &createdBy,
 	}
 
-	err = s.userRepo.Create(user)
+	tx, err := s.userRepo.BeginTx(ctx)
 	if err != nil {
-		logger.Error("Failed to create user", logger.Err(err))
+		return nil, err
+	}
+	// Rollback is a no-op after a successful Commit, so it's always safe to
+	// defer it unconditionally.
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	if err := s.userRepo.CreateTx(ctx, tx, user); err != nil {
 		return nil, err
 	}
 
-	// Assign roles if provided
-	if len(req.RoleIDs) > 0 {
-		err = s.userRepo.AssignRoles(userID, req.RoleIDs, userID)
-		if err != nil {
-			logger.Error("Failed to assign roles to user", logger.Err(err))
-			// Note: User is already created, log error but continue
-		} else {
-			logger.Info("Roles assigned to user", logger.String("user_id", userID), logger.Int("role_count", len(req.RoleIDs)))
+	// Assign company memberships in the SAME transaction so user + memberships
+	// commit or roll back together.
+	if len(req.CompanyIDs) > 0 {
+		if s.companySyncer == nil {
+			return nil, errors.New("company syncer not configured")
+		}
+		syncReq := &companyDto.SyncUserCompaniesRequest{
+			CompanyIDs: req.CompanyIDs,
+			RoleID:     req.RoleID,
+		}
+		if err := s.companySyncer.AssignUserToCompaniesTx(ctx, tx, user.ID, syncReq, createdBy); err != nil {
+			return nil, err
 		}
 	}
 
-	logger.Info("User created successfully", logger.String("user_id", user.ID))
-
-	// Fetch user with roles for response
-	if len(req.RoleIDs) > 0 {
-		usersWithRoles, err := s.userRepo.FindAllWithRoles(1, 0, "", "", "", user.Email, nil)
-		if err == nil && len(usersWithRoles) > 0 {
-			response := s.toUserResponseWithRoles(&usersWithRoles[0].User, usersWithRoles[0].Roles)
-			return &response, nil
+	// Assign branch access in the same transaction. Branch validation enforces
+	// that every branch exists and (for non-super-admin) belongs to the
+	// caller's scope company — any violation rolls the user row back.
+	if len(req.BranchIDs) > 0 {
+		if s.branchSyncer == nil {
+			return nil, errors.New("branch syncer not configured")
 		}
+		var scopeCompanyID *string
+		if scope != nil {
+			c := scope.CompanyID
+			scopeCompanyID = &c
+		}
+		if err := s.branchSyncer.AssignUserToBranchesTx(ctx, tx, user.ID, req.BranchIDs, createdBy, scopeCompanyID); err != nil {
+			return nil, err
+		}
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, err
 	}
 
 	response := s.toUserResponse(user)
 	return &response, nil
 }
 
-// Update updates a user
-func (s *UserService) Update(id string, updatedByUserID string, req *dto.UpdateUserRequest) (*dto.UserResponse, error) {
-	logger.Info("Updating user", logger.String("user_id", id))
+// Update updates a user. If scope is non-nil, the target user must be
+// visible to the caller's tenant scope.
+func (s *UserService) Update(ctx context.Context, id string, req *dto.UpdateUserRequest, updatedBy string, scope *TenantScope) (*dto.UserResponse, error) {
+	if err := s.validateRoleForScope(ctx, req.RoleID, scope); err != nil {
+		return nil, err
+	}
 
-	// Find user
-	user, err := s.userRepo.FindByID(id)
+	if scope != nil {
+		visible, err := s.userRepo.IsUserVisibleToScope(ctx, id, scope.CompanyID, scope.CallerUserID)
+		if err != nil {
+			return nil, err
+		}
+		if !visible {
+			return nil, ErrUserNotFound
+		}
+	}
+
+	user, err := s.userRepo.FindByID(ctx, id)
 	if err != nil {
-		logger.Error("Failed to fetch user", logger.Err(err))
 		return nil, err
 	}
 	if user == nil {
-		logger.Warn("User not found", logger.String("user_id", id))
 		return nil, ErrUserNotFound
 	}
 
-	// Validate role IDs if provided
-	if req.RoleIDs != nil && len(req.RoleIDs) > 0 {
-		if err := s.validateRoleIDs(req.RoleIDs); err != nil {
-			logger.Error("Invalid role IDs", logger.Err(err))
-			return nil, err
-		}
-	}
-
-	// Update fields if provided
+	// Check email uniqueness if changed
 	if req.Email != nil && *req.Email != user.Email {
-		// Check if new email already exists
-		existingUser, err := s.userRepo.FindByEmail(*req.Email)
+		exists, err := s.userRepo.EmailExists(ctx, *req.Email, &id)
 		if err != nil {
-			logger.Error("Failed to check existing email", logger.Err(err))
 			return nil, err
 		}
-		if existingUser != nil && existingUser.ID != id {
-			logger.Warn("Email already exists", logger.String("email", *req.Email))
+		if exists {
 			return nil, ErrEmailAlreadyExists
 		}
 		user.Email = *req.Email
 	}
 
+	// Check username uniqueness if changed
 	if req.Username != nil && *req.Username != user.Username {
-		// Check if new username already exists
-		existingUser, err := s.userRepo.FindByUsername(*req.Username)
+		exists, err := s.userRepo.UsernameExists(ctx, *req.Username, &id)
 		if err != nil {
-			logger.Error("Failed to check existing username", logger.Err(err))
 			return nil, err
 		}
-		if existingUser != nil && existingUser.ID != id {
-			logger.Warn("Username already exists", logger.String("username", *req.Username))
+		if exists {
 			return nil, ErrUsernameAlreadyExists
 		}
 		user.Username = *req.Username
@@ -246,121 +364,128 @@ func (s *UserService) Update(id string, updatedByUserID string, req *dto.UpdateU
 	if req.FullName != nil {
 		user.FullName = req.FullName
 	}
-
 	if req.Phone != nil {
 		user.Phone = req.Phone
 	}
-
+	if req.AvatarURL != nil {
+		user.AvatarURL = req.AvatarURL
+	}
 	if req.IsActive != nil {
 		user.IsActive = *req.IsActive
 	}
 
 	user.UpdatedAt = time.Now()
-	user.UpdatedBy = &updatedByUserID
+	user.UpdatedBy = &updatedBy
 
-	// Update user
-	err = s.userRepo.Update(user)
+	err = s.userRepo.Update(ctx, user)
 	if err != nil {
-		logger.Error("Failed to update user", logger.Err(err))
 		return nil, err
 	}
 
-	// Sync roles if provided
-	if req.RoleIDs != nil {
-		err = s.userRepo.SyncRoles(id, req.RoleIDs, id)
-		if err != nil {
-			logger.Error("Failed to sync roles", logger.Err(err))
-			// Continue despite role sync failure
-		} else {
-			logger.Info("Roles synced for user", logger.String("user_id", id), logger.Int("role_count", len(req.RoleIDs)))
+	// Sync company memberships if provided. Errors are now propagated so a
+	// partial failure is surfaced to the API caller instead of being silently
+	// dropped.
+	if req.CompanyIDs != nil && s.companySyncer != nil {
+		syncReq := &companyDto.SyncUserCompaniesRequest{
+			CompanyIDs: req.CompanyIDs,
+			RoleID:     req.RoleID,
+		}
+		if err := s.companySyncer.SyncUserCompanies(ctx, id, syncReq, updatedBy); err != nil {
+			return nil, err
 		}
 	}
 
-	logger.Info("User updated successfully", logger.String("user_id", id))
-
-	// Fetch user with roles for response
-	usersWithRoles, err := s.userRepo.FindAllWithRoles(1, 0, "", "", "", user.Email, nil)
-	if err == nil && len(usersWithRoles) > 0 {
-		response := s.toUserResponseWithRoles(&usersWithRoles[0].User, usersWithRoles[0].Roles)
-		return &response, nil
+	// Sync branch access if provided. A non-nil pointer means "replace";
+	// a nil pointer means "don't touch branch assignments".
+	if req.BranchIDs != nil && s.branchSyncer != nil {
+		var scopeCompanyID *string
+		if scope != nil {
+			c := scope.CompanyID
+			scopeCompanyID = &c
+		}
+		if err := s.branchSyncer.SyncUserBranches(ctx, id, *req.BranchIDs, updatedBy, scopeCompanyID); err != nil {
+			return nil, err
+		}
 	}
 
 	response := s.toUserResponse(user)
 	return &response, nil
 }
 
-// Delete deletes a user (soft delete)
-func (s *UserService) Delete(id string, deletedBy string) error {
-	logger.Info("Deleting user", logger.String("user_id", id))
+// Delete soft deletes a user. If scope is non-nil, the target user must be
+// visible to the caller's tenant scope.
+func (s *UserService) Delete(ctx context.Context, id, deletedBy string, scope *TenantScope) error {
+	if scope != nil {
+		visible, err := s.userRepo.IsUserVisibleToScope(ctx, id, scope.CompanyID, scope.CallerUserID)
+		if err != nil {
+			return err
+		}
+		if !visible {
+			return ErrUserNotFound
+		}
+	}
 
-	// Check if user exists
-	user, err := s.userRepo.FindByID(id)
+	user, err := s.userRepo.FindByID(ctx, id)
 	if err != nil {
-		logger.Error("Failed to fetch user", logger.Err(err))
 		return err
 	}
 	if user == nil {
-		logger.Warn("User not found", logger.String("user_id", id))
 		return ErrUserNotFound
 	}
 
-	// Soft delete
-	err = s.userRepo.Delete(id, deletedBy)
-	if err != nil {
-		logger.Error("Failed to delete user", logger.Err(err))
-		return err
-	}
-
-	logger.Info("User deleted successfully", logger.String("user_id", id))
-	return nil
+	return s.userRepo.SoftDelete(ctx, id, deletedBy)
 }
 
-// Restore restores a soft-deleted user
-func (s *UserService) Restore(id string) (*dto.UserResponse, error) {
-	logger.Info("Restoring user", logger.String("user_id", id))
+// GetMe returns current user profile. Tenant scope is never applied — a user
+// can always see their own record regardless of company memberships.
+func (s *UserService) GetMe(ctx context.Context, userID string) (*dto.UserResponse, error) {
+	return s.GetByID(ctx, userID, nil)
+}
 
-	// Restore user
-	err := s.userRepo.Restore(id)
+// UpdateMe updates current user profile
+func (s *UserService) UpdateMe(ctx context.Context, userID string, req *dto.UpdateMeRequest) (*dto.UserResponse, error) {
+	user, err := s.userRepo.FindByID(ctx, userID)
 	if err != nil {
-		logger.Error("Failed to restore user", logger.Err(err))
-		return nil, err
-	}
-
-	// Fetch restored user
-	user, err := s.userRepo.FindByID(id)
-	if err != nil {
-		logger.Error("Failed to fetch restored user", logger.Err(err))
 		return nil, err
 	}
 	if user == nil {
-		logger.Warn("User not found after restore", logger.String("user_id", id))
 		return nil, ErrUserNotFound
 	}
 
-	logger.Info("User restored successfully", logger.String("user_id", id))
+	if req.FullName != nil {
+		user.FullName = req.FullName
+	}
+	if req.Phone != nil {
+		user.Phone = req.Phone
+	}
+	if req.AvatarURL != nil {
+		user.AvatarURL = req.AvatarURL
+	}
+
+	user.UpdatedAt = time.Now()
+	user.UpdatedBy = &userID
+
+	err = s.userRepo.Update(ctx, user)
+	if err != nil {
+		return nil, err
+	}
 
 	response := s.toUserResponse(user)
 	return &response, nil
 }
 
 // ChangePassword changes user password
-func (s *UserService) ChangePassword(id string, req *dto.ChangePasswordRequest) error {
-	logger.Info("Changing password", logger.String("user_id", id))
-
-	// Find user
-	user, err := s.userRepo.FindByID(id)
+func (s *UserService) ChangePassword(ctx context.Context, userID string, req *dto.ChangePasswordRequest) error {
+	user, err := s.userRepo.FindByID(ctx, userID)
 	if err != nil {
-		logger.Error("Failed to fetch user", logger.Err(err))
 		return err
 	}
 	if user == nil {
-		logger.Warn("User not found", logger.String("user_id", id))
 		return ErrUserNotFound
 	}
 
-	// Verify old password
-	if !crypto.ComparePassword(user.PasswordHash, req.OldPassword) {
-		logger.Warn("Invalid old password", logger.String("user_id", id))
+	// Verify current password
+	if !crypto.ComparePassword(user.PasswordHash, req.CurrentPassword) {
 		return ErrInvalidPassword
 	}
 
@@ -371,18 +496,10 @@ func (s *UserService) ChangePassword(id string, req *dto.ChangePasswordRequest) 
 		return err
 	}
 
-	// Update password
-	err = s.userRepo.UpdatePassword(id, newPasswordHash, id)
-	if err != nil {
-		logger.Error("Failed to update password", logger.Err(err))
-		return err
-	}
-
-	logger.Info("Password changed successfully", logger.String("user_id", id))
-	return nil
+	return s.userRepo.UpdatePassword(ctx, userID, newPasswordHash, userID)
 }
 
-// Helper: Convert domain.User to dto.UserResponse
+// toUserResponse converts domain.User to dto.UserResponse
 func (s *UserService) toUserResponse(user *domain.User) dto.UserResponse {
 	return dto.UserResponse{
 		ID:              user.ID,
@@ -390,191 +507,49 @@ func (s *UserService) toUserResponse(user *domain.User) dto.UserResponse {
 		Username:        user.Username,
 		FullName:        user.FullName,
 		Phone:           user.Phone,
+		AvatarURL:       user.AvatarURL,
 		IsActive:        user.IsActive,
 		IsEmailVerified: user.IsEmailVerified,
 		LastLoginAt:     user.LastLoginAt,
-		Roles:           []dto.RoleInfo{}, // Empty roles for backward compatibility
 		CreatedAt:       user.CreatedAt,
-		CreatedBy:       user.CreatedBy,
 		UpdatedAt:       user.UpdatedAt,
-		UpdatedBy:       user.UpdatedBy,
-		DeletedAt:       user.DeletedAt,
-		DeletedBy:       user.DeletedBy,
 	}
 }
 
-// AssignRolesToUser assigns roles to a user (adds to existing roles)
-func (s *UserService) AssignRolesToUser(userID string, req *dto.AssignRolesRequest, assignedBy string) (*dto.UserResponse, error) {
-	logger.Info("Assigning roles to user", logger.String("user_id", userID), logger.Int("role_count", len(req.RoleIDs)))
-
-	// Check if user exists
-	user, err := s.userRepo.FindByID(userID)
-	if err != nil {
-		logger.Error("Failed to fetch user", logger.Err(err))
-		return nil, err
-	}
-	if user == nil {
-		logger.Warn("User not found", logger.String("user_id", userID))
-		return nil, ErrUserNotFound
-	}
-
-	// Validate role IDs
-	if err := s.validateRoleIDs(req.RoleIDs); err != nil {
-		logger.Error("Invalid role IDs", logger.Err(err))
-		return nil, err
-	}
-
-	// Assign roles
-	err = s.userRepo.AssignRoles(userID, req.RoleIDs, assignedBy)
-	if err != nil {
-		logger.Error("Failed to assign roles", logger.Err(err))
-		return nil, err
-	}
-
-	logger.Info("Roles assigned successfully", logger.String("user_id", userID))
-
-	// Fetch user with updated roles
-	usersWithRoles, err := s.userRepo.FindAllWithRoles(1, 0, "", "", "", user.Email, nil)
-	if err == nil && len(usersWithRoles) > 0 {
-		response := s.toUserResponseWithRoles(&usersWithRoles[0].User, usersWithRoles[0].Roles)
-		return &response, nil
-	}
-
-	response := s.toUserResponse(user)
-	return &response, nil
-}
-
-// RemoveRoleFromUser removes a role from a user
-func (s *UserService) RemoveRoleFromUser(userID, roleID, deletedBy string) (*dto.UserResponse, error) {
-	logger.Info("Removing role from user", logger.String("user_id", userID), logger.String("role_id", roleID))
-
-	// Check if user exists
-	user, err := s.userRepo.FindByID(userID)
-	if err != nil {
-		logger.Error("Failed to fetch user", logger.Err(err))
-		return nil, err
-	}
-	if user == nil {
-		logger.Warn("User not found", logger.String("user_id", userID))
-		return nil, ErrUserNotFound
-	}
-
-	// Validate role exists
-	role, err := s.roleRepo.FindByID(roleID)
-	if err != nil {
-		logger.Error("Failed to fetch role", logger.Err(err))
-		return nil, err
-	}
-	if role == nil {
-		logger.Warn("Role not found", logger.String("role_id", roleID))
-		return nil, ErrRoleNotFound
-	}
-
-	// Remove role
-	err = s.userRepo.RemoveRole(userID, roleID, deletedBy)
-	if err != nil {
-		logger.Error("Failed to remove role", logger.Err(err))
-		return nil, err
-	}
-
-	logger.Info("Role removed successfully", logger.String("user_id", userID), logger.String("role_id", roleID))
-
-	// Fetch user with updated roles
-	usersWithRoles, err := s.userRepo.FindAllWithRoles(1, 0, "", "", "", user.Email, nil)
-	if err == nil && len(usersWithRoles) > 0 {
-		response := s.toUserResponseWithRoles(&usersWithRoles[0].User, usersWithRoles[0].Roles)
-		return &response, nil
-	}
-
-	response := s.toUserResponse(user)
-	return &response, nil
-}
-
-// SyncUserRoles syncs/replaces all user roles
-func (s *UserService) SyncUserRoles(userID string, req *dto.SyncRolesRequest, updatedBy string) (*dto.UserResponse, error) {
-	logger.Info("Syncing roles for user", logger.String("user_id", userID), logger.Int("role_count", len(req.RoleIDs)))
-
-	// Check if user exists
-	user, err := s.userRepo.FindByID(userID)
-	if err != nil {
-		logger.Error("Failed to fetch user", logger.Err(err))
-		return nil, err
-	}
-	if user == nil {
-		logger.Warn("User not found", logger.String("user_id", userID))
-		return nil, ErrUserNotFound
-	}
-
-	// Validate role IDs if not empty
-	if len(req.RoleIDs) > 0 {
-		if err := s.validateRoleIDs(req.RoleIDs); err != nil {
-			logger.Error("Invalid role IDs", logger.Err(err))
-			return nil, err
+// enrichWithCompanyData adds company memberships, branch access, and role
+// name to user response. Failures in individual lookups are swallowed — the
+// base user data is still returned.
+func (s *UserService) enrichWithCompanyData(ctx context.Context, resp *dto.UserResponse, userID string) {
+	if s.companySyncer != nil {
+		if details, err := s.companySyncer.GetUserCompaniesWithDetails(ctx, userID); err == nil {
+			companies := make([]dto.UserCompanyItem, len(details))
+			for i, d := range details {
+				companies[i] = dto.UserCompanyItem{
+					CompanyID:   d.CompanyID,
+					CompanyName: d.CompanyName,
+					IsOwner:     d.OwnerID == userID,
+				}
+				// Use the first role name found as the user's role
+				if resp.RoleName == nil && d.RoleName != nil {
+					resp.RoleName = d.RoleName
+				}
+			}
+			resp.Companies = companies
 		}
 	}
 
-	// Sync roles
-	err = s.userRepo.SyncRoles(userID, req.RoleIDs, updatedBy)
-	if err != nil {
-		logger.Error("Failed to sync roles", logger.Err(err))
-		return nil, err
-	}
-
-	logger.Info("Roles synced successfully", logger.String("user_id", userID))
-
-	// Fetch user with updated roles
-	usersWithRoles, err := s.userRepo.FindAllWithRoles(1, 0, "", "", "", user.Email, nil)
-	if err == nil && len(usersWithRoles) > 0 {
-		response := s.toUserResponseWithRoles(&usersWithRoles[0].User, usersWithRoles[0].Roles)
-		return &response, nil
-	}
-
-	response := s.toUserResponse(user)
-	return &response, nil
-}
-
-// validateRoleIDs validates that all role IDs exist and are active
-func (s *UserService) validateRoleIDs(roleIDs []string) error {
-	for _, roleID := range roleIDs {
-		role, err := s.roleRepo.FindByID(roleID)
-		if err != nil {
-			return err
+	if s.branchSyncer != nil {
+		if details, err := s.branchSyncer.GetUserBranchesWithDetails(ctx, userID); err == nil {
+			branches := make([]dto.UserBranchItem, len(details))
+			for i, d := range details {
+				branches[i] = dto.UserBranchItem{
+					BranchID:   d.BranchID,
+					BranchCode: d.BranchCode,
+					BranchName: d.BranchName,
+					CompanyID:  d.CompanyID,
+				}
+			}
+			resp.Branches = branches
 		}
-		if role == nil {
-			logger.Warn("Invalid role ID", logger.String("role_id", roleID))
-			return ErrInvalidRoleID
-		}
-	}
-	return nil
-}
-
-// Helper: Convert domain.User with roles to dto.UserResponse
-func (s *UserService) toUserResponseWithRoles(user *domain.User, roles []repository.RoleInfo) dto.UserResponse {
-	roleInfos := make([]dto.RoleInfo, len(roles))
-	for i, role := range roles {
-		roleInfos[i] = dto.RoleInfo{
-			ID:          role.ID,
-			Name:        role.Name,
-			Description: role.Description,
-			IsSystem:    role.IsSystem,
-		}
-	}
-
-	return dto.UserResponse{
-		ID:              user.ID,
-		Email:           user.Email,
-		Username:        user.Username,
-		FullName:        user.FullName,
-		Phone:           user.Phone,
-		IsActive:        user.IsActive,
-		IsEmailVerified: user.IsEmailVerified,
-		LastLoginAt:     user.LastLoginAt,
-		Roles:           roleInfos,
-		CreatedAt:       user.CreatedAt,
-		CreatedBy:       user.CreatedBy,
-		UpdatedAt:       user.UpdatedAt,
-		UpdatedBy:       user.UpdatedBy,
-		DeletedAt:       user.DeletedAt,
-		DeletedBy:       user.DeletedBy,
 	}
 }

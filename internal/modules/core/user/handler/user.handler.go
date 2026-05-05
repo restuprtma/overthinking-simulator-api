@@ -4,16 +4,18 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/gin-gonic/gin"
+
+	branchService "venturo-skeleton-go/internal/modules/core/branch/service"
 	"venturo-skeleton-go/internal/middleware"
 	"venturo-skeleton-go/internal/modules/core/user/dto"
 	"venturo-skeleton-go/internal/modules/core/user/service"
 	"venturo-skeleton-go/internal/shared/response"
-
-	"github.com/gin-gonic/gin"
 )
 
 type UserHandler struct {
-	userService *service.UserService
+	userService     *service.UserService
+	companyVerifier middleware.CompanyContextVerifier
 }
 
 func NewUserHandler(userService *service.UserService) *UserHandler {
@@ -22,112 +24,149 @@ func NewUserHandler(userService *service.UserService) *UserHandler {
 	}
 }
 
-// GetAll gets all users with pagination
-// @Summary Get all users
-// @Description Get list of users with pagination and filters
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Param page query int false "Page number" default(1)
-// @Param page_size query int false "Page size" default(10)
-// @Param search query string false "Search across email, username, and full name (OR condition)"
-// @Param full_name query string false "Filter by full name (partial match)"
-// @Param username query string false "Filter by username (partial match)"
-// @Param email query string false "Filter by email (partial match)"
-// @Param is_active query bool false "Filter by active status"
-// @Success 200 {object} response.Response{data=dto.UserListResponse} "Users retrieved successfully"
-// @Failure 400 {object} response.Response "Invalid query parameters"
-// @Failure 500 {object} response.Response "Internal server error"
-// @Security BearerAuth
-// @Router /users [get]
+// SetCompanyVerifier wires the live company-membership verifier so that
+// resolveTenantScope can reject stale JWTs (caller no longer member of the
+// company in their JWT, or the company was soft-deleted/deactivated).
+func (h *UserHandler) SetCompanyVerifier(v middleware.CompanyContextVerifier) {
+	h.companyVerifier = v
+}
+
+// errStaleCompanyContext signals that the caller's JWT references a company
+// that is no longer valid (deleted/deactivated) or that the caller has lost
+// membership of. Mapped to 403 in handlers.
+var errStaleCompanyContext = errors.New("stale company context")
+
+// writeScopeError renders a 403 with an appropriate message based on which
+// failure mode resolveTenantScope returned.
+func writeScopeError(c *gin.Context, err error) {
+	if errors.Is(err, errStaleCompanyContext) {
+		response.Error(c, http.StatusForbidden, "Company context is no longer valid for this user", "stale_company_context")
+		return
+	}
+	response.Error(c, http.StatusForbidden, "Company context required", "")
+}
+
+// resolveTenantScope returns the tenant scope that must be applied to the
+// current caller, or nil for super admins (who see everything). Returns an
+// error when a non-super-admin caller has no company context — the caller
+// must have switched into a company before hitting these endpoints.
+//
+// When a company verifier is wired (production), it also re-checks against
+// the database that the company still exists, is active, and that the caller
+// is still a member of it.
+func (h *UserHandler) resolveTenantScope(c *gin.Context) (*service.TenantScope, error) {
+	claims, _ := middleware.GetUserFromContext(c)
+	if claims != nil && claims.HasRole("super_admin") {
+		return nil, nil
+	}
+	companyID := middleware.GetCompanyID(c)
+	if companyID == "" {
+		return nil, errors.New("company context required")
+	}
+	userID := middleware.MustGetUserID(c)
+	if h.companyVerifier != nil {
+		if err := h.companyVerifier.VerifyMembership(c.Request.Context(), userID, companyID); err != nil {
+			return nil, errStaleCompanyContext
+		}
+	}
+	return &service.TenantScope{
+		CompanyID:    companyID,
+		CallerUserID: userID,
+	}, nil
+}
+
 func (h *UserHandler) GetAll(c *gin.Context) {
 	var params dto.UserQueryParams
-
-	// Bind query parameters
 	if err := c.ShouldBindQuery(&params); err != nil {
 		response.Error(c, http.StatusBadRequest, "Invalid query parameters", err.Error())
 		return
 	}
 
-	// Set defaults
-	if params.Page == 0 {
-		params.Page = 1
-	}
-	if params.PageSize == 0 {
-		params.PageSize = 10
-	}
-
-	// Call service
-	result, err := h.userService.GetAll(&params)
+	scope, err := h.resolveTenantScope(c)
 	if err != nil {
-		response.Error(c, http.StatusInternalServerError, "Failed to fetch users", err.Error())
+		writeScopeError(c, err)
 		return
 	}
 
-	response.SuccessWithPagination(c, http.StatusOK, "Users retrieved successfully", result.Users, result.Page, result.PageSize, result.Total)
+	ctx := c.Request.Context()
+	result, err := h.userService.GetAll(ctx, &params, scope)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to get users", err.Error())
+		return
+	}
+
+	response.SuccessWithPagination(c, http.StatusOK, "Users retrieved successfully",
+		result.Users, result.Page, result.Limit, result.Total)
 }
 
-// GetByID gets a user by ID
-// @Summary Get user by ID
-// @Description Get user details by ID
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Param id path string true "User ID"
-// @Success 200 {object} response.Response{data=dto.UserResponse} "User retrieved successfully"
-// @Failure 404 {object} response.Response "User not found"
-// @Failure 500 {object} response.Response "Internal server error"
-// @Security BearerAuth
-// @Router /users/{id} [get]
 func (h *UserHandler) GetByID(c *gin.Context) {
 	id := c.Param("id")
+	if id == "" {
+		response.Error(c, http.StatusBadRequest, "User ID is required", "")
+		return
+	}
 
-	result, err := h.userService.GetByID(id)
+	scope, err := h.resolveTenantScope(c)
+	if err != nil {
+		writeScopeError(c, err)
+		return
+	}
+
+	ctx := c.Request.Context()
+	result, err := h.userService.GetByID(ctx, id, scope)
 	if err != nil {
 		if errors.Is(err, service.ErrUserNotFound) {
 			response.Error(c, http.StatusNotFound, "User not found", "")
 			return
 		}
-		response.Error(c, http.StatusInternalServerError, "Failed to fetch user", err.Error())
+		response.Error(c, http.StatusInternalServerError, "Failed to get user", err.Error())
 		return
 	}
 
 	response.Success(c, http.StatusOK, "User retrieved successfully", result)
 }
 
-// Create creates a new user
-// @Summary Create new user
-// @Description Create a new user account
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Param request body dto.CreateUserRequest true "User details"
-// @Success 201 {object} response.Response{data=dto.UserResponse} "User created successfully"
-// @Failure 400 {object} response.Response "Invalid request payload"
-// @Failure 409 {object} response.Response "Email or username already exists"
-// @Failure 500 {object} response.Response "Internal server error"
-// @Security BearerAuth
-// @Router /users [post]
 func (h *UserHandler) Create(c *gin.Context) {
 	var req dto.CreateUserRequest
-
-	// Bind and validate request
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, http.StatusBadRequest, "Invalid request payload", err.Error())
 		return
 	}
 
-	// Get current user ID from JWT context
-	userID := middleware.MustGetUserID(c)
+	// Enforce tenant scope: non-super-admin users can only assign the new
+	// user to their current company. Ignore any company_ids sent in the body
+	// to prevent adding users to tenants the caller does not own.
+	scope, err := h.resolveTenantScope(c)
+	if err != nil {
+		writeScopeError(c, err)
+		return
+	}
+	if scope != nil {
+		req.CompanyIDs = []string{scope.CompanyID}
+	}
 
-	// Call service
-	result, err := h.userService.Create(userID, &req)
+	createdBy := middleware.MustGetUserID(c)
+	ctx := c.Request.Context()
+
+	result, err := h.userService.Create(ctx, &req, createdBy, scope)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrEmailAlreadyExists):
 			response.Error(c, http.StatusConflict, "Email already exists", "")
 		case errors.Is(err, service.ErrUsernameAlreadyExists):
 			response.Error(c, http.StatusConflict, "Username already exists", "")
+		case errors.Is(err, service.ErrCompanyNotFound):
+			// One of the submitted company_ids does not exist (or was
+			// soft-deleted). The transaction has been rolled back.
+			response.Error(c, http.StatusBadRequest, "Invalid company_ids", err.Error())
+		case errors.Is(err, service.ErrCompaniesRequired):
+			response.Error(c, http.StatusBadRequest, "company_ids is required", "")
+		case errors.Is(err, service.ErrRoleNotAllowed):
+			response.Error(c, http.StatusForbidden, "Role not allowed for caller", "")
+		case errors.Is(err, branchService.ErrInvalidBranchIDs):
+			response.Error(c, http.StatusBadRequest, "Invalid branch_ids", err.Error())
+		case errors.Is(err, branchService.ErrBranchNotInScope):
+			response.Error(c, http.StatusForbidden, "Branch not in caller's scope", err.Error())
 		default:
 			response.Error(c, http.StatusInternalServerError, "Failed to create user", err.Error())
 		}
@@ -137,37 +176,35 @@ func (h *UserHandler) Create(c *gin.Context) {
 	response.Success(c, http.StatusCreated, "User created successfully", result)
 }
 
-// Update updates a user
-// @Summary Update user
-// @Description Update user details
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Param id path string true "User ID"
-// @Param request body dto.UpdateUserRequest true "User details to update"
-// @Success 200 {object} response.Response{data=dto.UserResponse} "User updated successfully"
-// @Failure 400 {object} response.Response "Invalid request payload"
-// @Failure 404 {object} response.Response "User not found"
-// @Failure 409 {object} response.Response "Email or username already exists"
-// @Failure 500 {object} response.Response "Internal server error"
-// @Security BearerAuth
-// @Router /users/{id} [put]
 func (h *UserHandler) Update(c *gin.Context) {
 	id := c.Param("id")
+	if id == "" {
+		response.Error(c, http.StatusBadRequest, "User ID is required", "")
+		return
+	}
 
 	var req dto.UpdateUserRequest
-
-	// Bind and validate request
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, http.StatusBadRequest, "Invalid request payload", err.Error())
 		return
 	}
 
-	// Get current user ID from JWT context
-	userID := middleware.MustGetUserID(c)
+	// Non-super-admin cannot modify a user's company memberships through this
+	// endpoint. SyncUserCompanies replaces the full set, so accepting it here
+	// would let a company admin evict a user from other tenants they don't own.
+	scope, err := h.resolveTenantScope(c)
+	if err != nil {
+		writeScopeError(c, err)
+		return
+	}
+	if scope != nil {
+		req.CompanyIDs = nil
+	}
 
-	// Call service
-	result, err := h.userService.Update(id, userID, &req)
+	updatedBy := middleware.MustGetUserID(c)
+	ctx := c.Request.Context()
+
+	result, err := h.userService.Update(ctx, id, &req, updatedBy, scope)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrUserNotFound):
@@ -176,6 +213,14 @@ func (h *UserHandler) Update(c *gin.Context) {
 			response.Error(c, http.StatusConflict, "Email already exists", "")
 		case errors.Is(err, service.ErrUsernameAlreadyExists):
 			response.Error(c, http.StatusConflict, "Username already exists", "")
+		case errors.Is(err, service.ErrCompanyNotFound):
+			response.Error(c, http.StatusBadRequest, "Invalid company_ids", err.Error())
+		case errors.Is(err, service.ErrRoleNotAllowed):
+			response.Error(c, http.StatusForbidden, "Role not allowed for caller", "")
+		case errors.Is(err, branchService.ErrInvalidBranchIDs):
+			response.Error(c, http.StatusBadRequest, "Invalid branch_ids", err.Error())
+		case errors.Is(err, branchService.ErrBranchNotInScope):
+			response.Error(c, http.StatusForbidden, "Branch not in caller's scope", err.Error())
 		default:
 			response.Error(c, http.StatusInternalServerError, "Failed to update user", err.Error())
 		}
@@ -185,29 +230,23 @@ func (h *UserHandler) Update(c *gin.Context) {
 	response.Success(c, http.StatusOK, "User updated successfully", result)
 }
 
-// Delete deletes a user
-// @Summary Delete user
-// @Description Soft delete a user
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Param id path string true "User ID"
-// @Success 200 {object} response.Response "User deleted successfully"
-// @Failure 404 {object} response.Response "User not found"
-// @Failure 500 {object} response.Response "Internal server error"
-// @Security BearerAuth
-// @Router /users/{id} [delete]
 func (h *UserHandler) Delete(c *gin.Context) {
 	id := c.Param("id")
-
-	// Get current user from JWT context
-	claims, err := middleware.GetUserFromContext(c)
-	if err != nil {
-		response.Error(c, http.StatusUnauthorized, "Unauthorized", "User not authenticated")
+	if id == "" {
+		response.Error(c, http.StatusBadRequest, "User ID is required", "")
 		return
 	}
 
-	err = h.userService.Delete(id, claims.UserID)
+	scope, err := h.resolveTenantScope(c)
+	if err != nil {
+		writeScopeError(c, err)
+		return
+	}
+
+	deletedBy := middleware.MustGetUserID(c)
+	ctx := c.Request.Context()
+
+	err = h.userService.Delete(ctx, id, deletedBy, scope)
 	if err != nil {
 		if errors.Is(err, service.ErrUserNotFound) {
 			response.Error(c, http.StatusNotFound, "User not found", "")
@@ -220,83 +259,63 @@ func (h *UserHandler) Delete(c *gin.Context) {
 	response.Success(c, http.StatusOK, "User deleted successfully", nil)
 }
 
-// Restore restores a soft-deleted user
-// @Summary Restore deleted user
-// @Description Restore a soft-deleted user by ID
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Param id path string true "User ID"
-// @Success 200 {object} response.Response{data=dto.UserResponse} "User restored successfully"
-// @Failure 404 {object} response.Response "User not found"
-// @Failure 500 {object} response.Response "Internal server error"
-// @Security BearerAuth
-// @Router /users/{id}/restore [post]
-func (h *UserHandler) Restore(c *gin.Context) {
-	id := c.Param("id")
+func (h *UserHandler) GetMe(c *gin.Context) {
+	userID := middleware.MustGetUserID(c)
+	ctx := c.Request.Context()
 
-	user, err := h.userService.Restore(id)
+	result, err := h.userService.GetMe(ctx, userID)
 	if err != nil {
 		if errors.Is(err, service.ErrUserNotFound) {
-			response.Error(c, http.StatusNotFound, "User not found or already active", "")
+			response.Error(c, http.StatusNotFound, "User not found", "")
 			return
 		}
-		response.Error(c, http.StatusInternalServerError, "Failed to restore user", err.Error())
+		response.Error(c, http.StatusInternalServerError, "Failed to get user", err.Error())
 		return
 	}
 
-	response.Success(c, http.StatusOK, "User restored successfully", user)
+	response.Success(c, http.StatusOK, "User retrieved successfully", result)
 }
 
-// ChangePassword changes user password
-// @Summary Change password
-// @Description Change user password (users can only change their own password unless they have users:update permission)
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Param id path string true "User ID"
-// @Param request body dto.ChangePasswordRequest true "Password change request"
-// @Success 200 {object} response.Response "Password changed successfully"
-// @Failure 400 {object} response.Response "Invalid request payload"
-// @Failure 401 {object} response.Response "Invalid old password"
-// @Failure 403 {object} response.Response "Forbidden - Cannot change other user's password"
-// @Failure 404 {object} response.Response "User not found"
-// @Failure 500 {object} response.Response "Internal server error"
-// @Security BearerAuth
-// @Router /users/{id}/change-password [post]
-func (h *UserHandler) ChangePassword(c *gin.Context) {
-	id := c.Param("id")
-
-	// Get current user from JWT context
-	claims, err := middleware.GetUserFromContext(c)
-	if err != nil {
-		response.Error(c, http.StatusUnauthorized, "Unauthorized", "User not authenticated")
-		return
-	}
-
-	// Check authorization: user can only change their own password
-	// Unless they have users:update permission (admin/super_admin)
-	if claims.UserID != id && !claims.HasPermission("users:update") {
-		response.Error(c, http.StatusForbidden, "Forbidden", "You can only change your own password")
-		return
-	}
-
-	var req dto.ChangePasswordRequest
-
-	// Bind and validate request
+func (h *UserHandler) UpdateMe(c *gin.Context) {
+	var req dto.UpdateMeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, http.StatusBadRequest, "Invalid request payload", err.Error())
 		return
 	}
 
-	// Call service
-	err = h.userService.ChangePassword(id, &req)
+	userID := middleware.MustGetUserID(c)
+	ctx := c.Request.Context()
+
+	result, err := h.userService.UpdateMe(ctx, userID, &req)
+	if err != nil {
+		if errors.Is(err, service.ErrUserNotFound) {
+			response.Error(c, http.StatusNotFound, "User not found", "")
+			return
+		}
+		response.Error(c, http.StatusInternalServerError, "Failed to update user", err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, "User updated successfully", result)
+}
+
+func (h *UserHandler) ChangePassword(c *gin.Context) {
+	var req dto.ChangePasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid request payload", err.Error())
+		return
+	}
+
+	userID := middleware.MustGetUserID(c)
+	ctx := c.Request.Context()
+
+	err := h.userService.ChangePassword(ctx, userID, &req)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrUserNotFound):
 			response.Error(c, http.StatusNotFound, "User not found", "")
 		case errors.Is(err, service.ErrInvalidPassword):
-			response.Error(c, http.StatusUnauthorized, "Invalid old password", "")
+			response.Error(c, http.StatusBadRequest, "Current password is incorrect", "")
 		default:
 			response.Error(c, http.StatusInternalServerError, "Failed to change password", err.Error())
 		}
@@ -304,143 +323,4 @@ func (h *UserHandler) ChangePassword(c *gin.Context) {
 	}
 
 	response.Success(c, http.StatusOK, "Password changed successfully", nil)
-}
-
-// AssignRoles assigns roles to a user
-// @Summary Assign roles to user
-// @Description Assign one or more roles to a user (adds to existing roles)
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Param id path string true "User ID"
-// @Param request body dto.AssignRolesRequest true "Role IDs to assign"
-// @Success 200 {object} response.Response{data=dto.UserResponse} "Roles assigned successfully"
-// @Failure 400 {object} response.Response "Invalid request payload"
-// @Failure 404 {object} response.Response "User not found or invalid role ID"
-// @Failure 500 {object} response.Response "Internal server error"
-// @Security BearerAuth
-// @Router /users/{id}/roles [post]
-func (h *UserHandler) AssignRoles(c *gin.Context) {
-	userID := c.Param("id")
-
-	// Get current user from JWT context
-	claims, err := middleware.GetUserFromContext(c)
-	if err != nil {
-		response.Error(c, http.StatusUnauthorized, "Unauthorized", "User not authenticated")
-		return
-	}
-
-	var req dto.AssignRolesRequest
-
-	// Bind and validate request
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, "Invalid request payload", err.Error())
-		return
-	}
-
-	// Call service
-	result, err := h.userService.AssignRolesToUser(userID, &req, claims.UserID)
-	if err != nil {
-		switch {
-		case errors.Is(err, service.ErrUserNotFound):
-			response.Error(c, http.StatusNotFound, "User not found", "")
-		case errors.Is(err, service.ErrInvalidRoleID):
-			response.Error(c, http.StatusBadRequest, "Invalid role ID", "")
-		default:
-			response.Error(c, http.StatusInternalServerError, "Failed to assign roles", err.Error())
-		}
-		return
-	}
-
-	response.Success(c, http.StatusOK, "Roles assigned successfully", result)
-}
-
-// RemoveRole removes a role from a user
-// @Summary Remove role from user
-// @Description Remove a specific role from a user
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Param id path string true "User ID"
-// @Param roleId path string true "Role ID"
-// @Success 200 {object} response.Response{data=dto.UserResponse} "Role removed successfully"
-// @Failure 404 {object} response.Response "User not found or role not found"
-// @Failure 500 {object} response.Response "Internal server error"
-// @Security BearerAuth
-// @Router /users/{id}/roles/{roleId} [delete]
-func (h *UserHandler) RemoveRole(c *gin.Context) {
-	userID := c.Param("id")
-	roleID := c.Param("roleId")
-
-	// Get current user from JWT context
-	claims, err := middleware.GetUserFromContext(c)
-	if err != nil {
-		response.Error(c, http.StatusUnauthorized, "Unauthorized", "User not authenticated")
-		return
-	}
-
-	// Call service
-	result, err := h.userService.RemoveRoleFromUser(userID, roleID, claims.UserID)
-	if err != nil {
-		switch {
-		case errors.Is(err, service.ErrUserNotFound):
-			response.Error(c, http.StatusNotFound, "User not found", "")
-		case errors.Is(err, service.ErrRoleNotFound):
-			response.Error(c, http.StatusNotFound, "Role not found", "")
-		default:
-			response.Error(c, http.StatusInternalServerError, "Failed to remove role", err.Error())
-		}
-		return
-	}
-
-	response.Success(c, http.StatusOK, "Role removed successfully", result)
-}
-
-// SyncRoles syncs/replaces all user roles
-// @Summary Sync user roles
-// @Description Replace all user roles with a new set (removes old roles, assigns new ones)
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Param id path string true "User ID"
-// @Param request body dto.SyncRolesRequest true "Role IDs to sync"
-// @Success 200 {object} response.Response{data=dto.UserResponse} "Roles synced successfully"
-// @Failure 400 {object} response.Response "Invalid request payload"
-// @Failure 404 {object} response.Response "User not found or invalid role ID"
-// @Failure 500 {object} response.Response "Internal server error"
-// @Security BearerAuth
-// @Router /users/{id}/roles [put]
-func (h *UserHandler) SyncRoles(c *gin.Context) {
-	userID := c.Param("id")
-
-	// Get current user from JWT context
-	claims, err := middleware.GetUserFromContext(c)
-	if err != nil {
-		response.Error(c, http.StatusUnauthorized, "Unauthorized", "User not authenticated")
-		return
-	}
-
-	var req dto.SyncRolesRequest
-
-	// Bind and validate request
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, "Invalid request payload", err.Error())
-		return
-	}
-
-	// Call service
-	result, err := h.userService.SyncUserRoles(userID, &req, claims.UserID)
-	if err != nil {
-		switch {
-		case errors.Is(err, service.ErrUserNotFound):
-			response.Error(c, http.StatusNotFound, "User not found", "")
-		case errors.Is(err, service.ErrInvalidRoleID):
-			response.Error(c, http.StatusBadRequest, "Invalid role ID", "")
-		default:
-			response.Error(c, http.StatusInternalServerError, "Failed to sync roles", err.Error())
-		}
-		return
-	}
-
-	response.Success(c, http.StatusOK, "Roles synced successfully", result)
 }

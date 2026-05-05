@@ -1,13 +1,12 @@
-# Venturo Skeleton Go
+# Wizhub Backend
 
-Backend API Skeleton menggunakan Golang + Gin + PostgreSQL.
+Backend API untuk Wizhub menggunakan Golang + Gin + PostgreSQL.
 
 ## Prerequisites
 
 - Go 1.25+
 - PostgreSQL 14+
 - golang-migrate CLI (untuk menjalankan migration manual)
-- swag CLI (untuk generate Swagger documentation)
 - air CLI (untuk hot reload development)
 
 ## Installation
@@ -26,17 +25,7 @@ sudo mv migrate /usr/local/bin/
 choco install golang-migrate
 ```
 
-### 2. Install Swag CLI
-
-```bash
-# Install swag untuk generate Swagger documentation
-go install github.com/swaggo/swag/cmd/swag@latest
-
-# Verify installation
-swag --version
-```
-
-### 3. Install Air CLI
+### 2. Install Air CLI
 
 ```bash
 # Install air untuk hot reload development
@@ -46,17 +35,17 @@ go install github.com/air-verse/air@latest
 air -v
 ```
 
-### 4. Setup Database
+### 3. Setup Database
 
 ```bash
 # Buat database PostgreSQL
-createdb venturo_skeleton
+createdb wizhub
 
 # Copy .env.example ke .env dan sesuaikan konfigurasi
 cp .env.example .env
 ```
 
-### 5. Install Dependencies
+### 4. Install Dependencies
 
 ```bash
 go mod download
@@ -82,9 +71,6 @@ make migrate-version
 ```bash
 # Buat migration baru untuk module tertentu
 make migrate-create NAME=create_users_table MODULE=core
-make migrate-create NAME=create_invoices_table MODULE=finance
-make migrate-create NAME=create_employees_table MODULE=hr
-make migrate-create NAME=create_products_table MODULE=inventory
 ```
 
 ### Force Migration Version (jika ada error)
@@ -102,10 +88,7 @@ make migrate-force V=1 MODULE=core
 │   ├── config/                 # Configuration
 │   ├── database/              # Database connection & migrations
 │   ├── shared/                # Shared utilities
-│   ├── core/                  # Core module (user, auth, role)
-│   ├── finance/               # Finance module
-│   ├── hr/                    # HR module
-│   ├── inventory/             # Inventory module
+│   ├── modules/core/          # Core modules (user, auth, role, company, branch, ...)
 │   └── router/                # Route handlers
 └── pkg/                       # Public packages
 ```
@@ -137,7 +120,7 @@ go run cmd/api/main.go
 make build
 
 # Run binary
-./bin/venturo-skeleton-api
+./bin/wizhub-api
 ```
 
 ## Development
@@ -162,55 +145,24 @@ make build
    make dev
    ```
 
-4. Open Swagger UI
-   ```
-   http://localhost:8080/swagger/index.html
-   ```
-
 ### Make Commands
 
 ```bash
 make help          # Show all available commands
 make dev           # Development with hot reload
 make build         # Build production binary
-make swagger-gen   # Generate Swagger docs
 make db-setup      # Setup database
 ```
 
-📖 **Full guide**: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
-
 ## API Documentation
 
-### Swagger UI
-
-Akses interactive API documentation di:
-
-```
-http://localhost:8080/swagger/index.html
-```
-
-### Generate Swagger Docs
-
-Setiap ada perubahan API, regenerate swagger docs:
-
-```bash
-~/go/bin/swag init -g cmd/api/main.go -o docs/swagger --parseDependency --parseInternal
-```
+API contracts didokumentasikan secara manual di [docs/api-contract/](docs/api-contract/).
 
 ### Available Endpoints
 
 #### Authentication
 
 - `POST /api/v1/auth/signin` - User signin
-
-### Default Credentials
-
-Setelah menjalankan seeder, gunakan credential berikut untuk login:
-
-```
-Email: tantowi@gmail.com
-Password: Bismillah1407*
-```
 
 ### Testing API
 
@@ -226,8 +178,8 @@ curl http://localhost:8080/health
 curl -X POST http://localhost:8080/api/v1/auth/signin \
   -H "Content-Type: application/json" \
   -d '{
-    "login": "tantowi@gmail.com",
-    "password": "Bismillah1407*"
+    "login": "admin@wizhub.com",
+    "password": "admin123"
   }'
 ```
 
@@ -238,46 +190,6 @@ Project ini menggunakan **Uber's Zap** dengan **Ginzap** middleware untuk loggin
 - **Development**: Colored console output, Debug level
 - **Production**: JSON output, Info level
 
-Dokumentasi lengkap: [docs/LOGGING_SWAGGER.md](docs/LOGGING_SWAGGER.md)
-
-## Rename Module Name
-
-Untuk mengubah nama module dari `venturo-skeleton-go` ke nama project Anda:
-
-### Option 1: Using go-replace (Recommended)
-
-```bash
-# Install go-replace
-go install github.com/webdevops/go-replace@latest
-
-# Replace module name in all .go files and go.mod
-find . -type f -name "*.go" -exec sed -i '' 's|venturo-skeleton-go|your-new-module-name|g' {} +
-sed -i '' 's|venturo-skeleton-go|your-new-module-name|g' go.mod
-
-# Or on Linux (without the '')
-find . -type f -name "*.go" -exec sed -i 's|venturo-skeleton-go|your-new-module-name|g' {} +
-sed -i 's|venturo-skeleton-go|your-new-module-name|g' go.mod
-
-# Tidy up dependencies
-go mod tidy
-
-# Test build
-go build ./...
-```
-
-### Option 2: Manual (VS Code)
-
-1. Edit `go.mod` - ubah `module venturo-skeleton-go` ke nama baru
-2. Find & Replace (Cmd/Ctrl + Shift + H):
-   - Find: `venturo-skeleton-go`
-   - Replace: `your-new-module-name`
-   - Files to include: `*.go`
-3. Run: `go mod tidy`
-4. Test: `go build ./...`
-
 ## Documentation
 
-- [Development Guide](docs/DEVELOPMENT.md) - Hot reload, Make commands, debugging
-- [Architecture Guide](docs/ARCHITECTURE.md) - Project structure & patterns
-- [Logging & Swagger](docs/LOGGING_SWAGGER.md) - Logging & API documentation
-- [API Signin](docs/API_SIGNIN.md) - Signin endpoint documentation
+- [API Contract](docs/api-contract/) - API endpoint documentation

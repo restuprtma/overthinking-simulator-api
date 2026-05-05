@@ -4,17 +4,52 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// Claims represents custom JWT claims for Lakukan
+// RoleSuperAdmin is the constant for the super admin role code
+const RoleSuperAdmin = "super_admin"
+
+// Claims represents custom JWT claims for Wizhub.
+//
+// Permissions are intentionally NOT embedded here — they live in Redis
+// (see internal/shared/authz) and are looked up on the request path.
+// That keeps the JWT small enough to survive every proxy / ingress in
+// the chain and lets admin-side permission changes take effect without
+// waiting for the token to expire.
+//
+// Roles are kept inline because the set is small (1–2 entries per user)
+// and middleware.RequireRole checks them synchronously with no cache.
 type Claims struct {
-	UserID      string   `json:"user_id"`
-	CompanyID   string   `json:"company_id"`   // Primary company ID for multi-tenancy
-	CompanyName string   `json:"company_name"` // Company name for display purposes
-	Email       string   `json:"email"`
-	Username    string   `json:"username"`
-	FullName    string   `json:"full_name"`
-	Roles       []string `json:"roles"`
-	Permissions []string `json:"permissions"`
+	UserID       string   `json:"user_id"`
+	CompanyID    string   `json:"company_id"`   // Primary company ID for multi-tenancy
+	CompanyName  string   `json:"company_name"` // Company name for display purposes
+	ClientID     string   `json:"client_id"`    // Registration-level tenant ID (parent of company)
+	ClientSlug   string   `json:"client_slug"`  // DNS-safe client identifier — used by FE to call public translation bootstrap
+	Email        string   `json:"email"`
+	Username     string   `json:"username"`
+	FullName     string   `json:"full_name"`
+	IsSuperAdmin bool     `json:"is_super_admin"` // Bypasses all permission checks
+	Roles        []string `json:"roles"`
+
+	// ScopedPermissions is a runtime-only permission set used when a
+	// request is authenticated via API key. API keys can carry a
+	// narrower scope than the owning user's full permissions, so they
+	// bypass the Redis cache (which holds the user's *full* set) and
+	// pin an explicit list here. Never serialised into the JWT — the
+	// `json:"-"` tag is intentional.
+	ScopedPermissions []string `json:"-"`
+
 	jwt.RegisteredClaims
+}
+
+// HasScopedPermission is a helper for the API-key flow: true when the
+// request-scoped set includes the given permission. Not used by the
+// regular JWT flow (which reads from authz/Redis instead).
+func (c *Claims) HasScopedPermission(permission string) bool {
+	for _, p := range c.ScopedPermissions {
+		if p == permission {
+			return true
+		}
+	}
+	return false
 }
 
 // HasRole checks if user has a specific role
@@ -41,36 +76,6 @@ func (c *Claims) HasAnyRole(roles ...string) bool {
 func (c *Claims) HasAllRoles(roles ...string) bool {
 	for _, role := range roles {
 		if !c.HasRole(role) {
-			return false
-		}
-	}
-	return true
-}
-
-// HasPermission checks if user has a specific permission
-func (c *Claims) HasPermission(permission string) bool {
-	for _, p := range c.Permissions {
-		if p == permission {
-			return true
-		}
-	}
-	return false
-}
-
-// HasAnyPermission checks if user has at least one of the specified permissions
-func (c *Claims) HasAnyPermission(permissions ...string) bool {
-	for _, permission := range permissions {
-		if c.HasPermission(permission) {
-			return true
-		}
-	}
-	return false
-}
-
-// HasAllPermissions checks if user has all specified permissions
-func (c *Claims) HasAllPermissions(permissions ...string) bool {
-	for _, permission := range permissions {
-		if !c.HasPermission(permission) {
 			return false
 		}
 	}

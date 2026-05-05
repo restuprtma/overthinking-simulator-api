@@ -14,7 +14,42 @@ var (
 	ErrExpiredToken     = errors.New("token has expired")
 	ErrTokenNotProvided = errors.New("token not provided")
 	ErrInvalidSignature = errors.New("invalid token signature")
+	ErrInvalidJWTSecret = errors.New("JWT_SECRET not set or too short")
 )
+
+const (
+	MinSecretLength = 32 // Minimum length for JWT secret in characters
+)
+
+// ValidateSecret validates that JWT_SECRET is set and meets minimum requirements
+// This should be called at application startup
+func ValidateSecret(env string) error {
+	secret := os.Getenv("JWT_SECRET")
+
+	// In production, JWT_SECRET must be set
+	if env == "production" {
+		if secret == "" {
+			return fmt.Errorf("%w: JWT_SECRET environment variable must be set in production", ErrInvalidJWTSecret)
+		}
+
+		if len(secret) < MinSecretLength {
+			return fmt.Errorf("%w: JWT_SECRET must be at least %d characters long (current: %d)",
+				ErrInvalidJWTSecret, MinSecretLength, len(secret))
+		}
+
+		// Check if using the default development secret
+		if secret == "wizhub-development-secret-change-in-production" {
+			return fmt.Errorf("%w: cannot use default development secret in production", ErrInvalidJWTSecret)
+		}
+	} else {
+		// In development/staging, warn if secret is weak but don't fail
+		if secret != "" && len(secret) < MinSecretLength {
+			fmt.Printf("WARNING: JWT_SECRET is shorter than recommended minimum of %d characters\n", MinSecretLength)
+		}
+	}
+
+	return nil
+}
 
 // GetSecret returns JWT secret from environment variable
 func GetSecret() []byte {
@@ -22,7 +57,7 @@ func GetSecret() []byte {
 	if secret == "" {
 		// Default secret for development only
 		// In production, JWT_SECRET MUST be set in .env
-		secret = "venturo-skeleton-development-secret-change-in-production"
+		secret = "wizhub-development-secret-change-in-production"
 	}
 	return []byte(secret)
 }
@@ -42,25 +77,42 @@ func GetExpirationTime() time.Duration {
 	return duration
 }
 
-// GenerateToken generates a new JWT token with user claims
-func GenerateToken(userID, companyID, companyName, email, username string, fullName string, roles, permissions []string) (string, error) {
+// GenerateToken generates a new JWT token with user claims.
+// clientID / clientSlug are the registration-level tenant identifiers —
+// callers pass them in so the FE can read its current client from the
+// JWT (useful for per-client features like translation overrides).
+// Both are optional: pre-company-switch tokens (refresh with no company
+// context) should pass "" for both.
+//
+// Note: the user's permission set is NOT embedded in the token. Keeping
+// it out lets the token stay small enough to survive every proxy in the
+// chain. The authz package (internal/shared/authz) handles runtime
+// permission lookup against Redis.
+func GenerateToken(
+	userID, companyID, companyName, clientID, clientSlug, email, username string,
+	fullName string,
+	isSuperAdmin bool,
+	roles []string,
+) (string, error) {
 	now := time.Now()
 	expirationTime := GetExpirationTime()
 
 	claims := &Claims{
-		UserID:      userID,
-		CompanyID:   companyID,
-		CompanyName: companyName,
-		Email:       email,
-		Username:    username,
-		FullName:    fullName,
-		Roles:       roles,
-		Permissions: permissions,
+		UserID:       userID,
+		CompanyID:    companyID,
+		CompanyName:  companyName,
+		ClientID:     clientID,
+		ClientSlug:   clientSlug,
+		Email:        email,
+		Username:     username,
+		FullName:     fullName,
+		IsSuperAdmin: isSuperAdmin,
+		Roles:        roles,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(now.Add(expirationTime)),
 			IssuedAt:  jwt.NewNumericDate(now),
 			NotBefore: jwt.NewNumericDate(now),
-			Issuer:    "venturo-skeleton-api",
+			Issuer:    "wizhub-api",
 			Subject:   userID,
 		},
 	}
@@ -122,15 +174,19 @@ func RefreshToken(oldTokenString string) (string, error) {
 		}
 	}
 
-	// Generate new token with same claims
+	// Generate new token with same claims. Permissions are not part of
+	// the token anymore — the caller refetches them from authz on the
+	// next request, so there's nothing to carry across here.
 	return GenerateToken(
 		claims.UserID,
 		claims.CompanyID,
 		claims.CompanyName,
+		claims.ClientID,
+		claims.ClientSlug,
 		claims.Email,
 		claims.Username,
 		claims.FullName,
+		claims.IsSuperAdmin,
 		claims.Roles,
-		claims.Permissions,
 	)
 }

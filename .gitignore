@@ -6,9 +6,6 @@
 *.dylib
 bin/
 dist/
-build/
-lakukan-be
-venturo-skeleton-go
 
 # Test binary
 *.test
@@ -34,7 +31,6 @@ vendor/
 *.swo
 *~
 .DS_Store
-.claude/
 
 # Logs
 *.log

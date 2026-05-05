@@ -1,95 +1,47 @@
 package user
 
 import (
+	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
+
 	"venturo-skeleton-go/internal/middleware"
 	"venturo-skeleton-go/internal/modules/core/user/handler"
 	"venturo-skeleton-go/internal/modules/core/user/repository"
 	"venturo-skeleton-go/internal/modules/core/user/service"
-	roleRepo "venturo-skeleton-go/internal/modules/core/role/repository"
-
-	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type UserModule struct {
 	Handler *handler.UserHandler
+	Service *service.UserService
 }
 
 // Initialize initializes the user module with all dependencies
 func Initialize(db *pgxpool.Pool) *UserModule {
-	// Initialize repositories
 	userRepo := repository.NewUserRepository(db)
-	roleRepository := roleRepo.NewRoleRepository(db)
-
-	// Initialize services
-	userService := service.NewUserService(userRepo, roleRepository)
-
-	// Initialize handlers
+	userService := service.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userService)
 
 	return &UserModule{
 		Handler: userHandler,
+		Service: userService,
 	}
 }
 
-// SetupRoutes sets up user routes with permission-based authorization
+// SetupRoutes registers all user module routes
 func (m *UserModule) SetupRoutes(router *gin.RouterGroup) {
 	users := router.Group("/users")
-
-	// Apply JWT authentication to all user routes
 	users.Use(middleware.JWTAuth())
-
 	{
-		// READ operations - Require core.users:read permission
-		users.GET("",
-			middleware.RequirePermission("core.users:read"),
-			m.Handler.GetAll,
-		)
-		users.GET("/:id",
-			middleware.RequirePermission("core.users:read"),
-			m.Handler.GetByID,
-		)
+		// Current user endpoints (must be before /:id to avoid conflict)
+		users.GET("/me", m.Handler.GetMe)
+		users.PUT("/me", m.Handler.UpdateMe)
+		users.PUT("/me/password", m.Handler.ChangePassword)
 
-		// CREATE - Require core.users:create permission
-		users.POST("",
-			middleware.RequirePermission("core.users:create"),
-			m.Handler.Create,
-		)
-
-		// UPDATE - Require core.users:update permission
-		users.PUT("/:id",
-			middleware.RequirePermission("core.users:update"),
-			m.Handler.Update,
-		)
-
-		// DELETE - Require core.users:delete permission
-		users.DELETE("/:id",
-			middleware.RequirePermission("core.users:delete"),
-			m.Handler.Delete,
-		)
-
-		// RESTORE - Require core.users:restore permission
-		users.POST("/:id/restore",
-			middleware.RequirePermission("core.users:restore"),
-			m.Handler.Restore,
-		)
-
-		// CHANGE PASSWORD - Any authenticated user
-		// Handler will check if user can only change their own password
-		users.POST("/:id/change-password", m.Handler.ChangePassword)
-
-		// ROLE MANAGEMENT - Require core.users:update permission
-		users.POST("/:id/roles",
-			middleware.RequirePermission("core.users:update"),
-			m.Handler.AssignRoles,
-		)
-		users.DELETE("/:id/roles/:roleId",
-			middleware.RequirePermission("core.users:update"),
-			m.Handler.RemoveRole,
-		)
-		users.PUT("/:id/roles",
-			middleware.RequirePermission("core.users:update"),
-			m.Handler.SyncRoles,
-		)
+		// User management endpoints
+		users.GET("", m.Handler.GetAll)
+		users.GET("/:id", m.Handler.GetByID)
+		users.POST("", middleware.RequirePermission("user-management:create"), m.Handler.Create)
+		users.PUT("/:id", middleware.RequirePermission("user-management:update"), m.Handler.Update)
+		users.DELETE("/:id", middleware.RequirePermission("user-management:delete"), m.Handler.Delete)
 	}
 }
