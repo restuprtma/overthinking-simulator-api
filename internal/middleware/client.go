@@ -3,8 +3,8 @@ package middleware
 import (
 	"net/http"
 
-	"tuai/internal/shared/response"
-	"tuai/pkg/logger"
+	"venturo-skeleton-go/internal/shared/response"
+	"venturo-skeleton-go/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 )

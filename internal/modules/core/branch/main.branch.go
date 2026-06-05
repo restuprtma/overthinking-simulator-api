@@ -4,10 +4,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"tuai/internal/middleware"
-	"tuai/internal/modules/core/branch/handler"
-	"tuai/internal/modules/core/branch/repository"
-	"tuai/internal/modules/core/branch/service"
+	"venturo-skeleton-go/internal/middleware"
+	"venturo-skeleton-go/internal/modules/core/branch/handler"
+	"venturo-skeleton-go/internal/modules/core/branch/repository"
+	"venturo-skeleton-go/internal/modules/core/branch/service"
 )
 
 type BranchModule struct {

@@ -10,9 +10,9 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"tuai/internal/modules/core/role/domain"
-	"tuai/internal/modules/core/role/dto"
-	"tuai/pkg/logger"
+	"venturo-skeleton-go/internal/modules/core/role/domain"
+	"venturo-skeleton-go/internal/modules/core/role/dto"
+	"venturo-skeleton-go/pkg/logger"
 )
 
 type RoleRepository struct {

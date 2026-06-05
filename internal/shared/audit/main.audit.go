@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"tuai/internal/middleware"
+	"venturo-skeleton-go/internal/middleware"
 )
 
 // Module bundles the audit repository, service, and handler for both

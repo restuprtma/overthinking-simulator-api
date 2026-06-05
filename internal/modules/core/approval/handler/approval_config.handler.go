@@ -6,10 +6,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"tuai/internal/middleware"
-	"tuai/internal/modules/core/approval/dto"
-	"tuai/internal/modules/core/approval/service"
-	"tuai/internal/shared/response"
+	"venturo-skeleton-go/internal/middleware"
+	"venturo-skeleton-go/internal/modules/core/approval/dto"
+	"venturo-skeleton-go/internal/modules/core/approval/service"
+	"venturo-skeleton-go/internal/shared/response"
 )
 
 type ApprovalConfigHandler struct {

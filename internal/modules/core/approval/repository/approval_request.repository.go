@@ -9,9 +9,9 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"tuai/internal/modules/core/approval/domain"
-	"tuai/internal/modules/core/approval/dto"
-	"tuai/pkg/logger"
+	"venturo-skeleton-go/internal/modules/core/approval/domain"
+	"venturo-skeleton-go/internal/modules/core/approval/dto"
+	"venturo-skeleton-go/pkg/logger"
 )
 
 type ApprovalRequestRepository struct {

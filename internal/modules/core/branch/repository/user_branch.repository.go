@@ -8,8 +8,8 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"tuai/internal/modules/core/branch/domain"
-	"tuai/pkg/logger"
+	"venturo-skeleton-go/internal/modules/core/branch/domain"
+	"venturo-skeleton-go/pkg/logger"
 )
 
 type UserBranchRepository struct {

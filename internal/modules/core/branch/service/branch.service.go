@@ -9,10 +9,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
 
-	"tuai/internal/modules/core/branch/domain"
-	"tuai/internal/modules/core/branch/dto"
-	"tuai/internal/modules/core/branch/repository"
-	"tuai/pkg/logger"
+	"venturo-skeleton-go/internal/modules/core/branch/domain"
+	"venturo-skeleton-go/internal/modules/core/branch/dto"
+	"venturo-skeleton-go/internal/modules/core/branch/repository"
+	"venturo-skeleton-go/pkg/logger"
 )
 
 const (

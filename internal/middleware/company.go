@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	jwtpkg "tuai/pkg/jwt"
+	jwtpkg "venturo-skeleton-go/pkg/jwt"
 )
 
 // CompanyContextVerifier verifies — at request time — that the company in

@@ -12,11 +12,11 @@ import (
 
 	"github.com/google/uuid"
 
-	"tuai/internal/modules/core/api_key/domain"
-	"tuai/internal/modules/core/api_key/dto"
-	"tuai/internal/modules/core/api_key/repository"
-	"tuai/pkg/jwt"
-	"tuai/pkg/logger"
+	"venturo-skeleton-go/internal/modules/core/api_key/domain"
+	"venturo-skeleton-go/internal/modules/core/api_key/dto"
+	"venturo-skeleton-go/internal/modules/core/api_key/repository"
+	"venturo-skeleton-go/pkg/jwt"
+	"venturo-skeleton-go/pkg/logger"
 )
 
 // Service errors

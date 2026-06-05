@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"time"
 
-	"tuai/internal/config"
+	"venturo-skeleton-go/internal/config"
 
 	goredis "github.com/redis/go-redis/v9"
 )

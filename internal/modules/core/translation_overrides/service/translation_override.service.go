@@ -6,10 +6,10 @@ import (
 	"regexp"
 	"strings"
 
-	clientSvc "tuai/internal/modules/core/client/service"
-	"tuai/internal/modules/core/translation_overrides/domain"
-	"tuai/internal/modules/core/translation_overrides/dto"
-	"tuai/internal/modules/core/translation_overrides/repository"
+	clientSvc "venturo-skeleton-go/internal/modules/core/client/service"
+	"venturo-skeleton-go/internal/modules/core/translation_overrides/domain"
+	"venturo-skeleton-go/internal/modules/core/translation_overrides/dto"
+	"venturo-skeleton-go/internal/modules/core/translation_overrides/repository"
 )
 
 // Service errors surfaced to handlers.

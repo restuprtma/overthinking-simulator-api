@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"tuai/pkg/discord"
+	"venturo-skeleton-go/pkg/discord"
 
 	"go.uber.org/zap/zapcore"
 )

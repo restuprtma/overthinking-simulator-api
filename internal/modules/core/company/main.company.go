@@ -4,10 +4,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"tuai/internal/middleware"
-	"tuai/internal/modules/core/company/handler"
-	"tuai/internal/modules/core/company/repository"
-	"tuai/internal/modules/core/company/service"
+	"venturo-skeleton-go/internal/middleware"
+	"venturo-skeleton-go/internal/modules/core/company/handler"
+	"venturo-skeleton-go/internal/modules/core/company/repository"
+	"venturo-skeleton-go/internal/modules/core/company/service"
 )
 
 type CompanyModule struct {

@@ -4,10 +4,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"tuai/internal/middleware"
-	"tuai/internal/modules/core/user/handler"
-	"tuai/internal/modules/core/user/repository"
-	"tuai/internal/modules/core/user/service"
+	"venturo-skeleton-go/internal/middleware"
+	"venturo-skeleton-go/internal/modules/core/user/handler"
+	"venturo-skeleton-go/internal/modules/core/user/repository"
+	"venturo-skeleton-go/internal/modules/core/user/service"
 )
 
 type UserModule struct {

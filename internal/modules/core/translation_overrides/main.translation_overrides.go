@@ -4,11 +4,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"tuai/internal/middleware"
-	clientSvc "tuai/internal/modules/core/client/service"
-	"tuai/internal/modules/core/translation_overrides/handler"
-	"tuai/internal/modules/core/translation_overrides/repository"
-	"tuai/internal/modules/core/translation_overrides/service"
+	"venturo-skeleton-go/internal/middleware"
+	clientSvc "venturo-skeleton-go/internal/modules/core/client/service"
+	"venturo-skeleton-go/internal/modules/core/translation_overrides/handler"
+	"venturo-skeleton-go/internal/modules/core/translation_overrides/repository"
+	"venturo-skeleton-go/internal/modules/core/translation_overrides/service"
 )
 
 type Module struct {

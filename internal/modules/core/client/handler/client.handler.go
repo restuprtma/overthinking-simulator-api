@@ -6,10 +6,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"tuai/internal/middleware"
-	"tuai/internal/modules/core/client/dto"
-	"tuai/internal/modules/core/client/service"
-	"tuai/internal/shared/response"
+	"venturo-skeleton-go/internal/middleware"
+	"venturo-skeleton-go/internal/modules/core/client/dto"
+	"venturo-skeleton-go/internal/modules/core/client/service"
+	"venturo-skeleton-go/internal/shared/response"
 )
 
 type Handler struct {

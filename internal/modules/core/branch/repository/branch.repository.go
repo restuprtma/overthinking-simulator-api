@@ -10,9 +10,9 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"tuai/internal/modules/core/branch/domain"
-	"tuai/internal/modules/core/branch/dto"
-	"tuai/pkg/logger"
+	"venturo-skeleton-go/internal/modules/core/branch/domain"
+	"venturo-skeleton-go/internal/modules/core/branch/dto"
+	"venturo-skeleton-go/pkg/logger"
 )
 
 type BranchRepository struct {

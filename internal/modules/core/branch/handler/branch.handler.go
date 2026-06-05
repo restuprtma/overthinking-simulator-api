@@ -8,10 +8,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"tuai/internal/middleware"
-	"tuai/internal/modules/core/branch/dto"
-	"tuai/internal/modules/core/branch/service"
-	"tuai/internal/shared/response"
+	"venturo-skeleton-go/internal/middleware"
+	"venturo-skeleton-go/internal/modules/core/branch/dto"
+	"venturo-skeleton-go/internal/modules/core/branch/service"
+	"venturo-skeleton-go/internal/shared/response"
 )
 
 type BranchHandler struct {

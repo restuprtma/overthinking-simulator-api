@@ -13,9 +13,9 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 
-	"tuai/internal/modules/core/client/domain"
-	"tuai/internal/modules/core/client/dto"
-	"tuai/internal/modules/core/client/repository"
+	"venturo-skeleton-go/internal/modules/core/client/domain"
+	"venturo-skeleton-go/internal/modules/core/client/dto"
+	"venturo-skeleton-go/internal/modules/core/client/repository"
 )
 
 // Service errors surfaced to handlers / auth.

@@ -6,11 +6,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	branchService "tuai/internal/modules/core/branch/service"
-	"tuai/internal/middleware"
-	"tuai/internal/modules/core/user/dto"
-	"tuai/internal/modules/core/user/service"
-	"tuai/internal/shared/response"
+	branchService "venturo-skeleton-go/internal/modules/core/branch/service"
+	"venturo-skeleton-go/internal/middleware"
+	"venturo-skeleton-go/internal/modules/core/user/dto"
+	"venturo-skeleton-go/internal/modules/core/user/service"
+	"venturo-skeleton-go/internal/shared/response"
 )
 
 type UserHandler struct {

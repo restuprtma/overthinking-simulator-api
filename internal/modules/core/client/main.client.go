@@ -4,11 +4,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"tuai/internal/middleware"
-	"tuai/internal/modules/core/client/handler"
-	"tuai/internal/modules/core/client/repository"
-	"tuai/internal/modules/core/client/service"
-	jwtpkg "tuai/pkg/jwt"
+	"venturo-skeleton-go/internal/middleware"
+	"venturo-skeleton-go/internal/modules/core/client/handler"
+	"venturo-skeleton-go/internal/modules/core/client/repository"
+	"venturo-skeleton-go/internal/modules/core/client/service"
+	jwtpkg "venturo-skeleton-go/pkg/jwt"
 )
 
 type Module struct {

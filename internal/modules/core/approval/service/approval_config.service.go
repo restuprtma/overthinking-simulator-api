@@ -7,9 +7,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"tuai/internal/modules/core/approval/domain"
-	"tuai/internal/modules/core/approval/dto"
-	"tuai/internal/modules/core/approval/repository"
+	"venturo-skeleton-go/internal/modules/core/approval/domain"
+	"venturo-skeleton-go/internal/modules/core/approval/dto"
+	"venturo-skeleton-go/internal/modules/core/approval/repository"
 )
 
 var (

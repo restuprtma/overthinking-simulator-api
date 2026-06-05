@@ -8,11 +8,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
-	"tuai/internal/modules/core/approval/domain"
-	"tuai/internal/modules/core/approval/dto"
-	"tuai/internal/modules/core/approval/repository"
-	roleRepo "tuai/internal/modules/core/role/repository"
-	"tuai/pkg/logger"
+	"venturo-skeleton-go/internal/modules/core/approval/domain"
+	"venturo-skeleton-go/internal/modules/core/approval/dto"
+	"venturo-skeleton-go/internal/modules/core/approval/repository"
+	roleRepo "venturo-skeleton-go/internal/modules/core/role/repository"
+	"venturo-skeleton-go/pkg/logger"
 )
 
 // ─── ERRORS ─────────────────────────────────────────────────────

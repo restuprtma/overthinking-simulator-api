@@ -29,7 +29,7 @@ import (
 	"fmt"
 	"time"
 
-	"tuai/pkg/logger"
+	"venturo-skeleton-go/pkg/logger"
 
 	goredis "github.com/redis/go-redis/v9"
 )

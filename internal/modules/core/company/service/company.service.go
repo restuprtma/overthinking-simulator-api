@@ -9,12 +9,12 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
-	branchDomain "tuai/internal/modules/core/branch/domain"
-	clientDomain "tuai/internal/modules/core/client/domain"
-	"tuai/internal/modules/core/company/domain"
-	"tuai/internal/modules/core/company/dto"
-	"tuai/internal/modules/core/company/repository"
-	"tuai/pkg/logger"
+	branchDomain "venturo-skeleton-go/internal/modules/core/branch/domain"
+	clientDomain "venturo-skeleton-go/internal/modules/core/client/domain"
+	"venturo-skeleton-go/internal/modules/core/company/domain"
+	"venturo-skeleton-go/internal/modules/core/company/dto"
+	"venturo-skeleton-go/internal/modules/core/company/repository"
+	"venturo-skeleton-go/pkg/logger"
 )
 
 // BranchRepository is the minimal branch dependency used by CompanyService

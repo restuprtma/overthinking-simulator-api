@@ -6,10 +6,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"tuai/internal/middleware"
-	"tuai/internal/modules/core/role/dto"
-	"tuai/internal/modules/core/role/service"
-	"tuai/internal/shared/response"
+	"venturo-skeleton-go/internal/middleware"
+	"venturo-skeleton-go/internal/modules/core/role/dto"
+	"venturo-skeleton-go/internal/modules/core/role/service"
+	"venturo-skeleton-go/internal/shared/response"
 )
 
 type RoleHandler struct {

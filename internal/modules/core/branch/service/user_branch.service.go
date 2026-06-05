@@ -9,8 +9,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
-	"tuai/internal/modules/core/branch/domain"
-	"tuai/internal/modules/core/branch/repository"
+	"venturo-skeleton-go/internal/modules/core/branch/domain"
+	"venturo-skeleton-go/internal/modules/core/branch/repository"
 )
 
 var (

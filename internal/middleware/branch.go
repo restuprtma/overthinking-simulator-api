@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	jwtpkg "tuai/pkg/jwt"
+	jwtpkg "venturo-skeleton-go/pkg/jwt"
 )
 
 // UserBranchResolver looks up the active branch IDs a user has access to.

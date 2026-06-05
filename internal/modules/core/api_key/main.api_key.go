@@ -6,10 +6,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"tuai/internal/middleware"
-	"tuai/internal/modules/core/api_key/handler"
-	"tuai/internal/modules/core/api_key/repository"
-	"tuai/internal/modules/core/api_key/service"
+	"venturo-skeleton-go/internal/middleware"
+	"venturo-skeleton-go/internal/modules/core/api_key/handler"
+	"venturo-skeleton-go/internal/modules/core/api_key/repository"
+	"venturo-skeleton-go/internal/modules/core/api_key/service"
 )
 
 // RoleRepository interface for role operations

@@ -8,17 +8,17 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
-	branchDomain "tuai/internal/modules/core/branch/domain"
-	companyDomain "tuai/internal/modules/core/company/domain"
-	companyDto "tuai/internal/modules/core/company/dto"
-	companyService "tuai/internal/modules/core/company/service"
-	roleDomain "tuai/internal/modules/core/role/domain"
-	"tuai/internal/modules/core/user/domain"
-	"tuai/internal/modules/core/user/dto"
-	"tuai/internal/modules/core/user/repository"
-	"tuai/pkg/crypto"
-	jwtpkg "tuai/pkg/jwt"
-	"tuai/pkg/logger"
+	branchDomain "venturo-skeleton-go/internal/modules/core/branch/domain"
+	companyDomain "venturo-skeleton-go/internal/modules/core/company/domain"
+	companyDto "venturo-skeleton-go/internal/modules/core/company/dto"
+	companyService "venturo-skeleton-go/internal/modules/core/company/service"
+	roleDomain "venturo-skeleton-go/internal/modules/core/role/domain"
+	"venturo-skeleton-go/internal/modules/core/user/domain"
+	"venturo-skeleton-go/internal/modules/core/user/dto"
+	"venturo-skeleton-go/internal/modules/core/user/repository"
+	"venturo-skeleton-go/pkg/crypto"
+	jwtpkg "venturo-skeleton-go/pkg/jwt"
+	"venturo-skeleton-go/pkg/logger"
 )
 
 var (

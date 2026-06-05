@@ -1,4 +1,4 @@
-module tuai
+module venturo-skeleton-go
 
 go 1.26.1
 

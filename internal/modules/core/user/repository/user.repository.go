@@ -11,9 +11,9 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"tuai/internal/modules/core/user/domain"
-	"tuai/internal/modules/core/user/dto"
-	"tuai/pkg/logger"
+	"venturo-skeleton-go/internal/modules/core/user/domain"
+	"venturo-skeleton-go/internal/modules/core/user/dto"
+	"venturo-skeleton-go/pkg/logger"
 )
 
 type UserRepository struct {

@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"tuai/internal/shared/response"
+	"venturo-skeleton-go/internal/shared/response"
 
 	"github.com/gin-gonic/gin"
 )

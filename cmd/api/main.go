@@ -3,11 +3,11 @@ package main
 import (
 	"time"
 
-	"tuai/internal/config"
-	"tuai/internal/database"
-	"tuai/internal/router"
-	"tuai/pkg/jwt"
-	"tuai/pkg/logger"
+	"venturo-skeleton-go/internal/config"
+	"venturo-skeleton-go/internal/database"
+	"venturo-skeleton-go/internal/router"
+	"venturo-skeleton-go/pkg/jwt"
+	"venturo-skeleton-go/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 )

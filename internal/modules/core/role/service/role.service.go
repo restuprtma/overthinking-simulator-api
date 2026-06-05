@@ -7,10 +7,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"tuai/internal/modules/core/role/domain"
-	"tuai/internal/modules/core/role/dto"
-	"tuai/internal/modules/core/role/repository"
-	"tuai/pkg/logger"
+	"venturo-skeleton-go/internal/modules/core/role/domain"
+	"venturo-skeleton-go/internal/modules/core/role/dto"
+	"venturo-skeleton-go/internal/modules/core/role/repository"
+	"venturo-skeleton-go/pkg/logger"
 )
 
 var (

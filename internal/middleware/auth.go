@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strings"
 
-	"tuai/internal/shared/response"
-	jwtpkg "tuai/pkg/jwt"
-	"tuai/pkg/logger"
+	"venturo-skeleton-go/internal/shared/response"
+	jwtpkg "venturo-skeleton-go/pkg/jwt"
+	"venturo-skeleton-go/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 )
