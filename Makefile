@@ -66,7 +66,7 @@ seed-core:
 		for file in $(SEEDERS_PATH)/core/*.sql; do \
 			if [ -f "$$file" ]; then \
 				echo "Running seeder: $$(basename $$file)"; \
-				PGPASSWORD=$(DB_PASSWORD) psql -h $(DB_HOST) -p $(DB_PORT) -U $(DB_USER) -d $(DB_NAME) -f $$file; \
+				PGPASSWORD=$(DB_PASSWORD) psql -v ON_ERROR_STOP=1 -h $(DB_HOST) -p $(DB_PORT) -U $(DB_USER) -d $(DB_NAME) -f $$file || exit 1; \
 			fi; \
 		done; \
 	fi
@@ -85,7 +85,7 @@ db-setup:
 
 db-reset:
 	@echo "⚠️  Resetting database (this will drop all data)..."
-	@PGPASSWORD=$(DB_PASSWORD) psql -h $(DB_HOST) -p $(DB_PORT) -U $(DB_USER) -d postgres -c "DROP DATABASE IF EXISTS $(DB_NAME);"
+	@PGPASSWORD=$(DB_PASSWORD) psql -h $(DB_HOST) -p $(DB_PORT) -U $(DB_USER) -d postgres -c "DROP DATABASE IF EXISTS $(DB_NAME) WITH (FORCE);"
 	@PGPASSWORD=$(DB_PASSWORD) psql -h $(DB_HOST) -p $(DB_PORT) -U $(DB_USER) -d postgres -c "CREATE DATABASE $(DB_NAME);"
 	@echo "Database dropped and recreated!"
 	@make db-setup

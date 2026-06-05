@@ -1,7 +1,7 @@
 -- =====================================================
 -- CORE SEEDER - COMPANY USERS
 -- =====================================================
--- Seeder 004: Link users to companies with administrator role
+-- Seeder 005: Link users to companies with administrator role
 -- Each user is a member of all their companies (holding + subsidiaries)
 -- First holding is set as primary company
 -- =====================================================

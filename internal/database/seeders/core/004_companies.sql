@@ -1,7 +1,12 @@
 -- =====================================================
 -- CORE SEEDER - COMPANIES
 -- =====================================================
--- Seeder 003: Companies with parent-child structure
+-- Seeder 004: Companies with parent-child structure
+--
+-- Every company belongs to a client (NOT NULL client_id, migration
+-- 000012). client_id is sourced from seeder 003_clients:
+--   - Owner companies  → client 40000000-...-001 (slug "owner")
+--   - Client companies → client 40000000-...-002 (slug "client")
 --
 -- Owner (User 1):
 --   PT Alpha Indonesia (Holding)
@@ -27,9 +32,9 @@
 -- =====================================================
 
 -- =====================================================
--- OWNER COMPANIES
+-- OWNER COMPANIES  (client_id = 40000000-...-001)
 -- =====================================================
-INSERT INTO core.companies (id, parent_id, name, type, owner_id, sort, is_active) VALUES
+INSERT INTO core.companies (id, parent_id, name, type, owner_id, client_id, sort, is_active) VALUES
 -- Holding 1: PT Alpha Indonesia
 (
     '20000000-0000-0000-0000-000000000001',
@@ -37,6 +42,7 @@ INSERT INTO core.companies (id, parent_id, name, type, owner_id, sort, is_active
     'PT Alpha Indonesia',
     'holding',
     '10000000-0000-0000-0000-000000000001',
+    '40000000-0000-0000-0000-000000000001',
     1,
     TRUE
 ),
@@ -47,6 +53,7 @@ INSERT INTO core.companies (id, parent_id, name, type, owner_id, sort, is_active
     'PT Beta Nusantara',
     'holding',
     '10000000-0000-0000-0000-000000000001',
+    '40000000-0000-0000-0000-000000000001',
     2,
     TRUE
 ),
@@ -57,13 +64,14 @@ INSERT INTO core.companies (id, parent_id, name, type, owner_id, sort, is_active
     'PT Gamma Teknologi',
     'holding',
     '10000000-0000-0000-0000-000000000001',
+    '40000000-0000-0000-0000-000000000001',
     3,
     TRUE
 )
 ON CONFLICT DO NOTHING;
 
 -- Subsidiaries of Owner
-INSERT INTO core.companies (id, parent_id, name, type, owner_id, sort, is_active) VALUES
+INSERT INTO core.companies (id, parent_id, name, type, owner_id, client_id, sort, is_active) VALUES
 -- Alpha subsidiaries
 (
     '20000000-0000-0000-0000-000000000011',
@@ -71,6 +79,7 @@ INSERT INTO core.companies (id, parent_id, name, type, owner_id, sort, is_active
     'Alpha Jakarta',
     'subsidiary',
     '10000000-0000-0000-0000-000000000001',
+    '40000000-0000-0000-0000-000000000001',
     1,
     TRUE
 ),
@@ -80,6 +89,7 @@ INSERT INTO core.companies (id, parent_id, name, type, owner_id, sort, is_active
     'Alpha Surabaya',
     'subsidiary',
     '10000000-0000-0000-0000-000000000001',
+    '40000000-0000-0000-0000-000000000001',
     2,
     TRUE
 ),
@@ -90,6 +100,7 @@ INSERT INTO core.companies (id, parent_id, name, type, owner_id, sort, is_active
     'Beta Bandung',
     'subsidiary',
     '10000000-0000-0000-0000-000000000001',
+    '40000000-0000-0000-0000-000000000001',
     1,
     TRUE
 ),
@@ -99,6 +110,7 @@ INSERT INTO core.companies (id, parent_id, name, type, owner_id, sort, is_active
     'Beta Semarang',
     'subsidiary',
     '10000000-0000-0000-0000-000000000001',
+    '40000000-0000-0000-0000-000000000001',
     2,
     TRUE
 ),
@@ -109,6 +121,7 @@ INSERT INTO core.companies (id, parent_id, name, type, owner_id, sort, is_active
     'Gamma Yogyakarta',
     'subsidiary',
     '10000000-0000-0000-0000-000000000001',
+    '40000000-0000-0000-0000-000000000001',
     1,
     TRUE
 ),
@@ -118,15 +131,16 @@ INSERT INTO core.companies (id, parent_id, name, type, owner_id, sort, is_active
     'Gamma Bali',
     'subsidiary',
     '10000000-0000-0000-0000-000000000001',
+    '40000000-0000-0000-0000-000000000001',
     2,
     TRUE
 )
 ON CONFLICT DO NOTHING;
 
 -- =====================================================
--- CLIENT COMPANIES
+-- CLIENT COMPANIES  (client_id = 40000000-...-002)
 -- =====================================================
-INSERT INTO core.companies (id, parent_id, name, type, owner_id, sort, is_active) VALUES
+INSERT INTO core.companies (id, parent_id, name, type, owner_id, client_id, sort, is_active) VALUES
 -- Holding 1: PT Delta Digital
 (
     '20000000-0000-0000-0000-000000000004',
@@ -134,6 +148,7 @@ INSERT INTO core.companies (id, parent_id, name, type, owner_id, sort, is_active
     'PT Delta Digital',
     'holding',
     '10000000-0000-0000-0000-000000000002',
+    '40000000-0000-0000-0000-000000000002',
     1,
     TRUE
 ),
@@ -144,6 +159,7 @@ INSERT INTO core.companies (id, parent_id, name, type, owner_id, sort, is_active
     'PT Epsilon Solusi',
     'holding',
     '10000000-0000-0000-0000-000000000002',
+    '40000000-0000-0000-0000-000000000002',
     2,
     TRUE
 ),
@@ -154,13 +170,14 @@ INSERT INTO core.companies (id, parent_id, name, type, owner_id, sort, is_active
     'PT Zeta Global',
     'holding',
     '10000000-0000-0000-0000-000000000002',
+    '40000000-0000-0000-0000-000000000002',
     3,
     TRUE
 )
 ON CONFLICT DO NOTHING;
 
 -- Subsidiaries of Client
-INSERT INTO core.companies (id, parent_id, name, type, owner_id, sort, is_active) VALUES
+INSERT INTO core.companies (id, parent_id, name, type, owner_id, client_id, sort, is_active) VALUES
 -- Delta subsidiaries
 (
     '20000000-0000-0000-0000-000000000041',
@@ -168,6 +185,7 @@ INSERT INTO core.companies (id, parent_id, name, type, owner_id, sort, is_active
     'Delta Medan',
     'subsidiary',
     '10000000-0000-0000-0000-000000000002',
+    '40000000-0000-0000-0000-000000000002',
     1,
     TRUE
 ),
@@ -177,6 +195,7 @@ INSERT INTO core.companies (id, parent_id, name, type, owner_id, sort, is_active
     'Delta Makassar',
     'subsidiary',
     '10000000-0000-0000-0000-000000000002',
+    '40000000-0000-0000-0000-000000000002',
     2,
     TRUE
 ),
@@ -187,6 +206,7 @@ INSERT INTO core.companies (id, parent_id, name, type, owner_id, sort, is_active
     'Epsilon Malang',
     'subsidiary',
     '10000000-0000-0000-0000-000000000002',
+    '40000000-0000-0000-0000-000000000002',
     1,
     TRUE
 ),
@@ -196,6 +216,7 @@ INSERT INTO core.companies (id, parent_id, name, type, owner_id, sort, is_active
     'Epsilon Palembang',
     'subsidiary',
     '10000000-0000-0000-0000-000000000002',
+    '40000000-0000-0000-0000-000000000002',
     2,
     TRUE
 ),
@@ -206,6 +227,7 @@ INSERT INTO core.companies (id, parent_id, name, type, owner_id, sort, is_active
     'Zeta Denpasar',
     'subsidiary',
     '10000000-0000-0000-0000-000000000002',
+    '40000000-0000-0000-0000-000000000002',
     1,
     TRUE
 ),
@@ -215,6 +237,7 @@ INSERT INTO core.companies (id, parent_id, name, type, owner_id, sort, is_active
     'Zeta Manado',
     'subsidiary',
     '10000000-0000-0000-0000-000000000002',
+    '40000000-0000-0000-0000-000000000002',
     2,
     TRUE
 )

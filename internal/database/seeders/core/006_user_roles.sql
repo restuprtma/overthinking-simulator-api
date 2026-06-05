@@ -1,7 +1,7 @@
 -- =====================================================
 -- CORE SEEDER - USER ROLES
 -- =====================================================
--- Seeder 005: Assign administrator role to users
+-- Seeder 006: Assign administrator role to users
 -- Both users get the administrator role globally
 -- =====================================================
 

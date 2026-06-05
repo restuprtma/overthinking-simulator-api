@@ -1,7 +1,7 @@
 -- =====================================================
 -- CORE SEEDER - BRANCHES
 -- =====================================================
--- Seeder 006: Default branch "Cabang Pusat" for each company
+-- Seeder 007: Default branch "Cabang Pusat" for each company
 -- =====================================================
 
 INSERT INTO core.branches (id, company_id, code, name, is_default, is_active) VALUES
