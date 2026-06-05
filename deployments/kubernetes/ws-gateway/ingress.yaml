@@ -1,0 +1,38 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ws-gateway-production
+  namespace: tuai
+  labels:
+    app.kubernetes.io/name: ws-gateway
+    app.kubernetes.io/component: stock-gateway
+  annotations:
+    # WebSocket-friendly timeouts. Without these the connection is killed
+    # by nginx after the default 60s idle even when traffic flows.
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+
+    # Load-balance long-lived WebSocket connections evenly across pods.
+    # nginx-ingress doesn't expose `least_conn` directly; `ewma` (Effective
+    # Weighted Moving Average) is the recommended substitute — picks the
+    # upstream with lowest measured response time, which approximates
+    # least-connections for long-lived streams. Round-robin (the default)
+    # creates skew because WS connections never close.
+    nginx.ingress.kubernetes.io/load-balance: "ewma"
+
+    # Modern nginx-ingress auto-detects WS Upgrade; no extra annotation needed.
+    # Safety: small body cap (no file uploads).
+    nginx.ingress.kubernetes.io/proxy-body-size: "1m"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: ws.tuai.id
+      http:
+        paths:
+          - backend:
+              service:
+                name: service-ws-gateway-production
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix

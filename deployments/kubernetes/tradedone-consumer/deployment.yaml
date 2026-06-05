@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tuai-be-tradedone-consumer
+  namespace: tuai
+  labels:
+    app.kubernetes.io/name: tuai-be-tradedone-consumer
+    app.kubernetes.io/component: stock-consumer
+spec:
+  # Volume profile state lives entirely in Redis (HASH per stock).
+  # Consumer is stateless; the durable JetStream cursor would load-balance
+  # across replicas if scaled. Keep at 1 — Type 40 traffic is comfortably
+  # handled by a single pod, and idempotent HSETs make scale-up safe later.
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tuai-be-tradedone-consumer
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: tuai-be-tradedone-consumer
+        app.kubernetes.io/component: stock-consumer
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: tuai-be-tradedone-consumer
+                topologyKey: kubernetes.io/hostname
+      nodeSelector:
+        nodetype: worker
+      imagePullSecrets:
+        - name: dockerhub-secret-venturoid
+      containers:
+        - name: tuai-be-tradedone-consumer
+          image: venturoid/tuai-be-tradedone-consumer:latest
+          imagePullPolicy: Always
+          envFrom:
+            - secretRef:
+                name: tuai-be-tradedone-consumer-env
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "64Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+      terminationGracePeriodSeconds: 30

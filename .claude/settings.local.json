@@ -1,0 +1,5 @@
+{
+  "permissions": {
+    "allow": ["Bash(redis-cli -h 10.10.8.31 *)"]
+  }
+}
