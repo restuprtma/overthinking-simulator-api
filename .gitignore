@@ -26,9 +26,6 @@ vendor/
 cmd/*/.env
 cmd/*/.env.local
 cmd/*/.env.*.local
-deployments/freebsd/iqplus-publisher.env
-deployments/freebsd/*.env
-!deployments/freebsd/*.env.example
 deployments/kubernetes/**/secret.yaml
 !deployments/kubernetes/**/secret.yaml.example
 

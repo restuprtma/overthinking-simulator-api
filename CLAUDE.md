@@ -23,13 +23,11 @@ make build                     # Build production binary (outputs to bin/)
 ### Database Operations
 
 ```bash
-# Migrations — two modules: core (app data) and stock (market data)
-# Tracked separately in schema_migrations_core and schema_migrations_stock
-make migrate-up                # Run all pending migrations for both modules
+# Migrations — core module (app data), tracked in schema_migrations_core
+make migrate-up                # Run all pending migrations
 make migrate-down MODULE=core  # Rollback last migration in a module
-make migrate-version           # Show current version for both modules
+make migrate-version           # Show current version
 make migrate-create NAME=create_foo MODULE=core   # Create new core migration
-make migrate-create NAME=create_bar MODULE=stock  # Create new stock migration
 
 # Force migration version (if stuck)
 make migrate-force V=1 MODULE=core
@@ -187,7 +185,6 @@ func (r *Repository) GetByID(ctx context.Context, id, companyID string) (*domain
 - Check current version with `make migrate-version`
 - Use `make migrate-force V=X MODULE=core` to force version if stuck
 - Core migrations live under `internal/database/migrations/core` and are tracked in `schema_migrations_core`
-- Stock migrations live under `internal/database/migrations/stock` and are tracked in `schema_migrations_stock`. Schema `stock` holds public market data (stocks, brokers, prices, broker_summary, done_transactions) — no `company_id`, natural PKs, time-series tables partitioned monthly BY RANGE on `ts`/`date`
 
 ### Multi-Tenancy
 
