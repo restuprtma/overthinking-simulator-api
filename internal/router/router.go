@@ -11,6 +11,7 @@ import (
 	"venturo-skeleton-go/internal/modules/core/role"
 	"venturo-skeleton-go/internal/modules/core/user"
 	userRepo "venturo-skeleton-go/internal/modules/core/user/repository"
+	"venturo-skeleton-go/internal/modules/reflection/settings"
 
 	"venturo-skeleton-go/internal/shared/audit"
 	"venturo-skeleton-go/internal/shared/authz"
@@ -67,6 +68,9 @@ func Setup(router *gin.Engine, db *pgxpool.Pool, cfg *config.Config) {
 
 		roleModule := role.Initialize(db)
 		roleModule.SetupRoutes(coreV1)
+
+		settingsModule := settings.Initialize(db, cfg.Gemini.APIKeys, cfg.Gemini.Models)
+		settingsModule.SetupRoutes(coreV1)
 
 		authzService := authz.NewService(roleModule.Repository)
 		middleware.SetAuthzService(authzService)
