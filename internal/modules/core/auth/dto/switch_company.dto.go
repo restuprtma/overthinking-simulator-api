@@ -9,7 +9,7 @@ type SwitchCompanyRequest struct {
 //
 // Roles and Permissions are returned here because they differ per
 // company — the FE can no longer decode them from the JWT (permissions
-// are stored server-side in Redis rather than embedded in the token).
+// are stored server-side rather than embedded in the token).
 type SwitchCompanyResponse struct {
 	AccessToken  string      `json:"access_token"`
 	RefreshToken string      `json:"refresh_token"`

@@ -87,7 +87,7 @@ func GetExpirationTime() time.Duration {
 // Note: the user's permission set is NOT embedded in the token. Keeping
 // it out lets the token stay small enough to survive every proxy in the
 // chain. The authz package (internal/shared/authz) handles runtime
-// permission lookup against Redis.
+// permission lookup against the database.
 func GenerateToken(
 	userID, companyID, companyName, clientID, clientSlug, email, username string,
 	fullName string,

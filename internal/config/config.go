@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -14,9 +15,9 @@ type Config struct {
 	Auth     AuthConfig
 	WAHA     WAHAConfig
 	OpenAI   OpenAIConfig
-	Redis    RedisConfig
 	GCS      GCSConfig
 	Firebase FirebaseConfig
+	Gemini   GeminiConfig
 }
 
 type GCSConfig struct {
@@ -79,15 +80,10 @@ type OpenAIConfig struct {
 	Timeout int // API timeout in seconds
 }
 
-type RedisConfig struct {
-	Host     string
-	Port     string
-	Password string
-	DB       int
-	// PermissionTTL controls how long a user's effective permission set is
-	// cached before being re-fetched from the database. Short values favour
-	// prompt permission-revoke propagation; long values favour DB load.
-	PermissionTTL time.Duration
+type GeminiConfig struct {
+	APIKeys []string
+	Models  []string
+	Timeout int // API timeout in seconds
 }
 
 func Load() *Config {
@@ -124,13 +120,6 @@ func Load() *Config {
 			Model:   getEnv("OPENAI_MODEL", "gpt-4o-mini"),
 			Timeout: getEnvInt("OPENAI_TIMEOUT", 120),
 		},
-		Redis: RedisConfig{
-			Host:          getEnv("REDIS_HOST", "localhost"),
-			Port:          getEnv("REDIS_PORT", "6379"),
-			Password:      getEnv("REDIS_PASSWORD", ""),
-			DB:            getEnvInt("REDIS_DB", 10),
-			PermissionTTL: getEnvDuration("REDIS_PERMISSION_TTL", 10*time.Minute),
-		},
 		GCS: GCSConfig{
 			BucketName:      getEnv("GCS_BUCKET_NAME", ""),
 			ProjectID:       getEnv("GCS_PROJECT_ID", ""),
@@ -139,6 +128,11 @@ func Load() *Config {
 		Firebase: FirebaseConfig{
 			ProjectID:       getEnv("FIREBASE_PROJECT_ID", ""),
 			CredentialsJSON: getEnv("FIREBASE_CREDENTIALS_JSON", ""),
+		},
+		Gemini: GeminiConfig{
+			APIKeys: splitCSV(getEnv("GEMINI_API_KEYS", "")),
+			Models:  splitCSV(getEnv("GEMINI_MODELS", "gemini-1.5-flash")),
+			Timeout: getEnvInt("GEMINI_TIMEOUT", 60),
 		},
 	}
 }
@@ -195,4 +189,18 @@ func getEnvDuration(key string, defaultValue time.Duration) time.Duration {
 		return duration
 	}
 	return defaultValue
+}
+
+func splitCSV(s string) []string {
+	if s == "" {
+		return []string{}
+	}
+	parts := strings.Split(s, ",")
+	result := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if trimmed := strings.TrimSpace(p); trimmed != "" {
+			result = append(result, trimmed)
+		}
+	}
+	return result
 }

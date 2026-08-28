@@ -14,7 +14,6 @@ import (
 
 	"venturo-skeleton-go/internal/shared/audit"
 	"venturo-skeleton-go/internal/shared/authz"
-	sharedRedis "venturo-skeleton-go/internal/shared/redis"
 
 	pkgfirebase "venturo-skeleton-go/pkg/firebase"
 	"venturo-skeleton-go/pkg/logger"
@@ -28,16 +27,6 @@ import (
 
 func Setup(router *gin.Engine, db *pgxpool.Pool, cfg *config.Config) {
 	log := logger.GetLogger()
-
-	redisClient, err := sharedRedis.New(context.Background(), cfg.Redis)
-	if err != nil {
-		log.Fatal("Failed to connect to Redis", zap.Error(err))
-	}
-	log.Info("Redis connected",
-		zap.String("addr", cfg.Redis.Host+":"+cfg.Redis.Port),
-		zap.Int("db", cfg.Redis.DB),
-		zap.Duration("permission_ttl", cfg.Redis.PermissionTTL),
-	)
 
 	router.Use(ginzap.Ginzap(log, time.RFC3339, true))
 	router.Use(ginzap.RecoveryWithZap(log, true))
@@ -79,7 +68,7 @@ func Setup(router *gin.Engine, db *pgxpool.Pool, cfg *config.Config) {
 		roleModule := role.Initialize(db)
 		roleModule.SetupRoutes(coreV1)
 
-		authzService := authz.NewService(redisClient, roleModule.Repository, cfg.Redis.PermissionTTL)
+		authzService := authz.NewService(roleModule.Repository)
 		middleware.SetAuthzService(authzService)
 		roleModule.Service.SetPermissionCacheInvalidator(authzService)
 		authModule.Service.SetPermissionReader(authzService)

@@ -8,8 +8,8 @@ package dto
 // reload or when it re-syncs after a 403.
 //
 // `permissions` reflects the caller's *current* effective set in the
-// active company (from Redis / authz cache, falling back to DB on cache
-// miss) — not a snapshot of what the JWT was minted with.
+// active company (read from the database via authz) — not a snapshot of
+// what the JWT was minted with.
 type MeResponse struct {
 	User        UserInfo     `json:"user"`
 	Company     *CompanyInfo `json:"company,omitempty"`

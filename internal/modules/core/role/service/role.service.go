@@ -22,9 +22,8 @@ var (
 )
 
 // PermissionCacheInvalidator is the narrow hook the role service needs
-// to keep Redis in sync with role/permission changes. Implemented by
-// *authz.Service; declared here so the role package doesn't import
-// authz directly.
+// to signal role/permission changes. Implemented by *authz.Service;
+// declared here so the role package doesn't import authz directly.
 type PermissionCacheInvalidator interface {
 	InvalidateUser(ctx context.Context, userID string) error
 	InvalidateAll(ctx context.Context) error
@@ -41,9 +40,9 @@ func NewRoleService(roleRepo *repository.RoleRepository) *RoleService {
 	}
 }
 
-// SetPermissionCacheInvalidator wires the Redis-backed authz cache so
-// every write path below can drop stale entries. Safe to leave unset
-// in tests or tools that don't need cache coherence.
+// SetPermissionCacheInvalidator wires the authz invalidation hook so
+// every write path below can notify on changes. Safe to leave unset
+// in tests or tools that don't need it.
 func (s *RoleService) SetPermissionCacheInvalidator(inv PermissionCacheInvalidator) {
 	s.invalidator = inv
 }

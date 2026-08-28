@@ -10,14 +10,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// authzService is the permission-cache backend used by RequirePermission
+// authzService is the permission-lookup backend used by RequirePermission
 // and friends. It is wired in at bootstrap via SetAuthzService; until
 // then, any permission-gated request is rejected with 500 rather than
 // silently passing.
 var authzService *authz.Service
 
 // SetAuthzService registers the permission-lookup backend. Call this
-// once during router setup, after Redis is initialised.
+// once during router setup.
 func SetAuthzService(s *authz.Service) {
 	authzService = s
 }
@@ -90,13 +90,13 @@ func RequireAllRoles(roles ...string) gin.HandlerFunc {
 // RequirePermission checks if user has a specific permission.
 //
 // For JWT-authenticated requests the effective permission set is looked
-// up from Redis (via authz.Service) on each request — permissions are
-// no longer embedded in the token.
+// up from the database (via authz.Service) on each request — permissions
+// are not embedded in the token.
 //
 // For API-key-authenticated requests the set is pinned on
 // claims.ScopedPermissions at auth time (API keys may carry a scope
 // narrower than the user's full permission set, so they must not
-// consult the user-level Redis cache).
+// consult the user-level lookup).
 //
 // Must be used after JWTAuth middleware.
 func RequirePermission(permission string) gin.HandlerFunc {
