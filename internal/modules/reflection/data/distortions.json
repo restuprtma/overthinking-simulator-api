@@ -1,0 +1,85 @@
+{
+  "disclaimer_note": "Overthinking Simulator adalah alat refleksi diri ringan, bukan alat diagnosis atau pengganti terapi maupun bantuan profesional.",
+  "distortions": [
+    {
+      "id": "catastrophizing",
+      "name_id": "Katastrofisasi",
+      "name_en": "Catastrophizing",
+      "definition": "Pola pikir yang langsung membayangkan hasil paling buruk, meskipun hasil tersebut belum tentu terjadi.",
+      "example_thought": "Aku membuat satu kesalahan kecil di laporan; jangan-jangan karierku akan berantakan.",
+      "typical_realistic_counter": "Satu kesalahan dapat diperbaiki dan belum menjadi bukti bahwa seluruh kariermu terancam."
+    },
+    {
+      "id": "mind_reading",
+      "name_id": "Membaca Pikiran",
+      "name_en": "Mind Reading",
+      "definition": "Meyakini tahu apa yang dipikirkan atau dirasakan orang lain tanpa bukti yang memadai.",
+      "example_thought": "Dia hanya membalas singkat, pasti dia sedang kesal kepadaku.",
+      "typical_realistic_counter": "Balasan singkat bisa berarti banyak hal, seperti sedang sibuk, dan tidak selalu berarti ia kesal padamu."
+    },
+    {
+      "id": "fortune_telling",
+      "name_id": "Meramal Nasib",
+      "name_en": "Fortune Telling",
+      "definition": "Memprediksi hasil negatif di masa depan seolah-olah sudah pasti terjadi.",
+      "example_thought": "Wawancara ini pasti akan gagal, aku tidak akan diterima.",
+      "typical_realistic_counter": "Hasil wawancara belum bisa dipastikan sebelum diumumkan, dan persiapanmu sudah cukup baik."
+    },
+    {
+      "id": "overgeneralization",
+      "name_id": "Overgeneralisasi",
+      "name_en": "Overgeneralization",
+      "definition": "Menarik kesimpulan luas yang negatif dari satu kejadian tunggal.",
+      "example_thought": "Satu kali gagal presentasi, berarti aku memang tidak pernah bisa bicara di depan orang.",
+      "typical_realistic_counter": "Satu pengalaman buruk tidak mewakili seluruh kemampuanmu; banyak faktor lain yang memengaruhi."
+    },
+    {
+      "id": "personalization",
+      "name_id": "Personalisasi",
+      "name_en": "Personalization",
+      "definition": "Menyalahkan diri sendiri atas hal-hal yang sebenarnya berada di luar kendalimu.",
+      "example_thought": "Rapat dibatalkan mendadak, pasti karena aku yang mengajukan agenda itu.",
+      "typical_realistic_counter": "Pembatalan rapat bisa dipengaruhi banyak hal, dan belum tentu berkaitan dengan dirimu."
+    },
+    {
+      "id": "black_and_white_thinking",
+      "name_id": "Berpikir Hitam-Putih",
+      "name_en": "Black-and-White Thinking",
+      "definition": "Melihat segala sesuatu hanya dalam dua kutub ekstrem, tanpa ruang di antara keduanya.",
+      "example_thought": "Kalau laporan ini tidak sempurna, berarti pekerjaanku sepenuhnya gagal.",
+      "typical_realistic_counter": "Pekerjaan tidak harus sempurna untuk tetap bernilai; ada banyak tingkat keberhasilan di antara gagal dan sempurna."
+    },
+    {
+      "id": "emotional_reasoning",
+      "name_id": "Penalaran Emosional",
+      "name_en": "Emotional Reasoning",
+      "definition": "Menganggap perasaan sebagai bukti kebenaran, padahal perasaan belum tentu mencerminkan fakta.",
+      "example_thought": "Aku merasa tidak mampu, jadi pasti aku memang tidak mampu.",
+      "typical_realistic_counter": "Perasaan tidak mampu belum tentu sama dengan kenyataan; coba lihat bukti konkret kemampuanmu."
+    },
+    {
+      "id": "should_statements",
+      "name_id": "Pernyataan Harus",
+      "name_en": "Should Statements",
+      "definition": "Menuntut diri sendiri atau orang lain dengan kata 'harus' atau 'seharusnya' yang kaku.",
+      "example_thought": "Aku seharusnya sudah bisa menyelesaikan semua tugas tanpa lelah.",
+      "typical_realistic_counter": "Tidak ada manusia yang bisa selalu produktif tanpa lelah; beristirahat adalah hal yang wajar."
+    },
+    {
+      "id": "filtering",
+      "name_id": "Menyaring Negatif",
+      "name_en": "Filtering",
+      "definition": "Hanya berfokus pada satu hal negatif dan mengabaikan hal-hal positif yang juga ada.",
+      "example_thought": "Semua orang memuji pekerjaanku, tapi aku hanya ingat satu komentar kritik tadi.",
+      "typical_realistic_counter": "Satu kritik tidak menghapus banyak pujian yang juga kamu terima; keduanya sama-sama nyata."
+    },
+    {
+      "id": "labeling",
+      "name_id": "Memberi Label",
+      "name_en": "Labeling",
+      "definition": "Memberi label negatif yang menyeluruh pada diri sendiri atau orang lain berdasarkan satu peristiwa.",
+      "example_thought": "Aku lupa satu janji, berarti aku orang yang tidak bertanggung jawab.",
+      "typical_realistic_counter": "Satu kelupaan tidak mendefinisikan seluruh dirimu; setiap orang bisa lupa sesekali."
+    }
+  ]
+}
