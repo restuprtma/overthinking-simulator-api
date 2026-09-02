@@ -34,10 +34,10 @@ export
 
 migrate-up:
 	@echo "Running migrations..."
-	@if [ -d "$(MIGRATIONS_PATH)/core" ]; then \
+	@if exist "$(MIGRATIONS_PATH)\core" ( \
 		echo "Running core migrations..."; \
-		migrate -path $(MIGRATIONS_PATH)/core -database "$(DB_URL)&x-migrations-table=schema_migrations_core" up; \
-	fi
+		migrate -path $(MIGRATIONS_PATH)\core -database "$(DB_URL)&x-migrations-table=schema_migrations_core" up; \
+	) || echo "No migrations found"
 
 migrate-down:
 	@if [ -z "$(MODULE)" ]; then echo "Error: MODULE is required. Usage: make migrate-down MODULE=core"; exit 1; fi
@@ -62,15 +62,12 @@ migrate-version:
 # Database seeders
 seed-core:
 	@echo "Running core seeders..."
-	@if [ -d "$(SEEDERS_PATH)/core" ]; then \
-		for file in $(SEEDERS_PATH)/core/*.sql; do \
-			if [ -f "$$file" ]; then \
-				echo "Running seeder: $$(basename $$file)"; \
-				PGPASSWORD=$(DB_PASSWORD) psql -v ON_ERROR_STOP=1 -h $(DB_HOST) -p $(DB_PORT) -U $(DB_USER) -d $(DB_NAME) -f $$file || exit 1; \
-			fi; \
-		done; \
-	fi
-	@echo "✅ Core seeders completed!"
+	@if exist "$(SEEDERS_PATH)\core" ( \
+		psql -v ON_ERROR_STOP=1 -h $(DB_HOST) -p $(DB_PORT) -U $(DB_USER) -d $(DB_NAME) -W -f "$(SEEDERS_PATH)\core\001_roles.sql"; \
+		psql -v ON_ERROR_STOP=1 -h $(DB_HOST) -p $(DB_PORT) -U $(DB_USER) -d $(DB_NAME) -W -f "$(SEEDERS_PATH)\core\002_users.sql"; \
+		psql -v ON_ERROR_STOP=1 -h $(DB_HOST) -p $(DB_PORT) -U $(DB_USER) -d $(DB_NAME) -W -f "$(SEEDERS_PATH)\core\006_user_roles.sql"; \
+		echo "✅ Core seeders completed!" \
+	) || echo "No seeders found"
 
 seed: seed-core
 	@echo "✅ All seeders completed!"
@@ -102,4 +99,4 @@ run:
 
 dev:
 	@echo "🔥 Starting development server with hot reload..."
-	@~/go/bin/air
+	@$(GOPATH)\bin\air

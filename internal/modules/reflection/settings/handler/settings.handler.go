@@ -18,7 +18,7 @@ func NewHandler(svc *service.Service) *Handler {
 	return &Handler{svc: svc}
 }
 
-// Get returns the current (masked) gemini credentials.
+// Get returns the current (masked) Groq credentials.
 func (h *Handler) Get(c *gin.Context) {
 	masked, err := h.svc.GetMaskedCredentials(c.Request.Context())
 	if err != nil {
@@ -29,10 +29,10 @@ func (h *Handler) Get(c *gin.Context) {
 	response.Success(c, http.StatusOK, "OK", gin.H{"credentials": masked})
 }
 
-// Update replaces the gemini credentials list.
+// Update replaces the Groq credentials list.
 func (h *Handler) Update(c *gin.Context) {
 	var req struct {
-		Credentials []service.GeminiCredential `json:"credentials" binding:"required"`
+		Credentials []service.GroqCredential `json:"credentials" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, http.StatusBadRequest, "Input tidak valid", err.Error())

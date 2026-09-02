@@ -11,6 +11,7 @@ import (
 	"venturo-skeleton-go/internal/modules/reflection/dto"
 	"venturo-skeleton-go/internal/modules/reflection/service"
 	"venturo-skeleton-go/internal/shared/response"
+	"venturo-skeleton-go/pkg/logger"
 )
 
 type ReflectionHandler struct {
@@ -39,13 +40,16 @@ func (h *ReflectionHandler) Create(c *gin.Context) {
 
 	result, err := h.svc.RunReflection(c.Request.Context(), userID, req.Thought)
 	if err != nil {
+		logger.Error("Reflection create failed", logger.String("user_id", userID), logger.Err(err))
 		switch {
 		case errors.Is(err, service.ErrMissingCredentials):
-			response.Error(c, http.StatusServiceUnavailable, "Kredensial Gemini belum diatur. Tambahkan lewat menu Settings.", "")
-		case errors.Is(err, service.ErrAllCredentialsFailed):
-			response.Error(c, http.StatusServiceUnavailable, "Semua kredensial Gemini sedang limit/kadaluarsa. Coba lagi nanti atau ganti key di Settings.", "")
+			response.Error(c, http.StatusServiceUnavailable, "Kredensial Groq belum diatur. Tambahkan lewat menu Settings.", "")
+		// The service joins ErrAllCredentialsFailed onto the last failure, so the
+		// specific LLM-output errors must be matched first or they never surface.
 		case errors.Is(err, service.ErrClassificationFailed), errors.Is(err, service.ErrDialogFailed):
 			response.Error(c, http.StatusBadGateway, "Gagal memproses pikiran kamu, coba lagi", "")
+		case errors.Is(err, service.ErrAllCredentialsFailed):
+			response.Error(c, http.StatusServiceUnavailable, "Semua kredensial Groq sedang limit/kadaluarsa. Coba lagi nanti atau ganti key di Settings.", "")
 		default:
 			response.Error(c, http.StatusInternalServerError, "Gagal memproses pikiran kamu, coba lagi", "")
 		}
@@ -53,6 +57,47 @@ func (h *ReflectionHandler) Create(c *gin.Context) {
 	}
 
 	response.Success(c, http.StatusCreated, "Refleksi berhasil dibuat", result)
+}
+
+// ContinueConversation handles continuing an interactive conversation.
+func (h *ReflectionHandler) ContinueConversation(c *gin.Context) {
+	userID := middleware.MustGetUserID(c)
+	reflectionID := c.Param("id")
+
+	var req dto.ContinueRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, "Input tidak valid", err.Error())
+		return
+	}
+
+	req.UserMessage = strings.TrimSpace(req.UserMessage)
+	if req.UserMessage == "" {
+		response.Error(c, http.StatusBadRequest, "Pesan tidak boleh kosong", "")
+		return
+	}
+
+	result, err := h.svc.ContinueConversation(c.Request.Context(), reflectionID, userID, req.UserMessage)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrMissingCredentials):
+			response.Error(c, http.StatusServiceUnavailable, "Kredensial Groq belum diatur.", "")
+		case errors.Is(err, service.ErrReflectionNotFound):
+			response.Error(c, http.StatusNotFound, "Refleksi tidak ditemukan", "")
+		case errors.Is(err, service.ErrSafetyTriggered):
+			response.Error(c, http.StatusConflict, "Refleksi ini tidak bisa dilanjutkan. Silakan hubungi bantuan profesional atau mulai refleksi baru.", "")
+		case errors.Is(err, service.ErrConversationMaxed):
+			response.Error(c, http.StatusConflict, "Percakapan sudah mencapai batas maksimal. Mulai refleksi baru ya.", "")
+		case errors.Is(err, service.ErrDialogFailed):
+			response.Error(c, http.StatusBadGateway, "Gagal membuat balasan dialog. Silakan coba lagi.", "")
+		case errors.Is(err, service.ErrAllCredentialsFailed):
+			response.Error(c, http.StatusServiceUnavailable, "Layanan Groq sementara unavailable. Silakan coba lagi nanti.", "")
+		default:
+			response.Error(c, http.StatusInternalServerError, "Gagal memproses respons", "")
+		}
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Respons berhasil dibuat", result)
 }
 
 // List returns a paginated list of the authenticated user's reflections.
@@ -75,10 +120,12 @@ func (h *ReflectionHandler) List(c *gin.Context) {
 	summaries := make([]dto.ReflectionSummary, 0, len(reflections))
 	for _, r := range reflections {
 		summaries = append(summaries, dto.ReflectionSummary{
-			ID:              r.ID,
-			Thought:         r.Thought,
-			SafetyTriggered: r.SafetyTriggered,
-			CreatedAt:       r.CreatedAt,
+			ID:                r.ID,
+			Thought:           r.Thought,
+			SafetyTriggered:   r.SafetyTriggered,
+			ConversationState: r.ConversationState,
+			TotalTurns:        r.TotalTurns,
+			CreatedAt:         r.CreatedAt,
 		})
 	}
 

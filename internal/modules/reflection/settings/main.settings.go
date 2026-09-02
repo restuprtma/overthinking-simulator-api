@@ -34,13 +34,13 @@ func (m *Module) SetupRoutes(router *gin.RouterGroup) {
 	s := router.Group("/settings")
 	s.Use(middleware.JWTAuth())
 	{
-		s.GET("/gemini-credentials", m.Handler.Get)
-		s.PUT("/gemini-credentials", m.Handler.Update)
+		s.GET("/groq-credentials", m.Handler.Get)
+		s.PUT("/groq-credentials", m.Handler.Update)
 	}
 }
 
 // CredentialsProvider returns the active credential list at request time.
 // The reflection service (Phase 4) uses this to fetch key/model pairs.
-func (m *Module) CredentialsProvider(ctx context.Context) ([]service.GeminiCredential, error) {
+func (m *Module) CredentialsProvider(ctx context.Context) ([]service.GroqCredential, error) {
 	return m.Service.GetCredentials(ctx)
 }

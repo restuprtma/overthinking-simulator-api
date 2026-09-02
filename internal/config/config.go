@@ -15,9 +15,9 @@ type Config struct {
 	Auth     AuthConfig
 	WAHA     WAHAConfig
 	OpenAI   OpenAIConfig
+	Groq     GroqConfig
 	GCS      GCSConfig
 	Firebase FirebaseConfig
-	Gemini   GeminiConfig
 }
 
 type GCSConfig struct {
@@ -80,9 +80,10 @@ type OpenAIConfig struct {
 	Timeout int // API timeout in seconds
 }
 
-type GeminiConfig struct {
-	APIKeys []string
-	Models  []string
+type GroqConfig struct {
+	APIKey  string
+	BaseURL string
+	Model   string
 	Timeout int // API timeout in seconds
 }
 
@@ -129,10 +130,11 @@ func Load() *Config {
 			ProjectID:       getEnv("FIREBASE_PROJECT_ID", ""),
 			CredentialsJSON: getEnv("FIREBASE_CREDENTIALS_JSON", ""),
 		},
-		Gemini: GeminiConfig{
-			APIKeys: splitCSV(getEnv("GEMINI_API_KEYS", "")),
-			Models:  splitCSV(getEnv("GEMINI_MODELS", "gemini-1.5-flash")),
-			Timeout: getEnvInt("GEMINI_TIMEOUT", 60),
+		Groq: GroqConfig{
+			APIKey:  getEnv("GROQ_API_KEY", ""),
+			BaseURL: getEnv("GROQ_BASE_URL", "https://api.groq.com/openai/v1"),
+			Model: getEnv("GROQ_MODEL", "openai/gpt-oss-120b"),
+			Timeout: getEnvInt("GROQ_TIMEOUT", 60),
 		},
 	}
 }

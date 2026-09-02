@@ -12,6 +12,10 @@ import (
 	"venturo-skeleton-go/pkg/logger"
 )
 
+// ErrDialogLimitReached signals that a reflection's dialog already holds the
+// maximum number of turns, so no further turns were appended.
+var ErrDialogLimitReached = errors.New("dialog turn limit reached")
+
 // ReflectionRepository owns reads/writes to core.reflections.
 // Every query is scoped to a single user via user_id.
 type ReflectionRepository struct {
@@ -36,16 +40,23 @@ func (r *ReflectionRepository) Create(ctx context.Context, ref *domain.Reflectio
 		return err
 	}
 
+	if ref.ConversationState == "" {
+		ref.ConversationState = domain.ConversationInitial
+	}
+	ref.TotalTurns = len(ref.Dialog)
+
 	query := `
 		INSERT INTO core.reflections (
 			id, user_id, thought, detected_distortions, core_fear, dialog,
-			actionable_suggestion, safety_triggered, safety_response, created_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+			actionable_suggestion, safety_triggered, safety_response,
+			conversation_state, total_turns, created_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 	`
 
 	_, err = r.db.Exec(ctx, query,
 		ref.ID, ref.UserID, ref.Thought, distortionsJSON, ref.CoreFear, dialogJSON,
-		ref.ActionableSuggestion, ref.SafetyTriggered, ref.SafetyResponse, ref.CreatedAt,
+		ref.ActionableSuggestion, ref.SafetyTriggered, ref.SafetyResponse,
+		ref.ConversationState, ref.TotalTurns, ref.CreatedAt,
 	)
 	if err != nil {
 		logger.Error("Failed to create reflection", logger.Err(err))
@@ -69,7 +80,8 @@ func (r *ReflectionRepository) ListByUser(ctx context.Context, userID string, pa
 	offset := (page - 1) * limit
 	query := `
 		SELECT id, user_id, thought, detected_distortions, core_fear, dialog,
-		       actionable_suggestion, safety_triggered, safety_response, created_at
+		       actionable_suggestion, safety_triggered, safety_response,
+		       conversation_state, total_turns, created_at
 		FROM core.reflections
 		WHERE user_id = $1
 		ORDER BY created_at DESC
@@ -105,7 +117,8 @@ func (r *ReflectionRepository) ListByUser(ctx context.Context, userID string, pa
 func (r *ReflectionRepository) GetByIDAndUser(ctx context.Context, id, userID string) (*domain.Reflection, error) {
 	query := `
 		SELECT id, user_id, thought, detected_distortions, core_fear, dialog,
-		       actionable_suggestion, safety_triggered, safety_response, created_at
+		       actionable_suggestion, safety_triggered, safety_response,
+		       conversation_state, total_turns, created_at
 		FROM core.reflections
 		WHERE id = $1 AND user_id = $2
 	`
@@ -122,6 +135,67 @@ func (r *ReflectionRepository) GetByIDAndUser(ctx context.Context, id, userID st
 	return ref, nil
 }
 
+// AppendDialogTurns atomically appends turns to an existing reflection's dialog
+// and returns the resulting state. The concatenation happens inside the UPDATE
+// (`dialog || $1::jsonb`) rather than read-modify-write in Go, so two concurrent
+// continuations cannot overwrite each other's turns.
+//
+// maxTurns bounds the growth: when the stored dialog already has that many turns
+// the update is a no-op and ErrDialogLimitReached is returned.
+func (r *ReflectionRepository) AppendDialogTurns(ctx context.Context, id, userID string, turns []domain.DialogTurn, maxTurns int) (*domain.DialogState, error) {
+	turnsJSON, err := json.Marshal(turns)
+	if err != nil {
+		logger.Error("Failed to marshal dialog turns", logger.Err(err))
+		return nil, err
+	}
+
+	query := `
+		UPDATE core.reflections
+		SET dialog = dialog || $1::jsonb,
+		    total_turns = jsonb_array_length(dialog || $1::jsonb),
+		    conversation_state = CASE
+		        WHEN jsonb_array_length(dialog || $1::jsonb) >= $4 THEN 'final'
+		        ELSE 'continued'
+		    END
+		WHERE id = $2 AND user_id = $3 AND jsonb_array_length(dialog) < $4
+		RETURNING dialog, conversation_state, total_turns
+	`
+
+	var dialogJSON []byte
+	state := &domain.DialogState{}
+
+	err = r.db.QueryRow(ctx, query, turnsJSON, id, userID, maxTurns).
+		Scan(&dialogJSON, &state.ConversationState, &state.TotalTurns)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// Either the row is gone or the dialog already hit the cap. Tell the
+			// two cases apart so the caller can map them to different statuses.
+			var turnCount int
+			checkErr := r.db.QueryRow(ctx,
+				`SELECT jsonb_array_length(dialog) FROM core.reflections WHERE id = $1 AND user_id = $2`,
+				id, userID,
+			).Scan(&turnCount)
+			if checkErr != nil {
+				if errors.Is(checkErr, pgx.ErrNoRows) {
+					return nil, pgx.ErrNoRows
+				}
+				logger.Error("Failed to inspect dialog length", logger.Err(checkErr))
+				return nil, checkErr
+			}
+			return nil, ErrDialogLimitReached
+		}
+		logger.Error("Failed to append dialog turns", logger.Err(err))
+		return nil, err
+	}
+
+	if err := json.Unmarshal(dialogJSON, &state.Dialog); err != nil {
+		logger.Error("Failed to unmarshal appended dialog", logger.Err(err))
+		return nil, err
+	}
+
+	return state, nil
+}
+
 // rowScanner is the minimal subset of pgx.Row / pgx.Rows needed to scan
 // a single reflection row.
 type rowScanner interface {
@@ -136,7 +210,8 @@ func scanReflection(row rowScanner) (*domain.Reflection, error) {
 
 	err := row.Scan(
 		&ref.ID, &ref.UserID, &ref.Thought, &distortionsJSON, &ref.CoreFear, &dialogJSON,
-		&ref.ActionableSuggestion, &ref.SafetyTriggered, &ref.SafetyResponse, &ref.CreatedAt,
+		&ref.ActionableSuggestion, &ref.SafetyTriggered, &ref.SafetyResponse,
+		&ref.ConversationState, &ref.TotalTurns, &ref.CreatedAt,
 	)
 	if err != nil {
 		return nil, err

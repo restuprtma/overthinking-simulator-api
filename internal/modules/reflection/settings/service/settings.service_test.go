@@ -24,13 +24,13 @@ func (f *fakeStore) Set(_ context.Context, key, value string) error {
 	return nil
 }
 
-func newTestService(store settingsStore, fallback []GeminiCredential) *Service {
+func newTestService(store settingsStore, fallback []GroqCredential) *Service {
 	return &Service{repo: store, fallbackCredentials: fallback}
 }
 
 func TestGetCredentialsFallsBackWhenEmpty(t *testing.T) {
 	store := newFakeStore()
-	svc := newTestService(store, []GeminiCredential{{Key: "fb1", Model: "m1"}})
+	svc := newTestService(store, []GroqCredential{{Key: "fb1", Model: "m1"}})
 
 	got, err := svc.GetCredentials(context.Background())
 	if err != nil {
@@ -45,7 +45,7 @@ func TestSetCredentialsPersists(t *testing.T) {
 	store := newFakeStore()
 	svc := newTestService(store, nil)
 
-	err := svc.SetCredentials(context.Background(), []GeminiCredential{
+	err := svc.SetCredentials(context.Background(), []GroqCredential{
 		{Key: "  key1  ", Model: ""},
 		{Key: "", Model: "ignored"},
 	})
@@ -53,7 +53,7 @@ func TestSetCredentialsPersists(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if store.data[GeminiCredentialsSetting] == "" {
+	if store.data[GroqCredentialsSetting] == "" {
 		t.Fatal("expected credentials to be persisted")
 	}
 
@@ -76,7 +76,7 @@ func TestSetCredentialsEmptyReturnsError(t *testing.T) {
 	store := newFakeStore()
 	svc := newTestService(store, nil)
 
-	err := svc.SetCredentials(context.Background(), []GeminiCredential{{Key: "   "}})
+	err := svc.SetCredentials(context.Background(), []GroqCredential{{Key: "   "}})
 	if !errors.Is(err, ErrEmptyCredentials) {
 		t.Fatalf("expected ErrEmptyCredentials, got %v", err)
 	}
@@ -84,7 +84,7 @@ func TestSetCredentialsEmptyReturnsError(t *testing.T) {
 
 func TestGetMaskedNeverReturnsFullKey(t *testing.T) {
 	store := newFakeStore()
-	store.data[GeminiCredentialsSetting] = `[{"key":"AIzaSyFULLKEYHEREabcd","model":"gemini-1.5-flash"},{"key":"short","model":"x"}]`
+	store.data[GroqCredentialsSetting] = `[{"key":"AIzaSyFULLKEYHEREabcd","model":"openai/gpt-oss-120b"},{"key":"short","model":"x"}]`
 
 	svc := newTestService(store, nil)
 	got, err := svc.GetMaskedCredentials(context.Background())
@@ -109,7 +109,7 @@ func TestGetMaskedNeverReturnsFullKey(t *testing.T) {
 
 func TestGetMaskedDefaultsEmptyModel(t *testing.T) {
 	store := newFakeStore()
-	store.data[GeminiCredentialsSetting] = `[{"key":"AIzaSyFULLKEYHEREabcd","model":""}]`
+	store.data[GroqCredentialsSetting] = `[{"key":"AIzaSyFULLKEYHEREabcd","model":""}]`
 
 	svc := newTestService(store, nil)
 	got, err := svc.GetMaskedCredentials(context.Background())

@@ -2,7 +2,9 @@ package router
 
 import (
 	"context"
+	"strings"
 	"time"
+
 	"venturo-skeleton-go/internal/config"
 	"venturo-skeleton-go/internal/middleware"
 
@@ -70,10 +72,14 @@ func Setup(router *gin.Engine, db *pgxpool.Pool, cfg *config.Config) {
 		roleModule := role.Initialize(db)
 		roleModule.SetupRoutes(coreV1)
 
-		settingsModule := settings.Initialize(db, cfg.Gemini.APIKeys, cfg.Gemini.Models)
+		var fallbackModels []string
+		if strings.TrimSpace(cfg.Groq.Model) != "" {
+			fallbackModels = []string{cfg.Groq.Model}
+		}
+		settingsModule := settings.Initialize(db, []string{cfg.Groq.APIKey}, fallbackModels)
 		settingsModule.SetupRoutes(coreV1)
 
-		reflectionModule := reflection.Initialize(db, time.Duration(cfg.Gemini.Timeout)*time.Second, settingsModule.CredentialsProvider)
+		reflectionModule := reflection.Initialize(db, time.Duration(cfg.Groq.Timeout)*time.Second, settingsModule.CredentialsProvider)
 		reflectionModule.SetupRoutes(coreV1)
 
 		authzService := authz.NewService(roleModule.Repository)

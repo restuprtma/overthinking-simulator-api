@@ -10,14 +10,14 @@ import (
 	"venturo-skeleton-go/pkg/logger"
 )
 
-const GeminiCredentialsSetting = "gemini_credentials"
+const GroqCredentialsSetting = "groq_credentials"
 
-const defaultModel = "gemini-1.5-flash"
+const defaultModel = "openai/gpt-oss-120b"
 
 var ErrEmptyCredentials = errors.New("kredensial tidak boleh kosong")
 
-// GeminiCredential represents a single API key + model pair.
-type GeminiCredential struct {
+// GroqCredential represents a single API key + model pair for Groq/OpenAI
+type GroqCredential struct {
 	Key   string `json:"key"`
 	Model string `json:"model"`
 }
@@ -31,20 +31,20 @@ type settingsStore interface {
 
 type Service struct {
 	repo                settingsStore
-	fallbackCredentials []GeminiCredential
+	fallbackCredentials []GroqCredential
 }
 
 // NewService builds a Service from a settings repository and env fallback
 // values. fallbackAPIKeys[i] is paired with fallbackModels[i]; when
 // fallbackModels is shorter, the missing model defaults to the default model.
 func NewService(repo *repository.SettingsRepository, fallbackAPIKeys, fallbackModels []string) *Service {
-	fallbackCredentials := make([]GeminiCredential, 0, len(fallbackAPIKeys))
+	fallbackCredentials := make([]GroqCredential, 0, len(fallbackAPIKeys))
 	for i, key := range fallbackAPIKeys {
 		model := defaultModel
 		if i < len(fallbackModels) && strings.TrimSpace(fallbackModels[i]) != "" {
 			model = strings.TrimSpace(fallbackModels[i])
 		}
-		fallbackCredentials = append(fallbackCredentials, GeminiCredential{
+		fallbackCredentials = append(fallbackCredentials, GroqCredential{
 			Key:   key,
 			Model: model,
 		})
@@ -58,8 +58,8 @@ func NewService(repo *repository.SettingsRepository, fallbackAPIKeys, fallbackMo
 
 // GetCredentials returns the active credential list. DB value (if present)
 // takes precedence; otherwise it falls back to the env-derived list.
-func (s *Service) GetCredentials(ctx context.Context) ([]GeminiCredential, error) {
-	raw, err := s.repo.Get(ctx, GeminiCredentialsSetting)
+func (s *Service) GetCredentials(ctx context.Context) ([]GroqCredential, error) {
+	raw, err := s.repo.Get(ctx, GroqCredentialsSetting)
 	if err != nil {
 		return nil, err
 	}
@@ -68,9 +68,9 @@ func (s *Service) GetCredentials(ctx context.Context) ([]GeminiCredential, error
 		return s.fallbackCredentials, nil
 	}
 
-	var creds []GeminiCredential
+	var creds []GroqCredential
 	if err := json.Unmarshal([]byte(raw), &creds); err != nil {
-		logger.Error("Failed to unmarshal gemini credentials", logger.Err(err))
+		logger.Error("Failed to unmarshal groq credentials", logger.Err(err))
 		return nil, err
 	}
 
@@ -84,8 +84,8 @@ func (s *Service) GetCredentials(ctx context.Context) ([]GeminiCredential, error
 }
 
 // SetCredentials trims keys, drops empty-key entries, and persists the list.
-func (s *Service) SetCredentials(ctx context.Context, creds []GeminiCredential) error {
-	cleaned := make([]GeminiCredential, 0, len(creds))
+func (s *Service) SetCredentials(ctx context.Context, creds []GroqCredential) error {
+	cleaned := make([]GroqCredential, 0, len(creds))
 	for _, c := range creds {
 		key := strings.TrimSpace(c.Key)
 		if key == "" {
@@ -95,7 +95,7 @@ func (s *Service) SetCredentials(ctx context.Context, creds []GeminiCredential) 
 		if model == "" {
 			model = defaultModel
 		}
-		cleaned = append(cleaned, GeminiCredential{Key: key, Model: model})
+		cleaned = append(cleaned, GroqCredential{Key: key, Model: model})
 	}
 
 	if len(cleaned) == 0 {
@@ -104,24 +104,24 @@ func (s *Service) SetCredentials(ctx context.Context, creds []GeminiCredential) 
 
 	jsonBytes, err := json.Marshal(cleaned)
 	if err != nil {
-		logger.Error("Failed to marshal gemini credentials", logger.Err(err))
+		logger.Error("Failed to marshal groq credentials", logger.Err(err))
 		return err
 	}
 
-	return s.repo.Set(ctx, GeminiCredentialsSetting, string(jsonBytes))
+	return s.repo.Set(ctx, GroqCredentialsSetting, string(jsonBytes))
 }
 
 // GetMaskedCredentials returns the active credentials with keys masked so the
 // full API key never leaves the server.
-func (s *Service) GetMaskedCredentials(ctx context.Context) ([]GeminiCredential, error) {
+func (s *Service) GetMaskedCredentials(ctx context.Context) ([]GroqCredential, error) {
 	creds, err := s.GetCredentials(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	masked := make([]GeminiCredential, len(creds))
+	masked := make([]GroqCredential, len(creds))
 	for i, c := range creds {
-		masked[i] = GeminiCredential{
+		masked[i] = GroqCredential{
 			Key:   maskKey(c.Key),
 			Model: c.Model,
 		}
@@ -131,7 +131,7 @@ func (s *Service) GetMaskedCredentials(ctx context.Context) ([]GeminiCredential,
 }
 
 // maskKey shows the first 4 and last 4 characters with "..." in between
-// (e.g. "AIza****abcd"). If the key is 8 chars or fewer it returns "****".
+// (e.g. "gsk_****RUDt"). If the key is 8 chars or fewer it returns "****".
 func maskKey(key string) string {
 	if len(key) <= 8 {
 		return "****"

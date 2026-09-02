@@ -23,7 +23,7 @@ type ReflectionModule struct {
 }
 
 // Initialize wires the reflection module dependencies.
-func Initialize(db *pgxpool.Pool, timeout time.Duration, credentialsProvider func(ctx context.Context) ([]settingsService.GeminiCredential, error)) *ReflectionModule {
+func Initialize(db *pgxpool.Pool, timeout time.Duration, credentialsProvider func(ctx context.Context) ([]settingsService.GroqCredential, error)) *ReflectionModule {
 	repo := repository.NewReflectionRepository(db)
 	svc := service.NewService(repo, timeout, distortionsJSON, credentialsProvider)
 	h := handler.NewReflectionHandler(svc)
@@ -41,5 +41,6 @@ func (m *ReflectionModule) SetupRoutes(router *gin.RouterGroup) {
 		reflections.POST("", m.Handler.Create)
 		reflections.GET("", m.Handler.List)
 		reflections.GET("/:id", m.Handler.Get)
+		reflections.POST("/:id/continue", m.Handler.ContinueConversation)
 	}
 }
